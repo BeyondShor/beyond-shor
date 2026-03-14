@@ -1,61 +1,80 @@
 # beyond-shor.eu
 
-Ein Blog über Post-Quanten-Kryptographie — was sie ist, warum sie wichtig ist, und wie sie funktioniert. Geschrieben für alle, die verstehen wollen, was nach Shor kommt.
+**Eine interaktive Lernplattform für Post-Quantum-Kryptografie.**
 
-Der Name ist Programm: Shors Algorithmus kann klassische Public-Key-Kryptographie (RSA, ECC) mit einem ausreichend leistungsstarken Quantencomputer brechen. Dieser Blog erklärt die Algorithmen, die das verhindern sollen — und setzt sie gleichzeitig selbst ein.
+> Dieses Repository enthält den Quellcode von [beyond-shor.eu](https://beyond-shor.eu) — einer zweisprachigen (DE/EN) Plattform, die sich mit Post-Quantum-Kryptografie, Krypto-Agilität und der Migration weg von quantenvulnerablen Algorithmen beschäftigt. Der Code ist zur Einsicht und als Referenz veröffentlicht — nicht als betriebsbereite lokale Installation gedacht.
 
-## Was steckt dahinter?
+---
 
-Der Blog ist selbst ein Experiment in angewandter PQC. Statt PQC nur zu erklären, wird sie hier aktiv eingesetzt:
+## 🔍 Was diese Plattform ist
 
-### Interaktiver KEM-Playground
+beyond-shor.eu ist kein typischer Blog. Es ist eine Plattform, die die Konzepte, die sie erklärt, gleichzeitig demonstriert.
 
-Drei post-quantensichere Key Encapsulation Mechanisms direkt im Browser vergleichen:
+Jeder Artikel wird mit **ML-DSA-65** (NIST FIPS 204) signiert und die Signatur ist direkt im Browser verifizierbar — ohne Serveranfrage, ohne zusätzliches Vertrauen. Das Signieren läuft automatisch über einen Strapi-Lifecycle-Hook bei der Veröffentlichung; die Verifikation läuft clientseitig über [`@noble/post-quantum`](https://github.com/paulmillr/noble-post-quantum).
 
-- **ML-KEM-1024** (NIST FIPS 203) — der neue Standard, gitterbasiert, klein und schnell
-- **Classic McEliece 8192128** — codebasiert, seit Jahrzehnten analysiert, sehr große Schlüssel
-- **FrodoKEM-1344** — konservativ, auf strukturlosen Gittern, Sicherheitslevel 5
+---
 
-Alle drei sind als hybride Verschlüsselung implementiert: der KEM-Shared-Secret wird per HKDF zu einem AES-256-GCM-Schlüssel abgeleitet. So kann man live erleben, wie sich Schlüsselgrößen, Kapselungszeiten und Ciphertext-Größen zwischen den Algorithmen unterscheiden.
+## ✨ Features
 
-### ML-DSA-65-Artikelsignaturen (NIST FIPS 204)
+### 🔐 ML-DSA-65 Artikel-Signierung
+Jeder Artikel wird bei der Veröffentlichung automatisch signiert. Ein Strapi-Lifecycle-Hook serialisiert den Artikelinhalt (inkl. SHA-256-Hashes eingebetteter Medien) und signiert ihn direkt mit ML-DSA-65 — ohne Pre-Hashing, da ML-DSA intern SHAKE-256 per FIPS 204 verwendet. Signatur und Public-Key-Referenz werden zusammen mit dem Artikel gespeichert. Die Verifikation läuft vollständig clientseitig über `@noble/post-quantum` — kein Server, keine Vertrauensannahme jenseits des veröffentlichten Public Keys.
 
-Jeder veröffentlichte Artikel wird serverseitig mit ML-DSA-65 signiert — einem gitterbasierten Signaturverfahren aus der CRYSTALS-Dilithium-Familie. Die Signatur wird in der Datenbank gespeichert und kann im Browser vollständig clientseitig verifiziert werden, ohne Serverrundtrip.
+### ⚗️ Hybrid Encryption Playground
+Eine interaktive, vollständig clientseitige Demo hybrider Verschlüsselung. Jedes Verfahren kombiniert **X25519** (klassisches ECDH) mit einem post-quantensicheren KEM — die beiden Shared Secrets werden per HKDF zu einem AES-256-GCM-Schlüssel kombiniert. Besucher können Text eingeben, ver- und wieder entschlüsseln — mit Echtzeit-Anzeige von Schlüsselgrößen und Berechnungszeiten auf dem eigenen Gerät. Unterstützte PQC-KEMs:
 
-Die signierte Nachricht umfasst `documentId`, `locale`, `title` und den serialisierten Inhalt aller Blöcke — inklusive SHA-256-Hashes eingebetteter Mediendateien. Das macht die Signatur manipulationssicher gegenüber Content-Änderungen, auch an Bildern.
+- **ML-KEM-1024** (NIST FIPS 203) — reines TypeScript, kein WASM
+- **Classic McEliece 8192128** — C-Referenzimplementierung via Emscripten/WASM
+- **FrodoKEM-1344** — liboqs via WASM
 
-### CBOM (Cryptography Bill of Materials)
+Jedes Verfahren hat eine ausklappbare Implementierungssektion für Entwickler, die es nachbauen möchten.
 
-Eine maschinenlesbare Übersicht aller kryptographischen Algorithmen im Einsatz — im CycloneDX-1.6-Format, automatisch aus dem Quellcode generiert. Jeder Algorithmus ist mit seinem NIST-Quantensicherheitslevel annotiert. Der Scanner läuft täglich per GitHub Actions und aktualisiert die CBOM automatisch.
+### 📋 Automatisierte CBOM
+Eine täglich aktualisierte Cryptography Bill of Materials nach [CycloneDX v1.6](https://cyclonedx.org). Ein Skript durchsucht die gesamte Codebase automatisch nach kryptografischen Assets, annotiert den Quantum-Safe-Status und modelliert Abhängigkeiten. Das Ergebnis wird als interaktiver Abhängigkeitsgraph und als maschinenlesbares JSON exportiert. Die CBOM ist live unter [beyond-shor.eu/cbom](https://beyond-shor.eu/cbom) abrufbar.
 
-## Tech Stack
+### 🛡️ Anti-Spam ohne reCAPTCHA
+Das Kontaktformular schützt sich durch vier unabhängige serverseitige Schichten - datenschutzkonform:
 
-| Schicht | Technologie |
+1. **Honeypot-Feld** — für Menschen unsichtbar, von Bots ausgefüllt
+2. **Timing-Check** — Einreichungen unter 3 Sekunden werden abgelehnt
+3. **HMAC-signierte Mathe-Challenge** — der Server generiert eine Rechenaufgabe und einen signierten Token; ohne das serverseitige Secret ist kein gültiger Token fälschbar
+4. **IP-Rate-Limiting** — maximal 3 Einreichungen pro Stunde pro IP
+
+### 🔒 Privacy by Design
+Keine Cookies, keine Werbung, kein Google Analytics, kein reCAPTCHA. Analytics über selbst gehostetes [Umami](https://umami.is).
+
+---
+
+## 🧱 Tech-Stack
+
+| Bereich | Technologie |
 |---|---|
-| Runtime | Node.js 24 |
-| Backend / CMS | Strapi 5, SQLite (better-sqlite3) |
-| Frontend | Next.js 16, App Router, TypeScript, Tailwind CSS 4 |
-| PQC-Bibliotheken | `@noble/post-quantum`, `mceliece`, `@oqs/liboqs-js` |
-| Sprachen | Deutsch & Englisch (next-intl) |
+| Frontend | Next.js 16, TypeScript, Tailwind CSS |
+| CMS | Strapi (headless, selbst gehostet) |
+| Analytics | Selbst gehostetes Umami |
+| Hosting | Hostinger VPS, Nginx Reverse Proxy |
 
-## Projektstruktur
+---
+
+## 📁 Repository-Struktur
 
 ```
-beyond-shor/
-├── config/                    Strapi-Konfiguration
+beyond-shor.eu/
+├── frontend/               # Next.js-Anwendung
+│   ├── app/                # App Router — Seiten und Layouts
+│   ├── components/         # UI-Komponenten (Playground, CBOM, Signatur-Badge)
+│   ├── lib/                # Utilities, API-Clients, Autolinker
+│   └── public/             # Statische Assets, cbom.json
 ├── src/
-│   ├── api/                   Content Types (article, author, category, …)
-│   └── admin/                 Strapi Admin-Anpassungen
+│   └── api/                # Strapi Content Types inkl. Lifecycle Hook (Signierung)
 ├── scripts/
-│   ├── scan-cbom.mjs          CBOM-Scanner (generiert frontend/public/cbom.json)
-│   ├── sign-articles.mjs      Backfill-Skript für Artikel-Signaturen
-│   └── generate-pqc-keys.mjs  Einmaliges Keygen für ML-DSA-65
-└── frontend/
-    ├── app/                   Next.js App Router (Seiten, API-Routes, OG-Images)
-    ├── components/            UI-Komponenten inkl. Playground und Signatur-Badge
-    └── lib/                   Strapi-Client, Typen, Hilfsfunktionen
+│   └── scan-cbom.mjs       # Täglicher CBOM-Scan
+└── README.md
 ```
 
-## Lizenz
+---
 
-MIT
+## 📄 Lizenz
+
+Der Quellcode in diesem Repository steht unter der [MIT-Lizenz](LICENSE).
+
+Blog-Inhalte (Artikel, Texte, Grafiken) sind © Marvin Sprey und nicht durch die MIT-Lizenz abgedeckt. Alle Rechte vorbehalten.
