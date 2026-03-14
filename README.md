@@ -1,61 +1,65 @@
-# 🚀 Getting started with Strapi
+# beyond-shor.eu
 
-Strapi comes with a full featured [Command Line Interface](https://docs.strapi.io/dev-docs/cli) (CLI) which lets you scaffold and manage your project in seconds.
+Ein Blog über Post-Quanten-Kryptographie — was sie ist, warum sie wichtig ist, und wie sie funktioniert. Geschrieben für alle, die verstehen wollen, was nach Shor kommt.
 
-### `develop`
+## Was steckt dahinter?
 
-Start your Strapi application with autoReload enabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-develop)
+Der Blog ist selbst ein Experiment in angewandter PQC:
+
+- **Interaktiver Playground** — ML-KEM-1024, Classic McEliece 8192128 und FrodoKEM-1344 direkt im Browser ausprobieren; hybride Verschlüsselung live erleben
+- **ML-DSA-65-Signaturen** (NIST FIPS 204) — jeder Artikel wird kryptographisch signiert und die Signatur ist im Browser verifizierbar
+- **CBOM** (Cryptography Bill of Materials) — eine maschinenlesbare Übersicht aller eingesetzten kryptographischen Algorithmen, automatisch aus dem Quellcode generiert
+
+## Tech Stack
+
+| Schicht | Technologie |
+|---|---|
+| Backend / CMS | Strapi 5, SQLite |
+| Frontend | Next.js 16, App Router, TypeScript, Tailwind CSS 4 |
+| PQC-Bibliotheken | `@noble/post-quantum`, `mceliece`, `@oqs/liboqs-js` |
+| Sprachen | Deutsch & Englisch (next-intl) |
+
+## Lokales Setup
+
+**Voraussetzungen:** Node 24, pnpm 10
+
+```bash
+# Repository klonen
+git clone git@github.com:BeyondShor/beyond-shor.git
+cd beyond-shor
+
+# Backend (Strapi) starten
+cp .env.example .env   # Werte anpassen
+npm install
+npm run dev            # läuft auf http://localhost:1337
+
+# Frontend (Next.js) starten — neues Terminal
+cd frontend
+cp .env.local.example .env.local   # Werte anpassen
+pnpm install
+pnpm dev               # läuft auf http://localhost:3000
+```
+
+Für die PQC-Funktionen (Artikel-Signaturen, Playground) sind keine zusätzlichen nativen Abhängigkeiten nötig — alle Bibliotheken laufen in reinem JS/WASM.
+
+## Projektstruktur
 
 ```
-npm run develop
-# or
-yarn develop
+beyond-shor/
+├── config/              Strapi-Konfiguration
+├── src/
+│   ├── api/             Content Types (article, author, category, …)
+│   └── admin/           Strapi Admin-Anpassungen
+├── scripts/
+│   ├── scan-cbom.mjs    CBOM-Scanner (generiert frontend/public/cbom.json)
+│   ├── sign-articles.mjs  Backfill-Skript für Artikel-Signaturen
+│   └── generate-pqc-keys.mjs  Einmaliges Keygen für ML-DSA-65
+└── frontend/
+    ├── app/             Next.js App Router
+    ├── components/      UI-Komponenten
+    └── lib/             Strapi-Client, Typen, Hilfsfunktionen
 ```
 
-### `start`
+## Lizenz
 
-Start your Strapi application with autoReload disabled. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-start)
-
-```
-npm run start
-# or
-yarn start
-```
-
-### `build`
-
-Build your admin panel. [Learn more](https://docs.strapi.io/dev-docs/cli#strapi-build)
-
-```
-npm run build
-# or
-yarn build
-```
-
-## ⚙️ Deployment
-
-Strapi gives you many possible deployment options for your project including [Strapi Cloud](https://cloud.strapi.io). Browse the [deployment section of the documentation](https://docs.strapi.io/dev-docs/deployment) to find the best solution for your use case.
-
-```
-yarn strapi deploy
-```
-
-## 📚 Learn more
-
-- [Resource center](https://strapi.io/resource-center) - Strapi resource center.
-- [Strapi documentation](https://docs.strapi.io) - Official Strapi documentation.
-- [Strapi tutorials](https://strapi.io/tutorials) - List of tutorials made by the core team and the community.
-- [Strapi blog](https://strapi.io/blog) - Official Strapi blog containing articles made by the Strapi team and the community.
-- [Changelog](https://strapi.io/changelog) - Find out about the Strapi product updates, new features and general improvements.
-
-Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/strapi). Your feedback and contributions are welcome!
-
-## ✨ Community
-
-- [Discord](https://discord.strapi.io) - Come chat with the Strapi community including the core team.
-- [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
-- [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
-
----
-
-<sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>
+MIT
