@@ -1,0 +1,222 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 7,
+  "serialNumber": "urn:uuid:b7e3c2a1-4f8d-4e9b-a1c3-d6f2e8b5a790",
+  "metadata": {
+    "timestamp": "2026-03-11T13:05:00Z",
+    "component": {
+      "type": "application",
+      "name": "beyond-shor.eu",
+      "version": "1.0.0",
+      "description": "Post-Quantum Cryptography blog and interactive playground"
+    },
+    "tools": [
+      {
+        "name": "scan-cbom.mjs",
+        "version": "1.0.0"
+      }
+    ]
+  },
+  "components": [
+    {
+      "bom-ref": "aes-256-gcm:playground",
+      "type": "cryptographic-asset",
+      "name": "AES-256-GCM",
+      "description": "Hybrid Encryption Playground — Authenticated symmetric encryption (AEAD, 256-bit key). Grover's algorithm halves the effective key length: AES-256 provides ~128-bit post-quantum security, corresponding to NIST Level 1.",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "block-cipher",
+          "nistQuantumSecurityLevel": 1
+        }
+      }
+    },
+    {
+      "bom-ref": "classic-mceliece-8192128:playground",
+      "type": "cryptographic-asset",
+      "name": "Classic McEliece 8192128",
+      "description": "Hybrid Encryption Playground — Code-based KEM (binary Goppa codes). Oldest and most battle-tested PQC assumption (50+ years). Very large public keys (~1 MB). Quantum-safe at NIST security level 5. NIST Round 4 alternate candidate.",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "kem",
+          "nistQuantumSecurityLevel": 5
+        }
+      }
+    },
+    {
+      "bom-ref": "frodokem-1344:playground",
+      "type": "cryptographic-asset",
+      "name": "FrodoKEM-1344",
+      "description": "Hybrid Encryption Playground — Lattice-based KEM (plain LWE — no ring/module structure). Most conservative lattice assumption. Quantum-safe at NIST security level 5. NIST Round 3 alternate candidate maintained by Microsoft Research.",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "kem",
+          "nistQuantumSecurityLevel": 5
+        }
+      }
+    },
+    {
+      "bom-ref": "hkdf-sha256:playground",
+      "type": "cryptographic-asset",
+      "name": "HKDF-SHA-256",
+      "description": "Hybrid Encryption Playground — HMAC-based Key Derivation Function with SHA-256 (RFC 5869 / NIST SP 800-56C). Derives a combined AES-256 key from the X25519 and KEM shared secrets in the hybrid encryption playground.",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "kdf",
+          "nistQuantumSecurityLevel": 2
+        }
+      }
+    },
+    {
+      "bom-ref": "hmac-sha256:contact-form",
+      "type": "cryptographic-asset",
+      "name": "HMAC-SHA-256",
+      "description": "Contact form — HMAC with SHA-256 (NIST FIPS 198). Grover's algorithm reduces the underlying hash preimage resistance to ~128 bits. Level 2 follows CycloneDX categorisation.",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "mac",
+          "nistQuantumSecurityLevel": 2
+        }
+      }
+    },
+    {
+      "bom-ref": "hs256-jwt:strapi",
+      "type": "cryptographic-asset",
+      "name": "HS256 (JWT)",
+      "description": "Strapi CMS — API authentication tokens (internal, server-to-server only).",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "mac",
+          "nistQuantumSecurityLevel": 2
+        }
+      }
+    },
+    {
+      "bom-ref": "ml-dsa-65:article-signing",
+      "type": "cryptographic-asset",
+      "name": "ML-DSA-65",
+      "description": "Article signing and verification — pure ML-DSA per FIPS 204 §5.2: raw UTF-8 message bytes are passed directly, no pre-hashing. ML-DSA internally derives µ = SHAKE-256(tr ∥ M, 64). NIST FIPS 204 (Strapi lifecycle hook + browser verifier).",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "nistQuantumSecurityLevel": 3
+        }
+      }
+    },
+    {
+      "bom-ref": "ml-kem-1024:playground",
+      "type": "cryptographic-asset",
+      "name": "ML-KEM-1024",
+      "description": "Hybrid Encryption Playground — NIST FIPS 203 (August 2024). Lattice-based KEM (Module-LWE). Quantum-safe at NIST security level 5.",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "kem",
+          "nistQuantumSecurityLevel": 5
+        }
+      }
+    },
+    {
+      "bom-ref": "sha-256:article-signing",
+      "type": "cryptographic-asset",
+      "name": "SHA-256",
+      "description": "Article signing and verification — SHA-256 (NIST FIPS 180-4). Used here to hash media file content (images) into a compact 32-byte digest that is embedded in the signed article message. Grover's algorithm reduces preimage resistance to ~128 bits. Level 2 follows the classical CycloneDX categorisation.",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "nistQuantumSecurityLevel": 2
+        }
+      }
+    },
+    {
+      "bom-ref": "shake-256:article-signing",
+      "type": "cryptographic-asset",
+      "name": "SHAKE-256",
+      "description": "Article signing and verification — SHAKE-256 (NIST FIPS 202) — extendable output function (XOF) based on Keccak-1600. Used internally by ML-DSA-65 to derive the message representative µ = SHAKE-256(tr ∥ M, 64) per FIPS 204 §5.2. Not called directly in source; implicit via @noble/post-quantum.",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "nistQuantumSecurityLevel": 3
+        }
+      }
+    },
+    {
+      "bom-ref": "x25519:playground",
+      "type": "cryptographic-asset",
+      "name": "X25519",
+      "description": "Hybrid Encryption Playground — Classical ECDH key exchange (Curve25519). Quantum-VULNERABLE — Shor's algorithm breaks the elliptic curve discrete logarithm. Intentionally included as quantum-vulnerable baseline in hybrid schemes.",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "ke",
+          "nistQuantumSecurityLevel": 0
+        }
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "aes-256-gcm:playground",
+      "dependsOn": [
+        "hkdf-sha256:playground"
+      ]
+    },
+    {
+      "ref": "classic-mceliece-8192128:playground",
+      "dependsOn": []
+    },
+    {
+      "ref": "frodokem-1344:playground",
+      "dependsOn": []
+    },
+    {
+      "ref": "hkdf-sha256:playground",
+      "dependsOn": [
+        "classic-mceliece-8192128:playground",
+        "frodokem-1344:playground",
+        "ml-kem-1024:playground",
+        "x25519:playground"
+      ]
+    },
+    {
+      "ref": "hmac-sha256:contact-form",
+      "dependsOn": []
+    },
+    {
+      "ref": "hs256-jwt:strapi",
+      "dependsOn": []
+    },
+    {
+      "ref": "ml-dsa-65:article-signing",
+      "dependsOn": [
+        "sha-256:article-signing",
+        "shake-256:article-signing"
+      ]
+    },
+    {
+      "ref": "ml-kem-1024:playground",
+      "dependsOn": []
+    },
+    {
+      "ref": "sha-256:article-signing",
+      "dependsOn": []
+    },
+    {
+      "ref": "shake-256:article-signing",
+      "dependsOn": []
+    },
+    {
+      "ref": "x25519:playground",
+      "dependsOn": []
+    }
+  ]
+}

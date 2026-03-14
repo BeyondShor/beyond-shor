@@ -1,0 +1,593 @@
+{
+  "_meta": {
+    "title": "Cryptographic Algorithm Quantum Safety Reference",
+    "version": "1.3.0",
+    "last_updated": "2025",
+    "sources": [
+      "NIST Post-Quantum Cryptography Project (nist.gov/pqcrypto)",
+      "NIST FIPS 203 / 204 / 205 / 206 (2024)",
+      "NIST SP 800-208 (XMSS, LMS)",
+      "BSI TR-02102-1 (bsi.bund.de)",
+      "ETSI Quantum Safe Cryptography",
+      "RFC 8391 (XMSS), RFC 8554 (LMS/HSS)",
+      "RFC 8446 (TLS 1.3)",
+      "IETF PQC drafts"
+    ],
+    "quantum_threat_notes": {
+      "shor": "Shor's algorithm breaks integer factorization and discrete logarithm problems — renders RSA, DSA, ECC, DH broken on a sufficiently powerful quantum computer",
+      "grover": "Grover's algorithm provides quadratic speedup for brute-force search — effectively halves symmetric key/hash security strength"
+    }
+  },
+
+  "algorithms": {
+
+    "asymmetric_encryption": [
+      {
+        "name": "RSA",
+        "variants": ["RSA-1024", "RSA-2048", "RSA-3072", "RSA-4096"],
+        "quantum_safe": false,
+        "threat": "shor",
+        "classical_security": "broken at 1024-bit, acceptable at 2048-4096-bit classically",
+        "quantum_status": "BROKEN — all key sizes vulnerable to Shor's algorithm",
+        "recommendation": "For encryption/key exchange: migrate to ML-KEM (FIPS 203). For signatures (RSA-PSS, PKCS#1): migrate to ML-DSA (FIPS 204) or SLH-DSA (FIPS 205).",
+        "nist_status": "not recommended post-quantum",
+        "category": "asymmetric_encryption"
+      },
+      {
+        "name": "ElGamal",
+        "variants": [],
+        "quantum_safe": false,
+        "threat": "shor",
+        "classical_security": "depends on key size",
+        "quantum_status": "BROKEN",
+        "recommendation": "Migrate to CRYSTALS-Kyber (ML-KEM)",
+        "nist_status": "not recommended post-quantum",
+        "category": "asymmetric_encryption"
+      }
+    ],
+
+    "key_exchange": [
+      {
+        "name": "Diffie-Hellman (DH)",
+        "variants": ["DH-1024", "DH-2048", "DH-4096"],
+        "quantum_safe": false,
+        "threat": "shor",
+        "classical_security": "acceptable at 2048+ bits classically",
+        "quantum_status": "BROKEN",
+        "recommendation": "Migrate to CRYSTALS-Kyber (ML-KEM) or McEliece",
+        "nist_status": "not recommended post-quantum",
+        "category": "key_exchange"
+      },
+      {
+        "name": "ECDH (Elliptic Curve Diffie-Hellman)",
+        "variants": ["ECDH-P256", "ECDH-P384", "ECDH-P521", "X25519", "X448"],
+        "quantum_safe": false,
+        "threat": "shor",
+        "classical_security": "strong classically",
+        "quantum_status": "BROKEN — Shor's algorithm applies to elliptic curve discrete log",
+        "recommendation": "Migrate to CRYSTALS-Kyber (ML-KEM)",
+        "nist_status": "not recommended post-quantum",
+        "category": "key_exchange"
+      },
+      {
+        "name": "CRYSTALS-Kyber (ML-KEM)",
+        "aliases": ["ML-KEM", "FIPS 203", "Kyber"],
+        "variants": ["Kyber-512 / ML-KEM-512", "Kyber-768 / ML-KEM-768", "Kyber-1024 / ML-KEM-1024"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — NIST standard FIPS 203 (2024). Lattice-based (Module-LWE).",
+        "recommendation": "Preferred PQC KEM",
+        "nist_status": "FIPS 203 — standardized August 2024",
+        "category": "key_exchange"
+      },
+      {
+        "name": "ML-KEM",
+        "aliases": ["CRYSTALS-Kyber", "FIPS 203"],
+        "variants": ["ML-KEM-512", "ML-KEM-768", "ML-KEM-1024"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — This is the FIPS 203 standardized name for CRYSTALS-Kyber",
+        "recommendation": "Preferred PQC KEM — use ML-KEM-768 or ML-KEM-1024 for high security",
+        "nist_status": "FIPS 203 — standardized August 2024",
+        "category": "key_exchange"
+      },
+      {
+        "name": "FrodoKEM",
+        "aliases": ["FrodoPKE"],
+        "variants": ["FrodoKEM-640-AES", "FrodoKEM-640-SHAKE", "FrodoKEM-976-AES", "FrodoKEM-976-SHAKE", "FrodoKEM-1344-AES", "FrodoKEM-1344-SHAKE"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — based on plain Learning with Errors (LWE), no ring/module structure. Most conservative lattice assumption.",
+        "recommendation": "Very conservative choice — larger keys/ciphertexts than Kyber, but security relies on fewer structural assumptions. Good for very high-assurance contexts.",
+        "nist_status": "NIST Round 3 alternate candidate — not selected as primary standard, but still actively maintained by Microsoft Research",
+        "category": "key_exchange"
+      },
+      {
+        "name": "Classic McEliece",
+        "aliases": ["McEliece", "NTS-KEM"],
+        "variants": ["mceliece348864", "mceliece460896", "mceliece6688128", "mceliece6960119", "mceliece8192128"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong — 50+ years without meaningful attack on core problem",
+        "quantum_status": "SAFE — code-based (binary Goppa codes). Oldest and most battle-tested PQC assumption. Very large public keys (hundreds of KB to MB range).",
+        "recommendation": "Extremely conservative choice for long-term data protection. Impractical for most interactive protocols due to large key sizes. Good for store-now-decrypt-later threat model.",
+        "nist_status": "NIST Round 4 alternate candidate",
+        "category": "key_exchange"
+      },
+      {
+        "name": "SABER",
+        "aliases": ["SABER-KEM"],
+        "variants": ["LightSaber", "Saber", "FireSaber"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — lattice-based (Module Learning with Rounding / MLWR). No longer actively developed since Kyber was selected.",
+        "recommendation": "Do not start new deployments — Kyber/ML-KEM is preferred. May be encountered in existing implementations.",
+        "nist_status": "NIST Round 3 finalist — not selected",
+        "category": "key_exchange"
+      },
+      {
+        "name": "NewHope",
+        "aliases": ["NewHope-Simple"],
+        "variants": ["NewHope-512-CPA", "NewHope-1024-CPA", "NewHope-512-CCA", "NewHope-1024-CCA"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — ring-LWE based. Historically important (used by Google in TLS experiments 2016), but superseded by Kyber.",
+        "recommendation": "Do not use in new deployments — superseded by ML-KEM. May be found in legacy/experimental systems.",
+        "nist_status": "withdrew from NIST process after Round 2",
+        "category": "key_exchange"
+      },
+      {
+        "name": "NTRU",
+        "variants": ["NTRU-HPS", "NTRU-HRSS"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — lattice-based",
+        "recommendation": "Acceptable alternative KEM",
+        "nist_status": "NIST Round 3 finalist, not selected as primary standard",
+        "category": "key_exchange"
+      },
+      {
+        "name": "BIKE",
+        "variants": ["BIKE-L1", "BIKE-L3", "BIKE-L5"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — code-based (under evaluation)",
+        "recommendation": "Use with caution — still under NIST evaluation (Round 4)",
+        "nist_status": "NIST Round 4 candidate",
+        "category": "key_exchange"
+      },
+      {
+        "name": "HQC",
+        "variants": ["HQC-128", "HQC-192", "HQC-256"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — code-based (quasi-cyclic moderate-density parity-check codes). Selected by NIST for standardization in March 2025 as additional KEM alongside ML-KEM.",
+        "recommendation": "Emerging standard — good as backup/diversity KEM alongside ML-KEM. Standardization in progress.",
+        "nist_status": "Selected for standardization March 2025 — standard in progress (backup KEM to FIPS 203 / ML-KEM)",
+        "category": "key_exchange"
+      }
+    ],
+
+    "digital_signatures": [
+      {
+        "name": "DSA (Digital Signature Algorithm)",
+        "variants": ["DSA-1024", "DSA-2048", "DSA-3072"],
+        "quantum_safe": false,
+        "threat": "shor",
+        "classical_security": "acceptable at 2048+ classically",
+        "quantum_status": "BROKEN",
+        "recommendation": "Migrate to CRYSTALS-Dilithium (ML-DSA) or SPHINCS+",
+        "nist_status": "not recommended post-quantum",
+        "category": "digital_signature"
+      },
+      {
+        "name": "ECDSA (Elliptic Curve DSA)",
+        "variants": ["ECDSA-P256", "ECDSA-P384", "ECDSA-P521"],
+        "quantum_safe": false,
+        "threat": "shor",
+        "classical_security": "strong classically",
+        "quantum_status": "BROKEN",
+        "recommendation": "Migrate to CRYSTALS-Dilithium (ML-DSA) or FALCON",
+        "nist_status": "not recommended post-quantum",
+        "category": "digital_signature"
+      },
+      {
+        "name": "Ed25519 / EdDSA",
+        "variants": ["Ed25519", "Ed448"],
+        "quantum_safe": false,
+        "threat": "shor",
+        "classical_security": "strong classically",
+        "quantum_status": "BROKEN — elliptic curve based",
+        "recommendation": "Migrate to CRYSTALS-Dilithium (ML-DSA) or SPHINCS+",
+        "nist_status": "not recommended post-quantum",
+        "category": "digital_signature"
+      },
+      {
+        "name": "CRYSTALS-Dilithium (ML-DSA)",
+        "aliases": ["ML-DSA", "FIPS 204", "Dilithium"],
+        "variants": ["Dilithium2 / ML-DSA-44", "Dilithium3 / ML-DSA-65", "Dilithium5 / ML-DSA-87"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — NIST standard FIPS 204 (2024). Lattice-based (Module-LWE + Module-SIS).",
+        "recommendation": "Preferred PQC signature scheme",
+        "nist_status": "FIPS 204 — standardized August 2024",
+        "category": "digital_signature"
+      },
+      {
+        "name": "ML-DSA",
+        "aliases": ["CRYSTALS-Dilithium", "FIPS 204"],
+        "variants": ["ML-DSA-44", "ML-DSA-65", "ML-DSA-87"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — This is the FIPS 204 standardized name for CRYSTALS-Dilithium",
+        "recommendation": "Preferred PQC signature scheme — ML-DSA-65 recommended for most use cases",
+        "nist_status": "FIPS 204 — standardized August 2024",
+        "category": "digital_signature"
+      },
+      {
+        "name": "FALCON (FN-DSA)",
+        "aliases": ["FN-DSA", "FIPS 206"],
+        "variants": ["FALCON-512 / FN-DSA-512", "FALCON-1024 / FN-DSA-1024"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — lattice-based (NTRU lattices). Compact signatures, more complex implementation than Dilithium.",
+        "recommendation": "Good for bandwidth-constrained environments. More implementation complexity than ML-DSA.",
+        "nist_status": "FIPS 206 — standardized August 2024",
+        "category": "digital_signature"
+      },
+      {
+        "name": "SPHINCS+ (SLH-DSA)",
+        "aliases": ["SLH-DSA", "FIPS 205"],
+        "variants": ["SPHINCS+-SHA2-128s", "SPHINCS+-SHA2-128f", "SPHINCS+-SHA2-192s", "SPHINCS+-SHA2-256s", "SPHINCS+-SHAKE-128s", "SPHINCS+-SHAKE-256s"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — hash-based stateless signature. Security relies only on hash function properties — most conservative assumption of all PQC signature schemes.",
+        "recommendation": "Most conservative choice — no lattice or code assumptions. Larger signatures than ML-DSA/FALCON. Prefer '-s' (small) variants unless performance-critical.",
+        "nist_status": "FIPS 205 — standardized August 2024",
+        "category": "digital_signature"
+      },
+      {
+        "name": "XMSS",
+        "aliases": ["XMSS^MT", "eXtended Merkle Signature Scheme"],
+        "variants": ["XMSS-SHA2_10_256", "XMSS-SHA2_16_256", "XMSS-SHA2_20_256", "XMSS-SHA2_20_512", "XMSS-SHAKE_10_256", "XMSS-SHAKE_20_256"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — hash-based stateful signature. Security relies only on hash function security. IMPORTANT: Stateful — key state MUST be managed carefully; reusing a one-time key pair is catastrophic.",
+        "recommendation": "Suitable for firmware signing, certificate authorities, and other low-frequency signing scenarios. Never use if state management cannot be guaranteed. Use SPHINCS+ (SLH-DSA) if stateless operation is required.",
+        "nist_status": "NIST SP 800-208 (2020) — approved for use. RFC 8391.",
+        "category": "digital_signature"
+      },
+      {
+        "name": "LMS / HSS",
+        "aliases": ["Leighton-Micali Signature", "Hierarchical Signature System"],
+        "variants": ["LMS_SHA256_M32_H5", "LMS_SHA256_M32_H10", "LMS_SHA256_M32_H15", "LMS_SHA256_M32_H20", "LMS_SHA256_M32_H25"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — hash-based stateful signature. Like XMSS, security depends only on hash functions. IMPORTANT: Stateful — same key-state warning as XMSS applies.",
+        "recommendation": "Good for firmware and code signing with limited signature volume. HSS (Hierarchical Signature System) extends LMS for larger key trees. Favored by some US government applications.",
+        "nist_status": "NIST SP 800-208 (2020) — approved for use. RFC 8554.",
+        "category": "digital_signature"
+      },
+      {
+        "name": "Rainbow",
+        "aliases": [],
+        "variants": ["Rainbow-I", "Rainbow-III", "Rainbow-V"],
+        "quantum_safe": false,
+        "threat": "classical cryptanalysis (2022 attack by Ward Beullens)",
+        "classical_security": "BROKEN — completely broken by classical attack in 2022",
+        "quantum_status": "BROKEN — eliminated from NIST process due to classical attack",
+        "recommendation": "Do not use. Was a NIST Round 3 finalist but broken in 2022.",
+        "nist_status": "eliminated — broken in 2022",
+        "category": "digital_signature"
+      },
+      {
+        "name": "Picnic",
+        "aliases": [],
+        "variants": ["Picnic-L1-FS", "Picnic-L3-FS", "Picnic-L5-FS", "Picnic3-L1", "Picnic3-L5"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — zero-knowledge proof based signature. Security relies on symmetric primitives (LowMC block cipher) only.",
+        "recommendation": "Not recommended for production — very large signatures (10s of KB), slow. Mainly of academic interest. Did not advance in NIST process.",
+        "nist_status": "NIST Round 3 alternate — not selected",
+        "category": "digital_signature"
+      }
+    ],
+
+    "symmetric_encryption": [
+      {
+        "name": "AES",
+        "variants": ["AES-128", "AES-192", "AES-256"],
+        "quantum_safe": {
+          "AES-128": false,
+          "AES-192": "marginal",
+          "AES-256": true
+        },
+        "threat": "grover",
+        "classical_security": "strong at all sizes",
+        "quantum_status": "PARTIAL — Grover halves effective key length. AES-128 → ~64-bit effective (BROKEN). AES-256 → ~128-bit effective (SAFE).",
+        "recommendation": "Use AES-256. Avoid AES-128 in long-lived or high-security contexts.",
+        "nist_status": "AES-256 recommended post-quantum",
+        "category": "symmetric_encryption"
+      },
+      {
+        "name": "3DES (Triple DES)",
+        "variants": ["3DES-112", "3DES-168"],
+        "quantum_safe": false,
+        "threat": "grover + classical weaknesses",
+        "classical_security": "weak — deprecated",
+        "quantum_status": "BROKEN — already deprecated classically",
+        "recommendation": "Do not use. Migrate to AES-256.",
+        "nist_status": "deprecated",
+        "category": "symmetric_encryption"
+      },
+      {
+        "name": "DES",
+        "variants": [],
+        "quantum_safe": false,
+        "threat": "grover + classical weaknesses",
+        "classical_security": "BROKEN classically",
+        "quantum_status": "BROKEN",
+        "recommendation": "Do not use.",
+        "nist_status": "deprecated / withdrawn",
+        "category": "symmetric_encryption"
+      },
+      {
+        "name": "ChaCha20",
+        "variants": ["ChaCha20", "ChaCha20-Poly1305"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong (256-bit key)",
+        "quantum_status": "SAFE — 256-bit symmetric, Grover leaves ~128-bit security",
+        "recommendation": "Safe to use, especially with Poly1305 for AEAD",
+        "nist_status": "not NIST-standardized but widely accepted (RFC 8439)",
+        "category": "symmetric_encryption"
+      },
+      {
+        "name": "RC4",
+        "variants": [],
+        "quantum_safe": false,
+        "threat": "classical weaknesses",
+        "classical_security": "BROKEN classically",
+        "quantum_status": "BROKEN",
+        "recommendation": "Do not use.",
+        "nist_status": "deprecated",
+        "category": "symmetric_encryption"
+      }
+    ],
+
+    "hash_functions": [
+      {
+        "name": "MD5",
+        "variants": [],
+        "quantum_safe": false,
+        "threat": "classical collisions",
+        "classical_security": "BROKEN — collision attacks known",
+        "quantum_status": "BROKEN",
+        "recommendation": "Do not use. Migrate to SHA-256 or SHA-3.",
+        "nist_status": "deprecated",
+        "category": "hash"
+      },
+      {
+        "name": "SHA-1",
+        "variants": [],
+        "quantum_safe": false,
+        "threat": "classical collisions + grover",
+        "classical_security": "BROKEN — SHAttered attack (2017)",
+        "quantum_status": "BROKEN",
+        "recommendation": "Do not use. Migrate to SHA-256 or SHA-3.",
+        "nist_status": "deprecated",
+        "category": "hash"
+      },
+      {
+        "name": "SHA-2",
+        "variants": ["SHA-224", "SHA-256", "SHA-384", "SHA-512"],
+        "quantum_safe": {
+          "SHA-224": false,
+          "SHA-256": "marginal",
+          "SHA-384": true,
+          "SHA-512": true
+        },
+        "threat": "grover",
+        "classical_security": "strong",
+        "quantum_status": "PARTIAL — Grover provides quadratic speedup. SHA-256 → ~128-bit preimage security (acceptable). SHA-384/512 → fully safe.",
+        "recommendation": "SHA-256 acceptable, SHA-384 or SHA-512 preferred for post-quantum.",
+        "nist_status": "SHA-256 acceptable; SHA-384/512 recommended",
+        "category": "hash"
+      },
+      {
+        "name": "SHA-3",
+        "variants": ["SHA3-224", "SHA3-256", "SHA3-384", "SHA3-512"],
+        "quantum_safe": {
+          "SHA3-224": false,
+          "SHA3-256": "marginal",
+          "SHA3-384": true,
+          "SHA3-512": true
+        },
+        "threat": "grover",
+        "classical_security": "strong",
+        "quantum_status": "SAFE at 384/512 — different construction than SHA-2 (Keccak sponge)",
+        "recommendation": "SHA3-256 acceptable, SHA3-384 or SHA3-512 preferred.",
+        "nist_status": "FIPS 202 — SHA3-384/512 recommended post-quantum",
+        "category": "hash"
+      },
+      {
+        "name": "BLAKE2",
+        "variants": ["BLAKE2s", "BLAKE2b"],
+        "quantum_safe": {
+          "BLAKE2s": false,
+          "BLAKE2b": true
+        },
+        "threat": "grover",
+        "classical_security": "strong",
+        "quantum_status": "BLAKE2b (512-bit output) SAFE. BLAKE2s (256-bit output) marginal.",
+        "recommendation": "Use BLAKE2b for post-quantum contexts.",
+        "nist_status": "not NIST-standardized but widely accepted",
+        "category": "hash"
+      },
+      {
+        "name": "BLAKE3",
+        "variants": [],
+        "quantum_safe": "marginal",
+        "threat": "grover",
+        "classical_security": "strong (256-bit output)",
+        "quantum_status": "MARGINAL — 256-bit output yields ~128-bit post-quantum security. Acceptable for most use cases.",
+        "recommendation": "Acceptable for most contexts. For very high security, use SHA3-512 or BLAKE2b.",
+        "nist_status": "not NIST-standardized",
+        "category": "hash"
+      }
+    ],
+
+    "mac_and_aead": [
+      {
+        "name": "HMAC",
+        "variants": ["HMAC-MD5", "HMAC-SHA1", "HMAC-SHA256", "HMAC-SHA512"],
+        "quantum_safe": "depends on underlying hash",
+        "threat": "grover (via hash)",
+        "classical_security": "depends on hash",
+        "quantum_status": "SAFE if used with SHA-256 or stronger. HMAC-MD5 and HMAC-SHA1 not recommended.",
+        "recommendation": "Use HMAC-SHA256 or HMAC-SHA512.",
+        "nist_status": "FIPS 198 — safe with approved hash",
+        "category": "mac"
+      },
+      {
+        "name": "GCM (Galois/Counter Mode)",
+        "variants": ["AES-128-GCM", "AES-256-GCM"],
+        "quantum_safe": {
+          "AES-128-GCM": false,
+          "AES-256-GCM": true
+        },
+        "threat": "grover",
+        "classical_security": "strong",
+        "quantum_status": "SAFE with AES-256. AES-128-GCM marginal.",
+        "recommendation": "Use AES-256-GCM.",
+        "nist_status": "SP 800-38D — AES-256-GCM recommended",
+        "category": "mac_aead"
+      },
+      {
+        "name": "Poly1305",
+        "variants": ["ChaCha20-Poly1305"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE",
+        "recommendation": "Safe to use with ChaCha20.",
+        "nist_status": "RFC 8439",
+        "category": "mac_aead"
+      }
+    ],
+
+    "key_derivation": [
+      {
+        "name": "PBKDF2",
+        "variants": ["PBKDF2-HMAC-SHA1", "PBKDF2-HMAC-SHA256", "PBKDF2-HMAC-SHA512"],
+        "quantum_safe": "depends on hash + iteration count",
+        "threat": "grover",
+        "classical_security": "depends on configuration",
+        "quantum_status": "MARGINAL — safe if using SHA-256+ and high iteration counts (≥600k per NIST 2023). Grover may reduce effective strength.",
+        "recommendation": "Use with HMAC-SHA256+, high iterations. Consider Argon2 for new designs.",
+        "nist_status": "SP 800-132",
+        "category": "kdf"
+      },
+      {
+        "name": "bcrypt",
+        "variants": [],
+        "quantum_safe": "marginal",
+        "threat": "grover",
+        "classical_security": "good",
+        "quantum_status": "MARGINAL — bcrypt produces a 184-bit output (hash). Grover reduces effective preimage security to ~92 bits. Additionally, bcrypt has a 72-byte password input limit. Sufficient for most current threat models but not future-proof.",
+        "recommendation": "Acceptable for passwords. Argon2id preferred for new designs.",
+        "nist_status": "not NIST-standardized",
+        "category": "kdf"
+      },
+      {
+        "name": "Argon2",
+        "variants": ["Argon2d", "Argon2i", "Argon2id"],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — memory-hard, Grover threat mitigated by memory hardness",
+        "recommendation": "Preferred KDF for passwords. Use Argon2id.",
+        "nist_status": "recommended (PHC winner 2015, IETF RFC 9106)",
+        "category": "kdf"
+      },
+      {
+        "name": "scrypt",
+        "variants": [],
+        "quantum_safe": true,
+        "threat": null,
+        "classical_security": "strong",
+        "quantum_status": "SAFE — memory-hard",
+        "recommendation": "Acceptable alternative to Argon2.",
+        "nist_status": "RFC 7914",
+        "category": "kdf"
+      },
+      {
+        "name": "HKDF",
+        "variants": ["HKDF-SHA256", "HKDF-SHA512"],
+        "quantum_safe": "depends on hash",
+        "threat": "grover",
+        "classical_security": "strong",
+        "quantum_status": "SAFE with SHA-256 or stronger",
+        "recommendation": "Use HKDF-SHA256 or HKDF-SHA512.",
+        "nist_status": "RFC 5869 / SP 800-56C",
+        "category": "kdf"
+      }
+    ],
+
+    "protocols_and_suites": [
+      {
+        "name": "TLS",
+        "variants": ["TLS 1.0", "TLS 1.1", "TLS 1.2", "TLS 1.3"],
+        "quantum_safe": {
+          "TLS 1.0": false,
+          "TLS 1.1": false,
+          "TLS 1.2": "depends on cipher suite",
+          "TLS 1.3": "depends on cipher suite"
+        },
+        "threat": "shor (key exchange) + grover (symmetric)",
+        "classical_security": "TLS 1.0/1.1 deprecated; TLS 1.2/1.3 acceptable classically",
+        "quantum_status": "NOT SAFE without PQC extensions — key exchange (ECDH) is vulnerable. TLS 1.3 + X25519Kyber768 hybrid is being standardized.",
+        "recommendation": "Use TLS 1.3 with hybrid PQC key exchange (X25519Kyber768 / FIPS 203).",
+        "nist_status": "TLS 1.0/1.1 deprecated (RFC 8996); PQC TLS under IETF standardization",
+        "category": "protocol"
+      },
+      {
+        "name": "SSH",
+        "variants": ["SSHv1", "SSHv2"],
+        "quantum_safe": false,
+        "threat": "shor (key exchange + host keys)",
+        "classical_security": "SSHv1 broken; SSHv2 acceptable classically",
+        "quantum_status": "NOT SAFE — ECDH/RSA key exchange vulnerable. OpenSSH 9.0+ supports sntrup761x25519 hybrid.",
+        "recommendation": "Use OpenSSH 9.0+ with post-quantum hybrid KEX.",
+        "nist_status": "IETF draft for PQC SSH in progress",
+        "category": "protocol"
+      },
+      {
+        "name": "PGP / GPG",
+        "variants": [],
+        "quantum_safe": false,
+        "threat": "shor",
+        "classical_security": "acceptable classically",
+        "quantum_status": "NOT SAFE — RSA/ECC based",
+        "recommendation": "Await PQC-enabled OpenPGP standard (in development).",
+        "nist_status": "no PQC standard yet",
+        "category": "protocol"
+      }
+    ]
+  }
+}

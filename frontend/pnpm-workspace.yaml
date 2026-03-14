@@ -1,0 +1,5 @@
+ignoredBuiltDependencies:
+  - unrs-resolver
+
+patchedDependencies:
+  '@oqs/liboqs-js': patches/@oqs__liboqs-js.patch

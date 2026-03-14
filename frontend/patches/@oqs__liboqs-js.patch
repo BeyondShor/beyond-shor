@@ -1,0 +1,44 @@
+diff --git a/src/algorithms/kem/frodokem/frodokem-1344-aes.js b/src/algorithms/kem/frodokem/frodokem-1344-aes.js
+index 32834cfbcaa0b6bbcb50849cfd95c7da62c1ff58..a5d099bf687379c61626437cf549f1b5a6eec4be 100644
+--- a/src/algorithms/kem/frodokem/frodokem-1344-aes.js
++++ b/src/algorithms/kem/frodokem/frodokem-1344-aes.js
+@@ -18,13 +18,12 @@ import { LibOQSError, LibOQSInitError, LibOQSOperationError, LibOQSValidationErr
+ import { isUint8Array } from '../../../core/validation.js';
+ 
+ // Dynamic module loading for cross-runtime compatibility
++// Static import paths keep bundlers (Turbopack/webpack) happy
+ async function loadModule() {
+   const isDeno = typeof Deno !== 'undefined';
+-  const modulePath = isDeno
+-    ? `../../../../dist/frodokem-1344-aes.deno.js`
+-    : `../../../../dist/frodokem-1344-aes.min.js`;
+-
+-  const module = await import(modulePath);
++  const module = isDeno
++    ? await import('../../../../dist/frodokem-1344-aes.deno.js')
++    : await import('../../../../dist/frodokem-1344-aes.min.js');
+   return module.default;
+ }
+ 
+diff --git a/src/algorithms/kem/frodokem/frodokem-640-aes.js b/src/algorithms/kem/frodokem/frodokem-640-aes.js
+index 805b46ea0422e4ac7d0a0544527b837033d4822b..c73566f162fd05ac29954d41beaa8d0163436f14 100644
+--- a/src/algorithms/kem/frodokem/frodokem-640-aes.js
++++ b/src/algorithms/kem/frodokem/frodokem-640-aes.js
+@@ -18,13 +18,12 @@ import { LibOQSError, LibOQSInitError, LibOQSOperationError, LibOQSValidationErr
+ import { isUint8Array } from '../../../core/validation.js';
+ 
+ // Dynamic module loading for cross-runtime compatibility
++// Static import paths keep bundlers (Turbopack/webpack) happy
+ async function loadModule() {
+   const isDeno = typeof Deno !== 'undefined';
+-  const modulePath = isDeno
+-    ? `../../../../dist/frodokem-640-aes.deno.js`
+-    : `../../../../dist/frodokem-640-aes.min.js`;
+-
+-  const module = await import(modulePath);
++  const module = isDeno
++    ? await import('../../../../dist/frodokem-640-aes.deno.js')
++    : await import('../../../../dist/frodokem-640-aes.min.js');
+   return module.default;
+ }
+ 

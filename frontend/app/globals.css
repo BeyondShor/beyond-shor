@@ -1,0 +1,375 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ─── Design Tokens ─────────────────────────────────────────────────────────
+   "Cryptographic Aesthetic": deep navy base, electric cyan accent,
+   monospace typography for technical terms, subtle grid overlay.
+   ─────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Palette */
+  --color-bg-base:     #030712;
+  --color-bg-surface:  #0f172a;
+  --color-bg-elevated: #1e293b;
+  --color-border:      #1e3a5f;
+  --color-border-dim:  #0f2240;
+
+  --color-primary:     #06b6d4;   /* cyan-500 */
+  --color-primary-dim: #0891b2;   /* cyan-600 */
+  --color-primary-glow: rgba(6, 182, 212, 0.15);
+
+  --color-text-base:   #e2e8f0;   /* slate-200 */
+  --color-text-muted:  #94a3b8;   /* slate-400 */
+  --color-text-dim:    #475569;   /* slate-600 */
+
+  /* Fonts */
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+
+  /* Glassmorphism tokens */
+  --color-glass-bg:        rgba(15, 23, 42, 0.55);
+  --color-glass-bg-strong: rgba(15, 23, 42, 0.80);
+  --color-glass-border:    rgba(6, 182, 212, 0.18);
+  --color-glass-shine:     rgba(255, 255, 255, 0.04);
+  --color-orb-a:           rgba(6, 182, 212, 0.20);
+  --color-orb-b:           rgba(8, 145, 178, 0.14);
+  --color-orb-c:           rgba(99, 102, 241, 0.10);
+
+  /* Animation durations */
+  --duration-slow:   800ms;
+  --duration-medium: 400ms;
+  --duration-fast:   200ms;
+}
+
+/* ─── Keyframe Animations ─────────────────────────────────────────────────── */
+
+@keyframes orb-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.8; }
+  50%       { transform: scale(1.08); opacity: 1;   }
+}
+
+@keyframes orb-drift {
+  0%   { transform: translate(0px,   0px)   scale(1);    }
+  25%  { transform: translate(30px, -20px)  scale(1.04); }
+  50%  { transform: translate(-20px, 30px)  scale(0.97); }
+  75%  { transform: translate(20px,  20px)  scale(1.03); }
+  100% { transform: translate(0px,   0px)   scale(1);    }
+}
+
+@keyframes fade-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0);    }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+@keyframes scan-line {
+  from { top: -4px; }
+  to   { top: 100%; }
+}
+
+/* ─── Base Styles ─────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-bg-base);
+    color: var(--color-text-base);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  code, kbd, samp, pre {
+    font-family: var(--font-mono);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background-color: rgba(6, 182, 212, 0.2);
+    color: var(--color-primary);
+  }
+}
+
+/* ─── Utility Classes ─────────────────────────────────────────────────────── */
+@layer utilities {
+  /* Subtle dot-grid background pattern — "cryptographic" feel */
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(6, 182, 212, 0.065) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(6, 182, 212, 0.065) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  /* Monospace label for technical terms and categories */
+  .mono-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Cyan gradient text for hero headings */
+  .gradient-text {
+    background: linear-gradient(135deg, #e2e8f0 0%, #06b6d4 60%, #0891b2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Card hover lift with glow */
+  .card-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-primary);
+    box-shadow: 0 8px 32px rgba(6, 182, 212, 0.12);
+  }
+
+  /* ── Glassmorphism surfaces ──────────────────────────────────────────────── */
+  .glass-panel {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background-color: var(--color-glass-bg);
+    border: 1px solid var(--color-glass-border);
+    box-shadow: inset 0 1px 0 var(--color-glass-shine);
+  }
+
+  .glass-panel-strong {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background-color: var(--color-glass-bg-strong);
+    border: 1px solid var(--color-glass-border);
+    box-shadow: inset 0 1px 0 var(--color-glass-shine);
+  }
+
+  /* Glass card hover */
+  .card-glass-hover {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+
+  .card-glass-hover:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-primary);
+    box-shadow: 0 8px 40px rgba(6, 182, 212, 0.18), inset 0 1px 0 var(--color-glass-shine);
+  }
+
+  /* ── Fade-up entrance animations ─────────────────────────────────────────── */
+  @media (prefers-reduced-motion: no-preference) {
+    .animate-fade-up {
+      animation: fade-up var(--duration-slow) ease both;
+    }
+    .animate-fade-up-delay-1 {
+      animation: fade-up var(--duration-slow) 0.15s ease both;
+    }
+    .animate-fade-up-delay-2 {
+      animation: fade-up var(--duration-slow) 0.30s ease both;
+    }
+    .animate-fade-up-delay-3 {
+      animation: fade-up var(--duration-slow) 0.45s ease both;
+    }
+  }
+
+  /* ── Hero orbs ───────────────────────────────────────────────────────────── */
+  .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+  }
+
+  .orb-a {
+    background-color: var(--color-orb-a);
+    width: 600px;
+    height: 600px;
+    top: -200px;
+    left: -100px;
+    animation: orb-drift 22s ease-in-out infinite, orb-pulse 8s ease-in-out infinite;
+  }
+
+  .orb-b {
+    background-color: var(--color-orb-b);
+    width: 500px;
+    height: 500px;
+    top: -100px;
+    right: -150px;
+    animation: orb-drift 18s ease-in-out infinite reverse, orb-pulse 6s ease-in-out infinite 1s;
+  }
+
+  .orb-c {
+    background-color: var(--color-orb-c);
+    width: 400px;
+    height: 400px;
+    bottom: -150px;
+    left: 30%;
+    animation: orb-drift 20s ease-in-out infinite 2s, orb-pulse 7s ease-in-out infinite 2s;
+  }
+
+  /* ── Scan-line (cryptographic decoration) ────────────────────────────────── */
+  .scan-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 80px;
+    /* overlay über dunklem Hintergrund (< 50% Helligkeit) → multiply → kaum sichtbar
+       overlay über hellen Elementen (Cyan-Label, Gradient-Text, CTA-Button) → screen → aufgehellt */
+    background: linear-gradient(
+      to bottom,
+      rgba(6, 182, 212, 0.65) 0px,
+      rgba(6, 182, 212, 0.65) 2px,
+      rgba(6, 182, 212, 0.28) 14px,
+      rgba(6, 182, 212, 0.10) 48px,
+      transparent             80px
+    );
+    mix-blend-mode: overlay;
+    z-index: 5;
+    pointer-events: none;
+    animation: scan-line 8s linear infinite;
+  }
+
+  /* ── Mobile nav overlay & drawer ─────────────────────────────────────────── */
+  .mobile-nav-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 7, 18, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 40;
+    animation: fade-in var(--duration-medium) ease both;
+  }
+
+  .mobile-nav-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(320px, 85vw);
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+    animation: slide-in-right var(--duration-medium) ease both;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background-color: var(--color-glass-bg-strong);
+    border-left: 1px solid var(--color-glass-border);
+    box-shadow: inset 0 1px 0 var(--color-glass-shine), -8px 0 40px rgba(0, 0, 0, 0.4);
+  }
+
+  /* ── Hamburger bars ───────────────────────────────────────────────────────── */
+  .hamburger-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background-color: var(--color-text-muted);
+    border-radius: 2px;
+    transition: transform 0.25s ease, opacity 0.25s ease, background-color 0.25s ease;
+    transform-origin: center;
+  }
+
+  .hamburger-open .hamburger-bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+    background-color: var(--color-primary);
+  }
+
+  .hamburger-open .hamburger-bar:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger-open .hamburger-bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+    background-color: var(--color-primary);
+  }
+
+  /* ── Cover image shimmer ──────────────────────────────────────────────────── */
+  .cover-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 60%
+    );
+    background-size: 200% 100%;
+    background-position: -200% center;
+    transition: background-position 0.6s ease;
+    pointer-events: none;
+  }
+
+  .group:hover .cover-shimmer::after {
+    background-position: 200% center;
+  }
+}
+
+/* ── Marquee Ticker ──────────────────────────────────────────────────────── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.ticker-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee 40s linear infinite;
+}
+
+.ticker-track:hover,
+.ticker-track:focus-within {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ─── Prose Overrides for react-markdown rich text ────────────────────────── */
+.prose-pqc {
+  --tw-prose-body:     #c8d6e2;   /* softer than text-base for long-form reading (~9:1 on bg-surface) */
+  --tw-prose-headings: #dce8f0;   /* softer than near-white, still crisp (~11:1 on bg-surface) */
+  --tw-prose-lead: var(--color-text-muted);
+  --tw-prose-links: var(--color-primary);
+  --tw-prose-bold:     #dce8f0;
+  --tw-prose-counters: var(--color-text-muted);
+  --tw-prose-bullets: var(--color-primary-dim);
+  --tw-prose-hr: var(--color-border);
+  --tw-prose-quotes: var(--color-text-muted);
+  --tw-prose-quote-borders: var(--color-primary);
+  --tw-prose-code: var(--color-primary);
+  --tw-prose-pre-code: #c8d6e2;
+  --tw-prose-pre-bg: #0f172a;
+  --tw-prose-th-borders: var(--color-border);
+  --tw-prose-td-borders: var(--color-border-dim);
+}
