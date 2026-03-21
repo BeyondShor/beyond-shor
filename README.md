@@ -31,20 +31,20 @@ Eine interaktive, vollständig clientseitige Lernplattofrm für Post-Quantum Kry
 Jedes Verfahren hat eine ausklappbare Implementierungssektion für Entwickler.
 
 Unterstützte PQC-KEMs:
-- **ML-KEM-1024** (NIST FIPS 203) — reines TypeScript via `@noble/post-quantum`, kein WASM
+- **ML-KEM-1024** — reines TypeScript via `@noble/post-quantum`, kein WASM
 - **Classic McEliece 8192128** — C-Referenzimplementierung via Emscripten/WASM
 - **FrodoKEM-1344-AES** — liboqs via WASM
 
 Unterstützte Signaturverfahren (inkl. 20× Benchmark):
 - **ECDSA** (klassisch, als Referenzpunkt)
-- **ML-DSA-65** (NIST FIPS 204)
-- **SLH-DSA** — jeweils ein kompakter und ein sicherheitsmaximierter Parametersatz
+- **ML-DSA-65**
+- **SLH-DSA** — jeweils ein kompakter (kleine Signaturen, langsames Signing) und ein performanter Parametersatz (schnelles Signing, größere Signaturen)
 
 ### 📋 Automatisierte & signierte CBOM
 Eine täglich aktualisierte Cryptography Bill of Materials nach [CycloneDX v1.6](https://cyclonedx.org). Ein Skript durchsucht die gesamte Codebase automatisch nach kryptografischen Assets — einschließlich aller im Playground eingesetzten Algorithmen — annotiert den Quantum-Safe-Status und modelliert Abhängigkeiten. Das Ergebnis wird als interaktiver Abhängigkeitsgraph und als maschinenlesbares JSON exportiert. Die CBOM wird täglich neu generiert und automatisch mit ML-DSA-65 signiert. Sie ist live unter [beyond-shor.eu/cbom](https://beyond-shor.eu/cbom) abrufbar und kann direkt in Tools wie CBOMkit importiert werden.
 
 ### 📅 Interaktive Q-Day Timeline
-Eine chronologische, interaktive Timeline von 1994 bis ~2040 — von Shors Algorithmus über die NIST-Standardisierung bis zu regulatorischen Deadlines und Q-Day-Schätzungen. Ereignisse sind nach Kategorien (Geschichte, Standard, Hardware, Regulierung, Prognose) farblich kodiert und per Klick aufklappbar. Ein Slider verschiebt den Q-Day zwischen 2028 und 2040 und zeigt live, wie viele Jahre Migrationszeit verbleiben. Der `// NOW`-Marker aktualisiert sich automatisch zum aktuellen Datum. Die Datenbasis liegt als zweisprachiges Markdown vor und kann ohne Code-Änderungen aktualisiert werden.
+Eine chronologische, interaktive Timeline von 1994 bis ~2040 — von Shors Algorithmus über die NIST-Standardisierung bis zu regulatorischen Deadlines und Q-Day-Schätzungen. Ereignisse sind nach Kategorien (Geschichte, Standard, Hardware, Regulierung, Prognose) farblich kodiert und per Klick aufklappbar.
 
 ### 🛡️ Anti-Spam ohne reCAPTCHA
 Das Kontaktformular schützt sich durch vier unabhängige serverseitige Schichten - datenschutzkonform:
