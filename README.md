@@ -21,6 +21,7 @@ Jeder Artikel wird bei der Veröffentlichung automatisch signiert. Ein Strapi-Li
 
 ### ⚗️ Post-Quantum Kryptografie Playground
 Eine interaktive, vollständig clientseitige Lernplattofrm für Post-Quantum Kryptografie - mit hybrider Verschlüsselung, post-quantensicheren Signaturverfahren und statistisch ausgewertetem Benchmarking. Das ist in drei Modi implementiert: 
+
 **Einzelner Run:** Der vollständige hybride Handshake wird Schritt für Schritt visualisiert (Schlüsselerzeugung → X25519-DH → KEM-Encapsulation → HKDF → AES-256-GCM-Verschlüsselung → Entschlüsselung). Jeder Schritt zeigt explizit, welche Werte öffentlich übertragen werden und welche privat bleiben. Zusätzlich verfügbar: eine umschaltbare Angreiferperspektive, ein Toggle für Shors Algorithmus (mit Auswirkungen auf den klassischen Kanal), ein Bit-Manipulations-Toggle zur Demonstration von AES-GCM-Authentizität sowie eine separate Server- und Client-Sicht. Einzelne Runs können als Link geteilt werden — der State wird beim Aufruf wiederhergestellt.
 
 **Direktvergleich:** Alle drei KEMs werden parallel ausgeführt und ihre Hauptmetriken (Schlüsselgrößen, Berechnungszeiten) direkt gegenübergestellt.
