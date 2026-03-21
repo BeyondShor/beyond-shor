@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import cbomData from '@/public/cbom.json';
+import CbomSignatureBadge from '@/components/CbomSignatureBadge';
 
 /* ─── types ─────────────────────────────────────────────────────────── */
 type CbomComponent = (typeof cbomData.components)[number];
@@ -31,7 +33,7 @@ function depsOf(ref: string) {
 }
 
 /* ─── main component ─────────────────────────────────────────────────── */
-export default function CbomViewer() {
+export default function CbomViewer({ cbomSig, cbomHtml }: { cbomSig?: string | null; cbomHtml?: string }) {
   const t = useTranslations('cbom');
 
   const components = cbomData.components;
@@ -39,17 +41,19 @@ export default function CbomViewer() {
   const qsCount    = components.filter(isQS).length;
   const nqsCount   = count - qsCount;
 
+  const [depMapOpen, setDepMapOpen] = useState(true);
+
   const sorted = [...components].sort((a, b) => {
     if (isQS(a) !== isQS(b)) return isQS(a) ? -1 : 1;
     return a['bom-ref'].localeCompare(b['bom-ref']);
   });
 
   return (
-    <div className="space-y-16">
+    <div>
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <header className="space-y-5">
-        <p className="font-mono text-sm text-[var(--color-primary)]">
+      <header className="mb-12">
+        <p className="font-mono text-sm text-[var(--color-primary)] mb-2">
           // cbom ·{' '}
           <a
             href="https://cyclonedx.org/guides/OWASP_CycloneDX-Authoritative-Guide-to-CBOM-en.pdf"
@@ -60,22 +64,31 @@ export default function CbomViewer() {
             CycloneDX 1.6
           </a>
         </p>
-        <h1 className="text-3xl font-bold tracking-tight text-[var(--color-text)] sm:text-4xl">
+        <h1 className="text-3xl sm:text-4xl font-bold text-[var(--color-text-base)]">
           {t('pageTitle')}
         </h1>
-        <p className="max-w-3xl text-base leading-relaxed text-[var(--color-text-muted)]">
-          {t('intro', { count })}
-        </p>
-        <p className="max-w-3xl text-base leading-relaxed text-[var(--color-text-muted)]">
-          {t('idSchemeNote')}
-        </p>
-        <p className="max-w-3xl text-base leading-relaxed text-[var(--color-text-muted)]">
-          {t('scopeNote', { count })}
-        </p>
-        <p className="max-w-3xl text-base leading-relaxed text-[var(--color-text-muted)]">
-          {t('autoUpdateNote')}
-        </p>
+        <div className="mt-4 space-y-3 max-w-3xl">
+          <p className="text-base leading-relaxed text-[var(--color-text-muted)]">
+            {t('intro', { count })}
+          </p>
+          <p className="text-base leading-relaxed text-[var(--color-text-muted)]">
+            {t('idSchemeNote')}
+          </p>
+          <p className="text-base leading-relaxed text-[var(--color-text-muted)]">
+            {t('scopeNote', { count })}
+          </p>
+          <p className="text-base leading-relaxed text-[var(--color-text-muted)]">
+            {t('autoUpdateNote')}
+          </p>
+        </div>
+        {cbomSig && (
+          <div className="mt-6 max-w-xl">
+            <CbomSignatureBadge sig={cbomSig} />
+          </div>
+        )}
       </header>
+
+      <div className="space-y-16">
 
       {/* ── Compliance dashboard ──────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -87,8 +100,26 @@ export default function CbomViewer() {
 
       {/* ── Dependency map ────────────────────────────────────────────── */}
       <section>
-        <SectionHeader label="// dependency-map" title={t('depMapTitle')} />
-        <DependencyMap />
+        <div className="mb-5 flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="font-mono text-xs text-[var(--color-primary)]">// dependency-map</p>
+            <h2 className="text-lg font-semibold text-[var(--color-text)]">{t('depMapTitle')}</h2>
+          </div>
+          <button
+            onClick={() => setDepMapOpen(o => !o)}
+            aria-expanded={depMapOpen}
+            className="flex items-center gap-1.5 rounded-lg border border-[var(--color-glass-border)] px-3 py-1.5 font-mono text-xs text-[var(--color-text-muted)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
+          >
+            <svg
+              width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"
+              className={`transition-transform duration-200 ${depMapOpen ? 'rotate-180' : ''}`}
+            >
+              <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {depMapOpen ? t('depMapCollapse') : t('depMapExpand')}
+          </button>
+        </div>
+        {depMapOpen && <DependencyMap />}
       </section>
 
       {/* ── Component inventory ───────────────────────────────────────── */}
@@ -124,14 +155,16 @@ export default function CbomViewer() {
               <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </summary>
-          <div className="border-t border-[var(--color-border)] px-5 py-4">
-            <pre className="overflow-x-auto whitespace-pre text-xs leading-relaxed text-[var(--color-text-muted)]">
-              {JSON.stringify(cbomData, null, 2)}
-            </pre>
+          <div className="border-t border-[var(--color-border)]">
+            {cbomHtml
+              ? <div className="shiki-cbom overflow-x-auto px-5 py-4 text-xs leading-relaxed [&>pre]:!bg-transparent [&>pre]:!m-0" dangerouslySetInnerHTML={{ __html: cbomHtml }} />
+              : <pre className="overflow-x-auto whitespace-pre px-5 py-4 text-xs leading-relaxed text-[var(--color-text-muted)]">{JSON.stringify(cbomData, null, 2)}</pre>
+            }
           </div>
         </details>
       </section>
 
+      </div>
     </div>
   );
 }
@@ -374,7 +407,9 @@ function DownloadButton({ label }: { label: string }) {
     const json = JSON.stringify(cbomData, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
-    const a    = Object.assign(document.createElement('a'), { href: url, download: 'cbom.json' });
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'cbom.json';
     a.click();
     URL.revokeObjectURL(url);
   }

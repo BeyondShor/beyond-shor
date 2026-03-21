@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_playground_real_world_items",
+  "info": {
+    "displayName": "Real World Item",
+    "icon": "globe"
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "description": {
+      "type": "string",
+      "required": true
+    },
+    "link": {
+      "type": "string"
+    }
+  }
+}

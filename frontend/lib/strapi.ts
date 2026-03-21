@@ -6,6 +6,7 @@ import type {
   StrapiListResponse,
   StrapiSingleResponse,
 } from './types';
+import type { TimelineEvent, TimelineCategory } from './parseTimeline';
 
 const STRAPI_URL = process.env.STRAPI_URL ?? 'http://localhost:1337';
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
@@ -88,7 +89,8 @@ export async function getCategories(locale = 'de'): Promise<Category[]> {
       locale,
     });
     return res.data;
-  } catch {
+  } catch (err) {
+    console.error('[strapi] getCategories:', err);
     return [];
   }
 }
@@ -138,8 +140,34 @@ export async function getArticleSlugByDocumentId(
       locale,
     });
     return res.data[0]?.slug ?? null;
-  } catch {
+  } catch (err) {
+    console.error('[strapi] getArticleSlugByDocumentId:', err);
     return null;
+  }
+}
+
+export async function getRelatedArticles(
+  categorySlug: string,
+  currentSlug: string,
+  locale = 'de',
+  limit = 3,
+): Promise<Article[]> {
+  try {
+    const res = await strapiGet<StrapiListResponse<Article>>('articles', {
+      'populate[0]': 'author',
+      'populate[1]': 'author.avatar',
+      'populate[2]': 'category',
+      'filters[category][slug][$eq]': categorySlug,
+      'filters[slug][$ne]': currentSlug,
+      'filters[publishedAt][$notNull]': 'true',
+      'sort[0]': 'publishedAt:desc',
+      'pagination[pageSize]': String(limit),
+      locale,
+    });
+    return res.data;
+  } catch (err) {
+    console.error('[strapi] getRelatedArticles:', err);
+    return [];
   }
 }
 
@@ -156,6 +184,79 @@ export async function getArticlesForFeed(
   });
 }
 
+// ─── Timeline Events ─────────────────────────────────────────────────────────
+
+type TimelineMonth =
+  | 'JANUARY' | 'FEBRUARY' | 'MARCH'     | 'APRIL'
+  | 'MAY'     | 'JUNE'     | 'JULY'      | 'AUGUST'
+  | 'SEPTEMBER' | 'OCTOBER' | 'NOVEMBER' | 'DECEMBER';
+
+interface StrapiTimelineEvent {
+  id: number;
+  documentId: string;
+  title: string;
+  year: number;
+  month: TimelineMonth | null;
+  isApproximate: boolean;
+  category: TimelineCategory;
+  description: string;
+  caveat: string | null;
+}
+
+const MONTH_NUM: Record<TimelineMonth, number> = {
+  JANUARY: 1, FEBRUARY: 2, MARCH: 3,    APRIL: 4,
+  MAY: 5,     JUNE: 6,     JULY: 7,     AUGUST: 8,
+  SEPTEMBER: 9, OCTOBER: 10, NOVEMBER: 11, DECEMBER: 12,
+};
+
+const MONTH_SHORT: Record<'de' | 'en', string[]> = {
+  de: ['Jan','Feb','Mrz','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'],
+  en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+};
+
+export async function getTimelineEvents(locale = 'de'): Promise<TimelineEvent[]> {
+  try {
+    const res = await strapiGet<StrapiListResponse<StrapiTimelineEvent>>('timeline-events', {
+      'sort[0]': 'year:asc',
+      'sort[1]': 'month:asc',
+      'pagination[pageSize]': '100',
+      locale,
+    });
+
+    const shorts = MONTH_SHORT[locale as 'de' | 'en'] ?? MONTH_SHORT.de;
+
+    // Apply same-year/same-month deduplication offset so dots don't overlap
+    const yearKeyCount: Record<string, number> = {};
+
+    return res.data.map((e) => {
+      const monthNum  = e.month ? MONTH_NUM[e.month] : null;
+      const fraction  = monthNum ? (monthNum - 1) / 12 : 0;
+      const baseDecimal = e.year + fraction;
+      const key       = baseDecimal.toFixed(4);
+      const count     = yearKeyCount[key] ?? 0;
+      yearKeyCount[key] = count + 1;
+
+      const label = e.isApproximate
+        ? `~${e.year}`
+        : monthNum
+          ? `${e.year} (${shorts[monthNum - 1]})`
+          : `${e.year}`;
+
+      return {
+        year:     baseDecimal + count * 0.15,
+        label,
+        title:    e.title,
+        category: e.category,
+        desc:     e.description,
+        caveat:   e.caveat ?? undefined,
+      };
+    });
+  } catch (err) {
+    console.error('[strapi] getTimelineEvents:', err);
+    return [];
+  }
+}
+
 // ─── Global / About ──────────────────────────────────────────────────────────
 
 export async function getGlobal(locale = 'de'): Promise<Global | null> {
@@ -167,7 +268,8 @@ export async function getGlobal(locale = 'de'): Promise<Global | null> {
       locale,
     });
     return res.data;
-  } catch {
+  } catch (err) {
+    console.error('[strapi] getGlobal:', err);
     return null;
   }
 }
@@ -181,7 +283,8 @@ export async function getAbout(locale = 'de'): Promise<About | null> {
       locale,
     });
     return res.data;
-  } catch {
+  } catch (err) {
+    console.error('[strapi] getAbout:', err);
     return null;
   }
 }
@@ -195,7 +298,8 @@ export async function getImpressum(locale = 'de'): Promise<About | null> {
       locale,
     });
     return res.data;
-  } catch {
+  } catch (err) {
+    console.error('[strapi] getImpressum:', err);
     return null;
   }
 }
@@ -209,7 +313,33 @@ export async function getDatenschutz(locale = 'de'): Promise<About | null> {
       locale,
     });
     return res.data;
-  } catch {
+  } catch (err) {
+    console.error('[strapi] getDatenschutz:', err);
+    return null;
+  }
+}
+
+export interface PlaygroundRealWorldItem {
+  name:        string;
+  description: string;
+  link?:       string;
+}
+
+export interface PlaygroundPageData {
+  realWorldItems:    PlaygroundRealWorldItem[];
+  sigRealWorldItems: PlaygroundRealWorldItem[];
+}
+
+export async function getPlaygroundPage(locale = 'de'): Promise<PlaygroundPageData | null> {
+  try {
+    const res = await strapiGet<StrapiSingleResponse<PlaygroundPageData>>('playground-page', {
+      'populate[0]': 'realWorldItems',
+      'populate[1]': 'sigRealWorldItems',
+      locale,
+    });
+    return res.data;
+  } catch (err) {
+    console.error('[strapi] getPlaygroundPage:', err);
     return null;
   }
 }

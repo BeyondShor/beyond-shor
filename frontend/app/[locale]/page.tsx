@@ -3,6 +3,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { getArticles } from '@/lib/strapi';
 import ArticleCard from '@/components/ArticleCard';
+import HndlTimeline from '@/components/HndlTimeline';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -155,6 +156,9 @@ export default async function HomePage({ params }: PageProps) {
           })()}
         </div>
       </section>
+
+      {/* ── HNDL Timeline ────────────────────────────────────────────────── */}
+      <HndlTimeline locale={locale} />
 
       {/* ── Latest Articles ──────────────────────────────────────────────── */}
       <section

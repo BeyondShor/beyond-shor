@@ -1,11 +1,35 @@
-import Link from 'next/link';
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-  title: '404 — Seite nicht gefunden | Beyond Shor',
-};
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+// This component sits outside the [locale] layout — no NextIntlClientProvider available.
+// Locale is detected from the URL path instead.
+
+const copy = {
+  de: {
+    meta:  '404 — Seite nicht gefunden | Beyond Shor',
+    label: '// route_not_found',
+    title: 'Seite nicht gefunden',
+    desc:  'Die gesuchte Seite existiert nicht oder wurde verschoben.',
+    back:  '← Zurück zur Startseite',
+    href:  '/de',
+  },
+  en: {
+    meta:  '404 — Page not found | Beyond Shor',
+    label: '// route_not_found',
+    title: 'Page not found',
+    desc:  'The page you are looking for does not exist or has been moved.',
+    back:  '← Back to Home',
+    href:  '/en',
+  },
+} as const;
 
 export default function NotFound() {
+  const pathname = usePathname() ?? '';
+  const locale   = pathname.startsWith('/en') ? 'en' : 'de';
+  const t        = copy[locale];
+
   return (
     <div className="grid-bg relative flex min-h-[calc(100vh-16rem)] items-center justify-center overflow-hidden px-4">
       {/* Decorative scan-line */}
@@ -35,22 +59,22 @@ export default function NotFound() {
         </p>
 
         <p className="mono-label text-[var(--color-primary)] mb-4 animate-fade-up-delay-1">
-          // route_not_found
+          {t.label}
         </p>
 
         <h1 className="text-2xl font-bold text-[var(--color-text-base)] sm:text-3xl mb-3 animate-fade-up-delay-1">
-          Seite nicht gefunden
+          {t.title}
         </h1>
 
         <p className="text-[var(--color-text-muted)] max-w-xs mx-auto mb-10 animate-fade-up-delay-2">
-          Die gesuchte Seite existiert nicht oder wurde verschoben.
+          {t.desc}
         </p>
 
         <Link
-          href="/"
+          href={t.href}
           className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-primary)] bg-[var(--color-primary)]/10 px-6 py-3 text-sm font-mono font-semibold text-[var(--color-primary)] transition-all hover:bg-[var(--color-primary)]/20 hover:shadow-[0_0_24px_rgba(6,182,212,0.2)] animate-fade-up-delay-2"
         >
-          ← Zurück zur Startseite
+          {t.back}
         </Link>
       </div>
     </div>

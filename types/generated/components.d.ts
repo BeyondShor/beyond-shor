@@ -1,5 +1,30 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
+export interface PlaygroundFaqItem extends Struct.ComponentSchema {
+  collectionName: 'components_playground_faq_items';
+  info: {
+    displayName: 'FAQ Item';
+    icon: 'question';
+  };
+  attributes: {
+    answer: Schema.Attribute.Text & Schema.Attribute.Required;
+    question: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
+export interface PlaygroundRealWorldItem extends Struct.ComponentSchema {
+  collectionName: 'components_playground_real_world_items';
+  info: {
+    displayName: 'Real World Item';
+    icon: 'globe';
+  };
+  attributes: {
+    description: Schema.Attribute.String & Schema.Attribute.Required;
+    link: Schema.Attribute.String;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
 export interface SharedMedia extends Struct.ComponentSchema {
   collectionName: 'components_shared_media';
   info: {
@@ -65,6 +90,8 @@ export interface SharedSlider extends Struct.ComponentSchema {
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
+      'playground.faq-item': PlaygroundFaqItem;
+      'playground.real-world-item': PlaygroundRealWorldItem;
       'shared.media': SharedMedia;
       'shared.quote': SharedQuote;
       'shared.rich-text': SharedRichText;

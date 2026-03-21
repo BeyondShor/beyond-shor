@@ -26,7 +26,7 @@ export default async function ImpressumPage({ params }: PageProps) {
 
   return (
     <div className="bg-[var(--color-bg-surface)]">
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
+    <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
       <header className="mb-12">
         <p className="mono-label text-[var(--color-primary)] mb-2">{t('label')}</p>
         <h1 className="text-3xl font-bold text-[var(--color-text-base)] sm:text-4xl">

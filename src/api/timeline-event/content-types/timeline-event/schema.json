@@ -1,0 +1,74 @@
+{
+  "kind": "collectionType",
+  "collectionName": "timeline_events",
+  "info": {
+    "singularName": "timeline-event",
+    "pluralName": "timeline-events",
+    "displayName": "Timeline Event",
+    "description": "PQC history & regulation milestones for the interactive timeline"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": {
+        "i18n": { "localized": true }
+      }
+    },
+    "year": {
+      "type": "integer",
+      "required": true,
+      "min": 1900,
+      "max": 2200,
+      "pluginOptions": {
+        "i18n": { "localized": false }
+      }
+    },
+    "month": {
+      "type": "enumeration",
+      "enum": [
+        "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+        "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+      ],
+      "pluginOptions": {
+        "i18n": { "localized": false }
+      }
+    },
+    "isApproximate": {
+      "type": "boolean",
+      "default": false,
+      "pluginOptions": {
+        "i18n": { "localized": false }
+      }
+    },
+    "category": {
+      "type": "enumeration",
+      "enum": ["HISTORY", "STANDARD", "HARDWARE", "REGULATION", "ESTIMATE"],
+      "required": true,
+      "pluginOptions": {
+        "i18n": { "localized": false }
+      }
+    },
+    "description": {
+      "type": "text",
+      "required": true,
+      "pluginOptions": {
+        "i18n": { "localized": true }
+      }
+    },
+    "caveat": {
+      "type": "text",
+      "pluginOptions": {
+        "i18n": { "localized": true }
+      }
+    }
+  }
+}

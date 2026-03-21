@@ -10,13 +10,23 @@
   "options": {
     "draftAndPublish": false
   },
-  "pluginOptions": {},
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
   "attributes": {
     "name": {
-      "type": "string"
+      "type": "string",
+      "pluginOptions": {
+        "i18n": { "localized": true }
+      }
     },
     "slug": {
-      "type": "uid"
+      "type": "uid",
+      "pluginOptions": {
+        "i18n": { "localized": false }
+      }
     },
     "articles": {
       "type": "relation",
@@ -25,7 +35,10 @@
       "mappedBy": "category"
     },
     "description": {
-      "type": "text"
+      "type": "text",
+      "pluginOptions": {
+        "i18n": { "localized": true }
+      }
     }
   }
 }

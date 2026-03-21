@@ -3,10 +3,13 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { getArticleBySlug, getAllArticleSlugs, getArticleSlugByDocumentId, getStrapiUrl, getAllArticleLinks } from '@/lib/strapi';
+import { getArticleBySlug, getAllArticleSlugs, getArticleSlugByDocumentId, getStrapiUrl, getAllArticleLinks, getRelatedArticles } from '@/lib/strapi';
 import BlockRenderer from '@/components/BlockRenderer';
 import JsonLd from '@/components/JsonLd';
 import PqcSignatureBadge from '@/components/PqcSignatureBadge';
+import ArticleCard from '@/components/ArticleCard';
+import TableOfContents from '@/components/TableOfContents';
+import { extractHeadings } from '@/lib/headings';
 
 // ─── Static Params ─────────────────────────────────────────────────────────────
 
@@ -74,6 +77,12 @@ export default async function ArticlePage({ params }: PageProps) {
   ]);
   if (!article) notFound();
 
+  const relatedArticles = article.category?.slug
+    ? await getRelatedArticles(article.category.slug, slug, locale)
+    : [];
+
+  const headings = article.blocks?.length ? extractHeadings(article.blocks) : [];
+
   const coverUrl = getStrapiUrl(article.cover?.url);
   const authorAvatarUrl = getStrapiUrl(article.author?.avatar?.url);
 
@@ -138,7 +147,7 @@ export default async function ArticlePage({ params }: PageProps) {
 
         {/* Category */}
         {article.category && (
-          <p className="mono-label text-[var(--color-primary)] mb-4">
+          <p className="mono-label text-[var(--color-primary)] mb-2">
             {article.category.name}
           </p>
         )}
@@ -196,6 +205,8 @@ export default async function ArticlePage({ params }: PageProps) {
           <BlockRenderer blocks={article.blocks} autoLinks={autoLinks} currentSlug={slug} />
         )}
 
+        <TableOfContents headings={headings} locale={locale} />
+
         {/* Back link */}
         <div className="mt-16 pt-8 border-t border-[var(--color-border)]">
           <Link
@@ -206,6 +217,20 @@ export default async function ArticlePage({ params }: PageProps) {
           </Link>
         </div>
       </article>
+
+      {/* Related articles */}
+      {relatedArticles.length > 0 && (
+        <section className="mx-auto max-w-5xl px-4 pb-16 sm:px-6 sm:pb-24">
+          <div className="border-t border-[var(--color-border)] pt-12">
+            <p className="mono-label text-[var(--color-primary)] mb-6">{t('related')}</p>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {relatedArticles.map((related) => (
+                <ArticleCard key={related.documentId} article={related} locale={locale} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
       </div>
     </>
   );

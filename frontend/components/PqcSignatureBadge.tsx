@@ -38,7 +38,7 @@ export default function PqcSignatureBadge({
           <span className="text-[var(--color-primary)] text-xs font-mono font-semibold tracking-widest uppercase">
             ML-DSA-65
           </span>
-          <span className="text-[var(--color-text-dim)] text-xs font-mono">
+          <span className="text-[var(--color-text-muted)] text-xs font-mono">
             NIST FIPS 204
           </span>
         </div>

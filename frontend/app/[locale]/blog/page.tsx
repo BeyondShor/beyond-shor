@@ -67,13 +67,13 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
     <div className="bg-[var(--color-bg-surface)]">
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
       {/* Page header */}
-      <header className="mb-8">
+      <header className="mb-12">
         <p className="mono-label text-[var(--color-primary)] mb-2">{t('allArticlesLabel')}</p>
         <h1 className="text-3xl font-bold text-[var(--color-text-base)] sm:text-4xl">
           {t('pageTitle')}
         </h1>
         {pagination.total > 0 && (
-          <p className="mt-3 text-sm text-[var(--color-text-dim)] font-mono">
+          <p className="mt-3 text-sm text-[var(--color-text-muted)] font-mono">
             {t('articleCount', { count: pagination.total })}
           </p>
         )}

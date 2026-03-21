@@ -48,15 +48,15 @@ export default async function RssPage({ params }: PageProps) {
 
   return (
     <div className="bg-[var(--color-bg-surface)]">
-      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24">
+      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
 
         {/* Header */}
-        <header className="mb-10">
+        <header className="mb-12">
           <p className="mono-label text-[var(--color-primary)] mb-2">{t('label')}</p>
-          <h1 className="text-3xl font-bold text-[var(--color-text-base)] sm:text-4xl mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-[var(--color-text-base)]">
             {t('title')}
           </h1>
-          <p className="text-[var(--color-text-muted)] leading-relaxed">{t('intro')}</p>
+          <p className="mt-4 text-[var(--color-text-muted)] leading-relaxed">{t('intro')}</p>
         </header>
 
         {/* Feed URL + Copy */}
@@ -91,7 +91,7 @@ export default async function RssPage({ params }: PageProps) {
                     key={article.id}
                     className="rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-bg-base)] p-5"
                   >
-                    <p className="font-mono text-[10px] text-[var(--color-text-dim)] mb-2 uppercase tracking-widest">
+                    <p className="mono-label text-[var(--color-text-muted)] mb-2">
                       {pubDate}
                     </p>
                     <Link

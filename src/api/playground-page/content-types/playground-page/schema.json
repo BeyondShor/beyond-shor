@@ -1,0 +1,44 @@
+{
+  "kind": "singleType",
+  "collectionName": "playground_pages",
+  "info": {
+    "singularName": "playground-page",
+    "pluralName": "playground-pages",
+    "displayName": "Playground Page",
+    "description": "Editable content for the Hybrid PQC Playground — real-world adoption examples"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "default": "Playground Page"
+    },
+    "realWorldItems": {
+      "type": "component",
+      "repeatable": true,
+      "component": "playground.real-world-item",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "sigRealWorldItems": {
+      "type": "component",
+      "repeatable": true,
+      "component": "playground.real-world-item",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    }
+  }
+}

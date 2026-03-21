@@ -24,14 +24,17 @@ import { readFileSync, writeFileSync, renameSync, readdirSync, statSync, existsS
 import { join, relative, extname } from 'path';
 import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
+import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
 
-const __dirname  = fileURLToPath(new URL('.', import.meta.url));
-const ROOT       = join(__dirname, '..');
-const OUTPUT     = join(ROOT, 'frontend/public/cbom.json');
-const OUTPUT_TMP = OUTPUT + '.tmp';
+const __dirname      = fileURLToPath(new URL('.', import.meta.url));
+const ROOT           = join(__dirname, '..');
+const OUTPUT         = join(ROOT, 'frontend/public/cbom.json');
+const OUTPUT_TMP     = OUTPUT + '.tmp';
+const OUTPUT_SIG     = join(ROOT, 'frontend/public/cbom.sig');
+const OUTPUT_SIG_TMP = OUTPUT_SIG + '.tmp';
 
 // ── Context priority (lower index = higher priority) ───────────────────────
-const CONTEXT_PRIORITY = ['article-signing', 'playground', 'contact-form', 'strapi'];
+const CONTEXT_PRIORITY = ['article-signing', 'cbom-signing', 'playground', 'contact-form', 'strapi'];
 
 function priorityOf(ctx) {
   const idx = CONTEXT_PRIORITY.indexOf(ctx);
@@ -97,13 +100,39 @@ const ALGORITHM_DB = [
     ],
   },
 
+  // ── Classical Signatures ──────────────────────────────────────────────
+  {
+    id: 'ecdsa-p256',
+    name: 'ECDSA P-256',
+    primitive: 'signature',
+    nistLevel: 0,
+    descriptionSuffix: "Classical elliptic-curve digital signature (NIST P-256 / secp256r1). Quantum-VULNERABLE — Shor's algorithm can recover the private key from the public key. Intentionally included as a quantum-vulnerable classical baseline in the Signature Playground.",
+    patterns: [/@noble\/curves\/nist/i, /\bp256\.sign\b/, /\bp256\.verify\b/, /\bp256\.keygen\b/],
+  },
+
   // ── Post-Quantum Signatures ────────────────────────────────────────────
+  {
+    id: 'slh-dsa-sha2-128s',
+    name: 'SLH-DSA-SHA2-128s',
+    primitive: 'signature',
+    nistLevel: 1,
+    descriptionSuffix: 'Hash-based stateless signature scheme (small variant). NIST FIPS 205 (August 2024). Smallest signatures of the SLH-DSA family at the cost of significantly slower signing. Quantum-safe at NIST security level 1. Based on SPHINCS+.',
+    patterns: [/slh[_-]dsa[_-]sha2[_-]128s/i, /slh_dsa_sha2_128s/i],
+  },
+  {
+    id: 'slh-dsa-sha2-128f',
+    name: 'SLH-DSA-SHA2-128f',
+    primitive: 'signature',
+    nistLevel: 1,
+    descriptionSuffix: 'Hash-based stateless signature scheme (fast variant). NIST FIPS 205 (August 2024). Faster signing than the small variant at the cost of larger signatures. Quantum-safe at NIST security level 1. Based on SPHINCS+.',
+    patterns: [/slh[_-]dsa[_-]sha2[_-]128f/i, /slh_dsa_sha2_128f/i],
+  },
   {
     id: 'ml-dsa-65',
     name: 'ML-DSA-65',
     primitive: 'signature',
     nistLevel: 3,
-    descriptionSuffix: 'Article signing and verification — pure ML-DSA per FIPS 204 §5.2: raw UTF-8 message bytes are passed directly, no pre-hashing. ML-DSA internally derives µ = SHAKE-256(tr ∥ M, 64). NIST FIPS 204 (Strapi lifecycle hook + browser verifier).',
+    descriptionSuffix: 'NIST FIPS 204 (August 2024). Lattice-based digital signature (Module-LWE + Module-SIS). Pure ML-DSA: message bytes passed directly without pre-hashing — SHAKE-256 applied internally (µ = SHAKE-256(tr ∥ M, 64) per FIPS 204 §5.2). Quantum-safe at NIST security level 3.',
     patterns: [/ml[_-]dsa[_-]?65/i, /dilithium3/i, /mlDsa65/],
   },
   {
@@ -230,7 +259,6 @@ const ALGO_BY_ID = Object.fromEntries(ALGORITHM_DB.map(a => [a.id, a]));
 // byAlgoId:    depends on specific algorithm IDs in that context.
 const USAGE_DEP_RULES = [
   // All playground KEMs + classical key-exchange (X25519) feed into HKDF.
-  // Automatically includes any new KEM added to the playground in the future.
   {
     when:      { algoId: 'hkdf-sha256', context: 'playground' },
     dependsOn: { byPrimitive: ['kem', 'ke'], context: 'playground' },
@@ -240,18 +268,45 @@ const USAGE_DEP_RULES = [
     when:      { algoId: 'aes-256-gcm', context: 'playground' },
     dependsOn: { byAlgoId: ['hkdf-sha256'], context: 'playground' },
   },
-  // ML-DSA-65 (pure) uses SHAKE-256 internally per FIPS 204 §5.2.
-  // SHA-256 is used separately for hashing media file content embedded in the message.
-  {
-    when:      { algoId: 'ml-dsa-65', context: 'article-signing' },
-    dependsOn: { byAlgoId: ['shake-256', 'sha-256'], context: 'article-signing' },
-  },
+  // ML-DSA-65 uses SHAKE-256 internally per FIPS 204 §5.2 — in every context.
+  // In article-signing: SHA-256 is also used to fingerprint media files embedded in the signed message.
+  { when: { algoId: 'ml-dsa-65', context: 'article-signing' }, dependsOn: { byAlgoId: ['shake-256', 'sha-256'], context: 'article-signing' } },
+  { when: { algoId: 'ml-dsa-65', context: 'playground'     }, dependsOn: { byAlgoId: ['shake-256'], context: 'playground'     } },
+  { when: { algoId: 'ml-dsa-65', context: 'cbom-signing'   }, dependsOn: { byAlgoId: ['shake-256'], context: 'cbom-signing'   } },
+  // ECDSA P-256 hashes the message with SHA-256 before signing.
+  { when: { algoId: 'ecdsa-p256', context: 'playground' }, dependsOn: { byAlgoId: ['sha-256'], context: 'playground' } },
+  // SLH-DSA SHA2 variants use SHA-256 and SHA-512 internally (FIPS 205, SHA2 instantiation).
+  { when: { algoId: 'slh-dsa-sha2-128s', context: 'playground' }, dependsOn: { byAlgoId: ['sha-256'], context: 'playground' } },
+  { when: { algoId: 'slh-dsa-sha2-128f', context: 'playground' }, dependsOn: { byAlgoId: ['sha-256'], context: 'playground' } },
+  // HMAC uses SHA-256 as its underlying hash function.
+  { when: { algoId: 'hmac-sha256', context: 'contact-form' }, dependsOn: { byAlgoId: ['sha-256'], context: 'contact-form' } },
+];
+
+// ── Implicit dependency propagation ────────────────────────────────────────
+// When algorithm X is detected in context Y, also add algorithm Z to context Y.
+// Ensures supporting primitives (SHAKE-256, SHA-256) always appear alongside
+// the higher-level algorithm that relies on them, even when not directly visible in source.
+const IMPLICIT_DEPS = [
+  { whenAlgoId: 'ml-dsa-65',         impliesAlgoId: 'shake-256' }, // FIPS 204: SHAKE-256 internal
+  { whenAlgoId: 'ecdsa-p256',        impliesAlgoId: 'sha-256'   }, // ECDSA: SHA-256 message hashing
+  { whenAlgoId: 'slh-dsa-sha2-128s', impliesAlgoId: 'sha-256'   }, // SLH-DSA SHA2: SHA-256 internal
+  { whenAlgoId: 'slh-dsa-sha2-128f', impliesAlgoId: 'sha-256'   }, // SLH-DSA SHA2: SHA-256 internal
+  { whenAlgoId: 'hmac-sha256',        impliesAlgoId: 'sha-256'   }, // HMAC construction uses SHA-256
+];
+
+// ── Explicit exclusions ────────────────────────────────────────────────────
+// (algoId, context) pairs to suppress from the CBOM output.
+// Use to remove false positives where source-level pattern matching detects
+// a primitive that is not a distinct cryptographic asset in that context.
+const CBOM_EXCLUDES = [
+  // no exclusions currently
 ];
 
 // ── Context labels ─────────────────────────────────────────────────────────
 const CONTEXT_LABELS = {
-  'playground':      'Hybrid Encryption Playground',
   'article-signing': 'Article signing and verification',
+  'cbom-signing':    'CBOM signing',
+  'playground':      'Interactive Cryptography Playground',
   'contact-form':    'Contact form',
   'strapi':          'Strapi CMS',
 };
@@ -382,7 +437,7 @@ function resolveDeps(algo, context, finalEntries) {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
-function main() {
+async function main() {
   console.log('🔍  Scanning codebase for cryptographic assets...\n');
 
   // Collect all candidate findings: Map<algoId, Set<context>>
@@ -403,18 +458,54 @@ function main() {
     for (const d of declarations) addFinding(d.algoId, d.context);
   }
 
+  // Static declarations for scan-cbom.mjs itself (excluded from scanning to avoid self-scan)
+  addFinding('ml-dsa-65', 'cbom-signing');
+
   // Safety check
   if (candidateContexts.size === 0) {
     console.error('\n❌  No cryptographic assets detected — aborting to prevent blank output.');
     process.exit(1);
   }
 
-  // Deduplicate: per algo, pick highest-priority context
+  // Filter to recognized contexts only — drops noise from generic path segments
+  // (e.g. 'workers', 'components', 'lib', 'scripts') that are not meaningful CBOM contexts.
+  const RECOGNIZED_CONTEXTS = new Set(CONTEXT_PRIORITY);
+  for (const [algoId, contexts] of candidateContexts) {
+    for (const ctx of [...contexts]) {
+      if (!RECOGNIZED_CONTEXTS.has(ctx)) contexts.delete(ctx);
+    }
+    if (contexts.size === 0) candidateContexts.delete(algoId);
+  }
+
+  // Apply implicit dependencies: when algo X exists in context Y, also add algo Z to context Y.
+  // Run until stable (in case of chained deps, though none currently exist).
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const rule of IMPLICIT_DEPS) {
+      const sourceContexts = candidateContexts.get(rule.whenAlgoId);
+      if (!sourceContexts) continue;
+      for (const ctx of sourceContexts) {
+        const before = candidateContexts.get(rule.impliesAlgoId)?.size ?? 0;
+        addFinding(rule.impliesAlgoId, ctx);
+        const after = candidateContexts.get(rule.impliesAlgoId)?.size ?? 0;
+        if (after > before) changed = true;
+      }
+    }
+  }
+
+  // Apply explicit exclusions
+  for (const exc of CBOM_EXCLUDES) {
+    candidateContexts.get(exc.algoId)?.delete(exc.context);
+  }
+
+  // Emit one entry per (algo, context) pair — no deduplication across contexts
   const finalEntries = []; // { algo, context, bomRef }
   for (const [algoId, contexts] of candidateContexts) {
-    const algo    = ALGO_BY_ID[algoId];
-    const context = [...contexts].sort((a, b) => priorityOf(a) - priorityOf(b))[0];
-    finalEntries.push({ algo, context, bomRef: `${algoId}:${context}` });
+    const algo = ALGO_BY_ID[algoId];
+    for (const context of contexts) {
+      finalEntries.push({ algo, context, bomRef: `${algoId}:${context}` });
+    }
   }
 
   // Sort: QS first, then alphabetical
@@ -432,8 +523,7 @@ function main() {
 
   for (const { algo, context, bomRef } of finalEntries) {
     const label       = labelForContext(context);
-    // For ml-dsa-65, the descriptionSuffix already contains the full context description
-    const description = algo.id === 'ml-dsa-65' || algo.id === 'hs256-jwt'
+    const description = algo.id === 'hs256-jwt'
       ? algo.descriptionSuffix
       : `${label} — ${algo.descriptionSuffix}`;
 
@@ -510,6 +600,31 @@ function main() {
 
   console.log(`\n🎯  Written to frontend/public/cbom.json`);
   console.log(`    ${components.length} total  |  ${qsCount} quantum-safe  |  ${nqsCount} quantum-vulnerable`);
+
+  // ── Sign CBOM with ML-DSA-65 ──────────────────────────────────────────────
+  const envPath = join(ROOT, '.env');
+  let privKeyHex = '';
+  if (existsSync(envPath)) {
+    for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+      if (line.startsWith('ML_DSA_PRIVATE_KEY=')) {
+        privKeyHex = line.slice('ML_DSA_PRIVATE_KEY='.length).trim();
+        break;
+      }
+    }
+  }
+
+  if (privKeyHex) {
+    const cbomContent = readFileSync(OUTPUT, 'utf8');
+    const privKey     = Uint8Array.from(Buffer.from(privKeyHex, 'hex'));
+    const msgBytes    = new TextEncoder().encode(cbomContent);
+    const sig         = ml_dsa65.sign(msgBytes, privKey);
+    const sigHex      = Buffer.from(sig).toString('hex');
+    writeFileSync(OUTPUT_SIG_TMP, sigHex, 'utf8');
+    renameSync(OUTPUT_SIG_TMP, OUTPUT_SIG);
+    console.log('🔐  CBOM signed   → frontend/public/cbom.sig');
+  } else {
+    console.warn('⚠️   ML_DSA_PRIVATE_KEY not found in .env — skipping signature.');
+  }
 }
 
 main();
