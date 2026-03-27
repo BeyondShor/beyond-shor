@@ -1,0 +1,26 @@
+name: Deploy Dev (Staging)
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to VPS (staging)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/beyond-shor
+            git pull origin dev
+            cd frontend
+            pnpm install --frozen-lockfile
+            pnpm build
+            pm2 reload beyond-shor-dev --update-env
