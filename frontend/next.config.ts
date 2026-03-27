@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+              "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://analytics.beyond-shor.eu",
               "worker-src 'self' blob:",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
