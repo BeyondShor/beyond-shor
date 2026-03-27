@@ -48,6 +48,8 @@ export default async function RootLayout({
       <body className="flex min-h-screen flex-col antialiased">
         {children}
       </body>
+      {/* eslint-disable-next-line @next/next/no-before-interactive-script-component */}
+      <script defer src="https://analytics.beyond-shor.eu/script.js" data-website-id="1cfde2d7-291d-4c33-b7a4-e182a6c12d53"></script>
     </html>
   );
 }
