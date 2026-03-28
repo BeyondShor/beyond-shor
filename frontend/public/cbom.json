@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "version": 12,
+  "version": 14,
   "serialNumber": "urn:uuid:b7e3c2a1-4f8d-4e9b-a1c3-d6f2e8b5a790",
   "metadata": {
-    "timestamp": "2026-03-21T12:59:03Z",
+    "timestamp": "2026-03-28T14:41:29Z",
     "component": {
       "type": "application",
       "name": "beyond-shor.eu",
@@ -62,7 +62,7 @@
       "bom-ref": "hkdf-sha256:playground",
       "type": "cryptographic-asset",
       "name": "HKDF-SHA-256",
-      "description": "Interactive Cryptography Playground — HMAC-based Key Derivation Function with SHA-256 (RFC 5869 / NIST SP 800-56C). Derives a combined AES-256 key from the X25519 and KEM shared secrets in the hybrid encryption playground.",
+      "description": "Interactive Cryptography Playground — HMAC-based Key Derivation Function with SHA-256 (RFC 5869 / NIST SP 800-56C). Derives pseudorandom keying material from input key material using HMAC-SHA-256 as the underlying pseudorandom function.",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
@@ -153,7 +153,7 @@
       "bom-ref": "sha-256:article-signing",
       "type": "cryptographic-asset",
       "name": "SHA-256",
-      "description": "Article signing and verification — SHA-256 (NIST FIPS 180-4). Used here to hash media file content (images) into a compact 32-byte digest that is embedded in the signed article message. Grover's algorithm reduces preimage resistance to ~128 bits. Level 2 follows the classical CycloneDX categorisation.",
+      "description": "Article signing and verification — SHA-256 (NIST FIPS 180-4). Cryptographic hash function producing a 256-bit digest; Grover's algorithm halves preimage resistance to ~128 bits, corresponding to NIST Level 2.",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
@@ -166,7 +166,7 @@
       "bom-ref": "sha-256:contact-form",
       "type": "cryptographic-asset",
       "name": "SHA-256",
-      "description": "Contact form — SHA-256 (NIST FIPS 180-4). Used here to hash media file content (images) into a compact 32-byte digest that is embedded in the signed article message. Grover's algorithm reduces preimage resistance to ~128 bits. Level 2 follows the classical CycloneDX categorisation.",
+      "description": "Contact form — SHA-256 (NIST FIPS 180-4). Cryptographic hash function producing a 256-bit digest; Grover's algorithm halves preimage resistance to ~128 bits, corresponding to NIST Level 2.",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
@@ -179,7 +179,7 @@
       "bom-ref": "sha-256:playground",
       "type": "cryptographic-asset",
       "name": "SHA-256",
-      "description": "Interactive Cryptography Playground — SHA-256 (NIST FIPS 180-4). Used here to hash media file content (images) into a compact 32-byte digest that is embedded in the signed article message. Grover's algorithm reduces preimage resistance to ~128 bits. Level 2 follows the classical CycloneDX categorisation.",
+      "description": "Interactive Cryptography Playground — SHA-256 (NIST FIPS 180-4). Cryptographic hash function producing a 256-bit digest; Grover's algorithm halves preimage resistance to ~128 bits, corresponding to NIST Level 2.",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
@@ -192,7 +192,7 @@
       "bom-ref": "shake-256:article-signing",
       "type": "cryptographic-asset",
       "name": "SHAKE-256",
-      "description": "Article signing and verification — SHAKE-256 (NIST FIPS 202) — extendable output function (XOF) based on Keccak-1600. Used internally by ML-DSA-65 to derive the message representative µ = SHAKE-256(tr ∥ M, 64) per FIPS 204 §5.2. Not called directly in source; implicit via @noble/post-quantum.",
+      "description": "Article signing and verification — SHAKE-256 (NIST FIPS 202) — extendable output function (XOF) based on Keccak-1600. Produces variable-length output from arbitrary input; used as the core hash construction inside ML-DSA-65 (FIPS 204 §5.2).",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
@@ -205,7 +205,7 @@
       "bom-ref": "shake-256:cbom-signing",
       "type": "cryptographic-asset",
       "name": "SHAKE-256",
-      "description": "CBOM signing — SHAKE-256 (NIST FIPS 202) — extendable output function (XOF) based on Keccak-1600. Used internally by ML-DSA-65 to derive the message representative µ = SHAKE-256(tr ∥ M, 64) per FIPS 204 §5.2. Not called directly in source; implicit via @noble/post-quantum.",
+      "description": "CBOM signing — SHAKE-256 (NIST FIPS 202) — extendable output function (XOF) based on Keccak-1600. Produces variable-length output from arbitrary input; used as the core hash construction inside ML-DSA-65 (FIPS 204 §5.2).",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
@@ -218,7 +218,7 @@
       "bom-ref": "shake-256:playground",
       "type": "cryptographic-asset",
       "name": "SHAKE-256",
-      "description": "Interactive Cryptography Playground — SHAKE-256 (NIST FIPS 202) — extendable output function (XOF) based on Keccak-1600. Used internally by ML-DSA-65 to derive the message representative µ = SHAKE-256(tr ∥ M, 64) per FIPS 204 §5.2. Not called directly in source; implicit via @noble/post-quantum.",
+      "description": "Interactive Cryptography Playground — SHAKE-256 (NIST FIPS 202) — extendable output function (XOF) based on Keccak-1600. Produces variable-length output from arbitrary input; used as the core hash construction inside ML-DSA-65 (FIPS 204 §5.2).",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
@@ -257,7 +257,7 @@
       "bom-ref": "ecdsa-p256:playground",
       "type": "cryptographic-asset",
       "name": "ECDSA P-256",
-      "description": "Interactive Cryptography Playground — Classical elliptic-curve digital signature (NIST P-256 / secp256r1). Quantum-VULNERABLE — Shor's algorithm can recover the private key from the public key. Intentionally included as a quantum-vulnerable classical baseline in the Signature Playground.",
+      "description": "Interactive Cryptography Playground — Classical elliptic-curve digital signature (NIST P-256 / secp256r1). Quantum-VULNERABLE — Shor's algorithm can recover the private key from the public key in polynomial time.",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
@@ -270,7 +270,7 @@
       "bom-ref": "x25519:playground",
       "type": "cryptographic-asset",
       "name": "X25519",
-      "description": "Interactive Cryptography Playground — Classical ECDH key exchange (Curve25519). Quantum-VULNERABLE — Shor's algorithm breaks the elliptic curve discrete logarithm. Intentionally included as quantum-vulnerable baseline in hybrid schemes.",
+      "description": "Interactive Cryptography Playground — Classical ECDH key exchange (Curve25519). Quantum-VULNERABLE — Shor's algorithm breaks the elliptic curve discrete logarithm problem in polynomial time.",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {

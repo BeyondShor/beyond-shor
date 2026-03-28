@@ -106,7 +106,7 @@ const ALGORITHM_DB = [
     name: 'ECDSA P-256',
     primitive: 'signature',
     nistLevel: 0,
-    descriptionSuffix: "Classical elliptic-curve digital signature (NIST P-256 / secp256r1). Quantum-VULNERABLE — Shor's algorithm can recover the private key from the public key. Intentionally included as a quantum-vulnerable classical baseline in the Signature Playground.",
+    descriptionSuffix: "Classical elliptic-curve digital signature (NIST P-256 / secp256r1). Quantum-VULNERABLE — Shor's algorithm can recover the private key from the public key in polynomial time.",
     patterns: [/@noble\/curves\/nist/i, /\bp256\.sign\b/, /\bp256\.verify\b/, /\bp256\.keygen\b/],
   },
 
@@ -158,7 +158,7 @@ const ALGORITHM_DB = [
     name: 'X25519',
     primitive: 'ke',
     nistLevel: 0,
-    descriptionSuffix: "Classical ECDH key exchange (Curve25519). Quantum-VULNERABLE — Shor's algorithm breaks the elliptic curve discrete logarithm. Intentionally included as quantum-vulnerable baseline in hybrid schemes.",
+    descriptionSuffix: "Classical ECDH key exchange (Curve25519). Quantum-VULNERABLE — Shor's algorithm breaks the elliptic curve discrete logarithm problem in polynomial time.",
     patterns: [/x25519/i, /generateX25519KeyPair/i],
   },
 
@@ -186,7 +186,7 @@ const ALGORITHM_DB = [
     name: 'SHA-256',
     primitive: 'hash',
     nistLevel: 2,
-    descriptionSuffix: "SHA-256 (NIST FIPS 180-4). Used here to hash media file content (images) into a compact 32-byte digest that is embedded in the signed article message. Grover's algorithm reduces preimage resistance to ~128 bits. Level 2 follows the classical CycloneDX categorisation.",
+    descriptionSuffix: "SHA-256 (NIST FIPS 180-4). Cryptographic hash function producing a 256-bit digest; Grover's algorithm halves preimage resistance to ~128 bits, corresponding to NIST Level 2.",
     patterns: [
       /createHash\s*\(\s*['"`]sha256['"`]/,
       /subtle\.digest\s*\(\s*['"`]SHA-256['"`]/,
@@ -198,7 +198,7 @@ const ALGORITHM_DB = [
     name: 'SHAKE-256',
     primitive: 'hash',
     nistLevel: 3,
-    descriptionSuffix: "SHAKE-256 (NIST FIPS 202) — extendable output function (XOF) based on Keccak-1600. Used internally by ML-DSA-65 to derive the message representative µ = SHAKE-256(tr ∥ M, 64) per FIPS 204 §5.2. Not called directly in source; implicit via @noble/post-quantum.",
+    descriptionSuffix: "SHAKE-256 (NIST FIPS 202) — extendable output function (XOF) based on Keccak-1600. Produces variable-length output from arbitrary input; used as the core hash construction inside ML-DSA-65 (FIPS 204 §5.2).",
     patterns: [/shake[_-]?256/i],
   },
   {
@@ -240,7 +240,7 @@ const ALGORITHM_DB = [
     name: 'HKDF-SHA-256',
     primitive: 'kdf',
     nistLevel: 2,
-    descriptionSuffix: "HMAC-based Key Derivation Function with SHA-256 (RFC 5869 / NIST SP 800-56C). Derives a combined AES-256 key from the X25519 and KEM shared secrets in the hybrid encryption playground.",
+    descriptionSuffix: "HMAC-based Key Derivation Function with SHA-256 (RFC 5869 / NIST SP 800-56C). Derives pseudorandom keying material from input key material using HMAC-SHA-256 as the underlying pseudorandom function.",
     patterns: [
       /hkdf\s*\(\s*sha256/i,
       /hkdf.*sha[_-]?256/i,
@@ -523,9 +523,10 @@ async function main() {
 
   for (const { algo, context, bomRef } of finalEntries) {
     const label       = labelForContext(context);
+    const descSuffix = algo.descriptionSuffix;
     const description = algo.id === 'hs256-jwt'
-      ? algo.descriptionSuffix
-      : `${label} — ${algo.descriptionSuffix}`;
+      ? descSuffix
+      : `${label} — ${descSuffix}`;
 
     components.push({
       'bom-ref': bomRef,
