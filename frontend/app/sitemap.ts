@@ -30,7 +30,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const { href, changeFrequency, priority } of staticRoutes) {
       const path = getPathname({ locale, href });
       entries.push({
-        url: `${BASE_URL}/${locale}${path === '/' ? '' : path}`,
+        url: `${BASE_URL}${path === '/' ? `/${locale}` : path}`,
         changeFrequency,
         priority,
       });
@@ -44,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       for (const slug of slugs) {
         const path = getPathname({ locale, href: { pathname: '/blog/[slug]', params: { slug } } });
         entries.push({
-          url: `${BASE_URL}/${locale}${path}`,
+          url: `${BASE_URL}${path}`,
           changeFrequency: 'monthly',
           priority: 0.8,
         });
