@@ -76,9 +76,13 @@
 }
 
 @keyframes scan-line {
-  from { top: -4px; }
-  to   { top: 100%; }
+  from { transform: translateY(-4px); }
+  to   { transform: translateY(100vh); }
 }
+
+/* ─── Font Display Override ──────────────────────────────────────────────── */
+@font-face { font-family: 'Inter Variable'; font-display: swap; src: local(''); }
+@font-face { font-family: 'JetBrains Mono Variable'; font-display: swap; src: local(''); }
 
 /* ─── Base Styles ─────────────────────────────────────────────────────────── */
 @layer base {
@@ -229,6 +233,7 @@
   /* ── Scan-line (cryptographic decoration) ────────────────────────────────── */
   .scan-line {
     position: absolute;
+    top: 0;
     left: 0;
     right: 0;
     height: 80px;
@@ -245,6 +250,8 @@
     mix-blend-mode: overlay;
     z-index: 5;
     pointer-events: none;
+    will-change: transform;
+    contain: layout style;
     animation: scan-line 8s linear infinite;
   }
 
