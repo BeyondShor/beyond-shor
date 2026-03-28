@@ -22,8 +22,8 @@
   --color-text-dim:    #475569;   /* slate-600 */
 
   /* Fonts */
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+  --font-sans: var(--font-inter, 'Inter Variable'), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains, 'JetBrains Mono Variable'), 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
 
   /* Glassmorphism tokens */
   --color-glass-bg:        rgba(15, 23, 42, 0.55);
@@ -79,10 +79,6 @@
   from { transform: translateY(-4px); }
   to   { transform: translateY(100vh); }
 }
-
-/* ─── Font Display Override ──────────────────────────────────────────────── */
-@font-face { font-family: 'Inter Variable'; font-display: swap; src: local(''); }
-@font-face { font-family: 'JetBrains Mono Variable'; font-display: swap; src: local(''); }
 
 /* ─── Base Styles ─────────────────────────────────────────────────────────── */
 @layer base {

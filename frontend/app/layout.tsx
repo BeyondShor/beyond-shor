@@ -1,9 +1,22 @@
 import type { Metadata } from 'next';
+import localFont from 'next/font/local';
 import { getLocale } from 'next-intl/server';
-import '@fontsource-variable/inter';
-import '@fontsource-variable/jetbrains-mono';
 import 'katex/dist/katex.min.css';
 import './globals.css';
+
+const fontSans = localFont({
+  src: '../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
+  variable: '--font-inter',
+  display: 'swap',
+  preload: true,
+});
+
+const fontMono = localFont({
+  src: '../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2',
+  variable: '--font-jetbrains',
+  display: 'swap',
+  preload: false,
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -44,7 +57,7 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getLocale();
   return (
-    <html lang={locale}>
+    <html lang={locale} className={`${fontSans.variable} ${fontMono.variable}`} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col antialiased">
         {children}
       </body>
