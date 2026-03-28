@@ -19,6 +19,7 @@ jobs:
           script: |
             set -e
             cd /var/www/beyond-shor
+            git checkout -- frontend/public/cbom.json frontend/public/cbom.sig
             git pull origin main
             cd frontend
             pnpm install --frozen-lockfile
