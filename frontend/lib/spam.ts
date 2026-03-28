@@ -5,7 +5,7 @@
  *   1. Honeypot  — hidden field; bots fill it, humans don't
  *   2. Timing    — minimum 3 s between page load and submit
  *   3. Math CAPTCHA — server-generated arithmetic question, HMAC-signed token,
- *                     no sessions needed, auto-expires after 10 minutes
+ *                     no sessions needed, auto-expires after 5 minutes
  *   4. Rate limit   — 3 submissions per IP per hour (in-memory)
  */
 
