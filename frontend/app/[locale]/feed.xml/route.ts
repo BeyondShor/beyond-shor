@@ -6,7 +6,7 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').r
 const FEED_META: Record<string, { title: string; description: string; language: string }> = {
   de: {
     title: 'Beyond Shor — Post-Quantum Cryptography',
-    description: 'Expertenwissen zu Post-Quantum-Kryptographie für Sicherheitsverantwortliche und IT-Entscheider.',
+    description: 'Expertenwissen zu Post-Quanten-Kryptografie für Sicherheitsverantwortliche und IT-Entscheider.',
     language: 'de',
   },
   en: {
