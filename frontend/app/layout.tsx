@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import { getLocale } from 'next-intl/server';
+import 'katex/dist/katex.min.css';
 import './globals.css';
 
 const fontSans = localFont({
