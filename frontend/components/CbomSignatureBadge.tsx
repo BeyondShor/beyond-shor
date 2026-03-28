@@ -33,7 +33,7 @@ export default function CbomSignatureBadge({ sig }: { sig: string }) {
           </span>
         </div>
         <Link
-          href="/verify?mode=cbom"
+          href={{ pathname: '/verify', query: { mode: 'cbom' } }}
           className="rounded px-3 py-1 text-xs font-mono font-semibold border transition-colors border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary-glow)]"
         >
           {t('sigVerifyLink')}

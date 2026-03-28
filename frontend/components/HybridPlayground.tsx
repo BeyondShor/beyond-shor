@@ -109,12 +109,12 @@ const KEM_DISPLAY_NAMES: Record<KemAlgorithm, string> = {
 interface ImplInfoPanelProps {
   toggleLabel: string; packageLabel: string; snippetLabel: string;
   packageName: string; packageUrl: string; snippetHtml: string; prose: string;
-  articleIntro: string; articleHref: string | null; articleLinkText: string;
+  articleIntro: string; articleSlug: string | null; articleLinkText: string;
   articleComingSoon: string;
 }
 
 function ImplInfoPanel({ toggleLabel, packageLabel, snippetLabel, packageName, packageUrl,
-  snippetHtml, prose, articleIntro, articleHref, articleLinkText, articleComingSoon,
+  snippetHtml, prose, articleIntro, articleSlug, articleLinkText, articleComingSoon,
 }: ImplInfoPanelProps) {
   const [open, setOpen] = useState(false);
   return (
@@ -139,8 +139,8 @@ function ImplInfoPanel({ toggleLabel, packageLabel, snippetLabel, packageName, p
           </div>
           <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">{prose}</p>
           <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-            {articleHref
-              ? <>{articleIntro}{' '}<Link href={articleHref} className="text-[var(--color-primary)] hover:underline">{articleLinkText}</Link>.</>
+            {articleSlug
+              ? <>{articleIntro}{' '}<Link href={{ pathname: '/blog/[slug]', params: { slug: articleSlug } }} className="text-[var(--color-primary)] hover:underline">{articleLinkText}</Link>.</>
               : <span className="text-[var(--color-text-muted)]">{articleComingSoon}</span>}
           </p>
         </div>
@@ -1506,7 +1506,7 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
               snippetLabel={t('implSnippetLabel')} packageName="@noble/post-quantum"
               packageUrl="https://github.com/paulmillr/noble-post-quantum"
               snippetHtml={snippetHtmls.mlkem} prose={t('mlkemImplProse')}
-              articleIntro={t('implArticleIntro')} articleHref="/blog/ML-KEM"
+              articleIntro={t('implArticleIntro')} articleSlug="ML-KEM"
               articleLinkText={t('implArticleLink')} articleComingSoon="" />
           )}
           {kem === 'mceliece' && (
@@ -1514,7 +1514,7 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
               snippetLabel={t('implSnippetLabel')} packageName="mceliece"
               packageUrl="https://github.com/cyph/pqcrypto.js/tree/master/packages/mceliece"
               snippetHtml={snippetHtmls.mceliece} prose={t('mcElieceImplProse')}
-              articleIntro={t('implArticleIntro')} articleHref={null}
+              articleIntro={t('implArticleIntro')} articleSlug={null}
               articleLinkText={t('implArticleLink')} articleComingSoon={t('implArticleComingSoon')} />
           )}
           {kem === 'frodokem' && (
@@ -1522,7 +1522,7 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
               snippetLabel={t('implSnippetLabel')} packageName="@oqs/liboqs-js"
               packageUrl="https://github.com/openforge-sh/liboqs-node"
               snippetHtml={snippetHtmls.frodokem} prose={t('frodoKemImplProse')}
-              articleIntro={t('implArticleIntro')} articleHref={null}
+              articleIntro={t('implArticleIntro')} articleSlug={null}
               articleLinkText={t('implArticleLink')} articleComingSoon={t('implArticleComingSoonFrodoKem')} />
           )}
 

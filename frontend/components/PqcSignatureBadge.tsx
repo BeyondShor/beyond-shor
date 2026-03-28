@@ -44,7 +44,7 @@ export default function PqcSignatureBadge({
         </div>
 
         <Link
-          href={`/verify?sig=${encodeURIComponent(signature)}&docId=${encodeURIComponent(documentId)}`}
+          href={{ pathname: '/verify', query: { sig: signature, docId: documentId } }}
           target="_blank"
           rel="noopener noreferrer"
           className="rounded px-3 py-1 text-xs font-mono font-semibold border transition-colors

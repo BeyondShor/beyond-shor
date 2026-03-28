@@ -35,7 +35,7 @@ export default function ArticleCard({ article, locale }: ArticleCardProps) {
         {/* Title */}
         <h2 className="text-lg font-semibold text-[var(--color-text-base)] leading-snug">
           <Link
-            href={`/blog/${article.slug}`}
+            href={{ pathname: '/blog/[slug]', params: { slug: article.slug } }}
             className="hover:text-[var(--color-primary)] transition-colors"
           >
             {article.title}

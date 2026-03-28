@@ -56,11 +56,10 @@ export default async function BlogPage({ params, searchParams }: BlogPageProps) 
 
   // Build pagination href preserving the active category filter
   function pageHref(p: number) {
-    const params = new URLSearchParams();
-    if (activeCategory) params.set('category', activeCategory);
-    if (p > 1) params.set('page', String(p));
-    const qs = params.toString();
-    return `/blog${qs ? `?${qs}` : ''}`;
+    const query: Record<string, string> = {};
+    if (activeCategory) query.category = activeCategory;
+    if (p > 1) query.page = String(p);
+    return { pathname: '/blog' as const, query };
   }
 
   return (

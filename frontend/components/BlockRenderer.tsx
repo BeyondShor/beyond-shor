@@ -75,7 +75,8 @@ async function RichText({ body }: { block: RichTextBlock; body: string }) {
             const isSafe = href && /^(https?:\/\/|\/|#|mailto:)/.test(href);
             if (!isSafe) return <>{children}</>;
             if (href.startsWith('/blog/')) {
-              return <Link href={href}>{children}</Link>;
+              const slug = href.slice('/blog/'.length).split('?')[0];
+              return <Link href={{ pathname: '/blog/[slug]', params: { slug } }}>{children}</Link>;
             }
             return (
               <a href={href} target="_blank" rel="noopener noreferrer">

@@ -95,7 +95,7 @@ export default async function RssPage({ params }: PageProps) {
                       {pubDate}
                     </p>
                     <Link
-                      href={`/blog/${article.slug}`}
+                      href={{ pathname: '/blog/[slug]', params: { slug: article.slug } }}
                       className="font-semibold text-[var(--color-text-base)] hover:text-[var(--color-primary)] transition-colors block mb-2"
                     >
                       {article.title}

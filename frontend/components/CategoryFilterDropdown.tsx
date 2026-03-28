@@ -49,8 +49,7 @@ export default function CategoryFilterDropdown({ categories, activeCategory }: P
   }, [open]);
 
   function navigate(slug: string | null) {
-    const qs = slug ? `?category=${encodeURIComponent(slug)}` : '';
-    router.push(`${pathname}${qs}`);
+    router.push({ pathname: '/blog', query: slug ? { category: slug } : {} });
     setOpen(false);
   }
 
