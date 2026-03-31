@@ -186,7 +186,7 @@
     "metaDescription": "Interactive browser playground for hybrid post-quantum encryption: X25519 + ML-KEM-1024 / McEliece / FrodoKEM + AES-256-GCM. With tamper mode, KEM race, 20× benchmark, and attacker view — fully client-side, no backend required.",
     "label": "// hybrid encryption",
     "title": "Hybrid Encryption Playground",
-    "intro": "An interactive playground that visualises hybrid post-quantum encryption step by step. Fully client-side — all computation runs in the browser, no backend required. Choose a KEM algorithm (ML-KEM-1024, Classic McEliece, or FrodoKEM), enter a message, and click \"Generate\". You will see exactly what is transmitted publicly and what remains private. Then: tamper mode (change one byte — the protocol breaks immediately), attacker and quantum-computer view, KEM race (all three in parallel), or a 20× benchmark with full statistics.",
+    "intro": "An interactive playground that visualises hybrid post-quantum encryption step by step. Fully client-side — all computation runs in the browser, no backend required. Choose a KEM algorithm (ML-KEM-1024, Classic McEliece, or FrodoKEM), enter a message, and click \"Generate\". The playground combines X25519 (ECDH) with a PQC KEM — both shared secrets are combined via HKDF-SHA-256 into a single AES-256-GCM key. You will see exactly what is transmitted publicly and what remains private. Then: tamper mode (change one byte — the protocol breaks immediately), attacker and quantum-computer view, KEM race (all three in parallel), or a 20× benchmark with full statistics.",
     "inputLabel": "Plaintext",
     "inputPlaceholder": "Your secret message…",
     "defaultPlaintext": "Hello, post-quantum world!",
