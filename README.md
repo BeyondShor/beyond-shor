@@ -1,6 +1,6 @@
 # beyond-shor.eu
 
-**Eine interaktive Lernplattform für Post-Quantum-Kryptografie.**
+**Eine interaktive Lernplattform für Post-Quanten Kryptografie.**
 
 > Dieses Repository enthält den Quellcode von [beyond-shor.eu](https://beyond-shor.eu) — einer zweisprachigen (DE/EN) Plattform, die sich mit Post-Quantum-Kryptografie, Krypto-Agilität und der Migration weg von quantenvulnerablen Algorithmen beschäftigt. Der Code ist zur Einsicht und als Referenz veröffentlicht — nicht als betriebsbereite lokale Installation gedacht.
 
@@ -19,8 +19,8 @@ Jeder Artikel wird mit **ML-DSA-65** (NIST FIPS 204) signiert und die Signatur i
 ### 🔐 ML-DSA-65 Artikel-Signierung
 Jeder Artikel wird bei der Veröffentlichung automatisch signiert. Ein Strapi-Lifecycle-Hook serialisiert den Artikelinhalt (inkl. SHA-256-Hashes eingebetteter Medien) und signiert ihn direkt mit ML-DSA-65 — ohne Pre-Hashing, da ML-DSA intern SHAKE-256 per FIPS 204 verwendet. Signatur und Public-Key-Referenz werden zusammen mit dem Artikel gespeichert. Die Verifikation läuft vollständig clientseitig über `@noble/post-quantum` — kein Server, keine Vertrauensannahme jenseits des veröffentlichten Public Keys.
 
-### ⚗️ Post-Quantum Kryptografie Playground
-Eine interaktive, vollständig clientseitige Lernplattofrm für Post-Quantum Kryptografie - mit hybrider Verschlüsselung, post-quantensicheren Signaturverfahren und statistisch ausgewertetem Benchmarking. Das ist in drei Modi implementiert: 
+### ⚗️ Post-Quanten Kryptografie-Playground
+Eine interaktive, vollständig clientseitige Lernplattform für Post-Quanten Kryptografie - mit hybrider Verschlüsselung, post-quantensicheren Signaturverfahren und statistisch ausgewertetem Benchmarking. Das ist in drei Modi implementiert: 
 
 **Einzelner Run:** Der vollständige hybride Handshake wird Schritt für Schritt visualisiert (Schlüsselerzeugung → X25519-DH → KEM-Encapsulation → HKDF → AES-256-GCM-Verschlüsselung → Entschlüsselung). Jeder Schritt zeigt explizit, welche Werte öffentlich übertragen werden und welche privat bleiben. Zusätzlich verfügbar: eine umschaltbare Angreiferperspektive, ein Toggle für Shors Algorithmus (mit Auswirkungen auf den klassischen Kanal), ein Bit-Manipulations-Toggle zur Demonstration von AES-GCM-Authentizität sowie eine separate Server- und Client-Sicht. Einzelne Runs können als Link geteilt werden — der State wird beim Aufruf wiederhergestellt.
 
