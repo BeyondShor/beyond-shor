@@ -31,10 +31,9 @@ interface RbeState {
   ctAlice:     EncResult | null;
   decBob:      DecState;
   decAlice:    DecState;
-  // Charlie's attack on Bob's ciphertext
-  charlieHsk:       HskPair | null;
-  charlieAttackTemp: number[] | null;
-  charlieAttackMsg:  string | null;
+  // Alice's attack on Bob's ciphertext (step 6)
+  aliceAttackTemp: number[] | null;
+  aliceAttackMsg:  string | null;
   busy:        boolean;
   busyLabel:   string;
   error:       string | null;
@@ -51,7 +50,7 @@ const INIT: RbeState = {
   msgForAlice: 'Hallo Alice! Nur für dich.',
   ctBob: null, ctAlice: null,
   decBob: EMPTY_DEC, decAlice: EMPTY_DEC,
-  charlieHsk: null, charlieAttackTemp: null, charlieAttackMsg: null,
+  aliceAttackTemp: null, aliceAttackMsg: null,
   busy: false, busyLabel: '', error: null,
 };
 
@@ -165,7 +164,8 @@ function PolyBox({ label, poly, equation, secret, garbled }: {
     <div className={`rounded-lg border px-4 py-3 space-y-1.5 ${borderCls}`}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <Label>{label}</Label>
+          {/* Kein uppercase hier — Labels enthalten Variablennamen wie a0, r, hsk0 */}
+          <span className="font-mono text-xs text-[var(--color-text-dim)] tracking-wide">{label}</span>
           {equation && (
             <span className="ml-2 font-mono text-xs text-[var(--color-text-dim)]">= {equation}</span>
           )}
@@ -430,47 +430,37 @@ export default function RbePlayground() {
     } catch (e) { setErr(e); }
   }
 
-  // Charlie's attack: use hsk_charlie (bound to Charlie) on c_bob (bound to Bob)
-  async function doFetchCharlieHsk() {
-    if (!s.sessionId) return;
-    setBusy('hsk_charlie vom KC laden (für Angriffsdemonstration)…');
-    try {
-      const res = await fetch(`/api/rbe/hsk?sessionId=${s.sessionId}&targetId=charlie`);
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
-      const data = await res.json() as ApiHskResponse;
-      setS(p => ({ ...p, charlieHsk: { hsk0: data.hsk0, hsk1: data.hsk1 }, busy: false }));
-    } catch (e) { setErr(e); }
-  }
-
-  async function doCharlieAttackStep1() {
-    if (!s.ctBob || !s.charlieHsk) return;
-    setBusy('Charlie wendet hsk_charlie auf c_bob an (falsche Identitätsbindung!)…');
+  // Alice's attack: use hsk_alice (bound to Alice) on c_bob (bound to Bob)
+  // Alice's hsk is already available from her own decryption in step 5.
+  async function doAliceAttackStep1() {
+    if (!s.ctBob || !s.decAlice.hsk) return;
+    setBusy('Alice wendet hsk_alice auf c_bob an (falsche Identitätsbindung!)…');
     try {
       type S1Done = { id: string; type: 'dec_step1_done'; temp: number[]; ms: number };
       const res = await callWorker<S1Done>({
         id: uid(), type: 'dec_step1',
         c0_0: s.ctBob.c0_0,
-        c0_1: s.ctBob.c0_1,   // ← bound to H("bob")
-        hsk0: s.charlieHsk.hsk0,
-        hsk1: s.charlieHsk.hsk1,  // ← bound to H("charlie")
+        c0_1: s.ctBob.c0_1,         // ← bound to H("bob")
+        hsk0: s.decAlice.hsk.hsk0,
+        hsk1: s.decAlice.hsk.hsk1,  // ← bound to H("alice")
         c1:   s.ctBob.c1,
       });
-      setS(p => ({ ...p, charlieAttackTemp: res.temp, busy: false }));
+      setS(p => ({ ...p, aliceAttackTemp: res.temp, busy: false }));
     } catch (e) { setErr(e); }
   }
 
-  async function doCharlieAttackStep2() {
-    if (!s.ctBob || !s.charlieAttackTemp || !s.charlie) return;
-    setBusy('Charlie wendet sk_charlie an (liest seinen eigenen Schlüssel aus)…');
+  async function doAliceAttackStep2() {
+    if (!s.ctBob || !s.aliceAttackTemp || !s.alice) return;
+    setBusy('Alice wendet sk_alice an…');
     try {
       type S2Done = { id: string; type: 'dec_step2_done'; result: number[]; msg: string; ms: number };
       const res = await callWorker<S2Done>({
         id: uid(), type: 'dec_step2',
         c0_0: s.ctBob.c0_0,
-        temp: s.charlieAttackTemp,
-        sk:   s.charlie.sk,
+        temp: s.aliceAttackTemp,
+        sk:   s.alice.sk,
       });
-      setS(p => ({ ...p, charlieAttackMsg: res.msg, busy: false }));
+      setS(p => ({ ...p, aliceAttackMsg: res.msg, busy: false }));
     } catch (e) { setErr(e); }
   }
 
@@ -794,38 +784,39 @@ export default function RbePlayground() {
       )}
 
       {/* ════════════════════════════════════════════════════════════════════
-          SCHRITT 6 — Sicherheitsnachweis: Charlie schlägt fehl
+          SCHRITT 6 — Sicherheitsnachweis: Alice schlägt fehl
       ════════════════════════════════════════════════════════════════════ */}
-      {bothDecoded && s.charlie && s.ctBob && (
-        <Card active={s.charlieAttackMsg === null}>
+      {bothDecoded && s.alice && s.ctBob && s.decAlice.hsk && (
+        <Card active={s.aliceAttackMsg === null}>
           <StepTitle n={6}
-            title="Sicherheitsnachweis: Charlie versucht, Bobs Nachricht zu lesen"
-            done={s.charlieAttackMsg !== null} />
+            title="Sicherheitsnachweis: Alice versucht, Bobs Nachricht zu lesen"
+            done={s.aliceAttackMsg !== null} />
 
           <div className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed space-y-2">
             <p>
-              Charlie ist ein <em>legitimer</em>, registrierter Nutzer mit einem gültig vom KC
-              ausgestellten <Mono>hsk_charlie</Mono>. Trotzdem kann er Bobs Nachricht nicht lesen —
-              und genau das wollen wir jetzt nachweisen.
+              Alice hat in Schritt 5 ihre eigene Nachricht erfolgreich entschlüsselt —
+              sie ist eine <em>legitime</em> Nutzerin mit einem gültig vom KC ausgestellten{' '}
+              <Mono>hsk_alice</Mono>. Jetzt versucht sie, denselben Schlüssel zu benutzen,
+              um auch Bobs Nachricht zu lesen.
             </p>
             <p>
-              Der Grund liegt in der Identitätsbindung:{' '}
-              <Mono>hsk_charlie</Mono> wurde mit dem Identitätspolynom <Mono>H("charlie")</Mono> berechnet
-              und erfüllt die Gleichung <Mono>a0·hsk0 + (a1 + H("charlie"))·hsk1 = mpkAgg − pk_charlie</Mono>.{' '}
-              Bobs Chiffretext <Mono>c0_1</Mono> enthält aber <Mono>H("bob")</Mono>.
-              Die beiden Polynome sind verschieden — die Gleichung geht nicht auf:
+              Das schlägt fehl, weil <Mono>hsk_alice</Mono> mit dem Identitätspolynom{' '}
+              <Mono>H("alice")</Mono> berechnet wurde und die Gleichung{' '}
+              <Mono>a0·hsk0 + (a1 + H("alice"))·hsk1 = mpkAgg − pk_alice</Mono> erfüllt.{' '}
+              Bobs Chiffretext enthält aber <Mono>H("bob")</Mono> in <Mono>c0_1</Mono>.{' '}
+              Da <Mono>H("alice") ≠ H("bob")</Mono>, geht die Gleichung nicht auf:
             </p>
           </div>
 
           <div className="rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-bg-base)]
             px-4 py-3 mb-5 font-mono text-xs text-[var(--color-text-muted)] space-y-1.5 leading-loose">
-            <div className="text-[var(--color-text-dim)]">// Charlie versucht Schritt 1 mit hsk_charlie auf c_bob:</div>
-            <div><Mono>c0_0·hsk0_charlie + c0_1·hsk1_charlie</Mono></div>
-            <div className="pl-4 text-[var(--color-text-dim)]">// c0_1 enthält H("bob"), hsk1_charlie enthält H("charlie"):</div>
-            <div className="pl-4"><Mono dim>= r_e · hsk1_charlie · (a0·r + a1 + H("bob"))</Mono></div>
-            <div className="pl-4"><Mono dim>= r_e · (1+H("charlie"))⁻¹·(mpkAgg−pk_charlie) · (1 + H("bob"))</Mono></div>
+            <div className="text-[var(--color-text-dim)]">// Alice versucht Schritt 1 mit hsk_alice auf c_bob:</div>
+            <div><Mono>c0_0·hsk0_alice + c0_1·hsk1_alice</Mono></div>
+            <div className="pl-4 text-[var(--color-text-dim)]">// c0_1 enthält H("bob"), hsk1_alice enthält H("alice"):</div>
+            <div className="pl-4"><Mono dim>= r_e · hsk1_alice · (a0·r + a1 + H("bob"))</Mono></div>
+            <div className="pl-4"><Mono dim>= r_e · (1+H("alice"))⁻¹·(mpkAgg−pk_alice) · (1 + H("bob"))</Mono></div>
             <div className="pl-4 text-red-400/80 pt-1">
-              ≠ r_e · (mpkAgg − pk_charlie){' '}
+              ≠ r_e · (mpkAgg − pk_alice){' '}
               <span className="text-[var(--color-text-dim)]">← würde für korrekten Schritt 1 benötigt</span>
             </div>
             <div className="pl-4 text-red-400/50 text-xs">
@@ -835,66 +826,57 @@ export default function RbePlayground() {
 
           <div className="space-y-3">
 
-            {/* 1. hsk_charlie laden */}
+            {/* hsk_alice ist bereits aus Schritt 5 vorhanden — kein extra Fetch nötig */}
+            <Callout variant="info">
+              <Mono>hsk_alice</Mono> wurde bereits in Schritt 5 vom KC geladen.
+              Alice verwendet ihn jetzt auf dem falschen Chiffretext.
+            </Callout>
+
+            {/* Schritt 1 mit falscher Identitätsbindung */}
             <div className="space-y-2">
-              <BtnDanger onClick={doFetchCharlieHsk} disabled={!!s.charlieHsk} busy={s.busy}>
-                hsk_charlie laden (legitim, aber falsch gebunden)
+              <BtnDanger onClick={doAliceAttackStep1} disabled={!!s.aliceAttackTemp} busy={s.busy}>
+                Schritt 1: hsk_alice auf c_bob anwenden (Identitätsfehler!)
               </BtnDanger>
-              {s.charlieHsk && (
+              {s.aliceAttackTemp && (
                 <div className="space-y-2">
-                  <PolyBox label='hsk0_charlie (gebunden an H("charlie"))' poly={s.charlieHsk.hsk0} />
-                  <PolyBox label='hsk1_charlie (gebunden an H("charlie"))' poly={s.charlieHsk.hsk1} />
+                  <PolyBox label='temp_alice_attack — kein r_e·pk_alice + encode(msg)!'
+                    poly={s.aliceAttackTemp} garbled />
+                  <Callout variant="danger">
+                    <strong>Identitätsbindung greift.</strong>{' '}
+                    Das Ergebnis ist <Mono>r_e · (1+H("alice"))⁻¹·(mpkAgg−pk_alice) · (1+H("bob"))</Mono> —
+                    kein gültiger Ring-LWE-Chiffretext unter <Mono>pk_alice</Mono>.{' '}
+                    Schritt 2 kann dieses Rauschen nicht herausrechnen.
+                  </Callout>
                 </div>
               )}
             </div>
 
-            {/* 2. Schritt 1 mit falscher Identitätsbindung */}
-            {s.charlieHsk && (
+            {/* Schritt 2 mit sk_alice */}
+            {s.aliceAttackTemp && (
               <div className="space-y-2">
-                <BtnDanger onClick={doCharlieAttackStep1} disabled={!!s.charlieAttackTemp} busy={s.busy}>
-                  Schritt 1: hsk_charlie auf c_bob anwenden (Identitätsfehler!)
+                <BtnDanger onClick={doAliceAttackStep2} disabled={s.aliceAttackMsg !== null} busy={s.busy}>
+                  Schritt 2: sk_alice anwenden
                 </BtnDanger>
-                {s.charlieAttackTemp && (
-                  <div className="space-y-2">
-                    <PolyBox label="temp_charlie (garbled — kein Ring-LWE unter pk_charlie!)"
-                      poly={s.charlieAttackTemp} garbled />
-                    <Callout variant="danger">
-                      <strong>Identitätsbindung greift.</strong> Das Ergebnis ist{' '}
-                      <Mono>r_e · (1+H("charlie"))⁻¹ · target_charlie · (1+H("bob"))</Mono> —
-                      ein von <Mono>r_e·pk_charlie</Mono> völlig verschiedenes Polynom.
-                      Schritt 2 kann dieses Rauschen nicht kompensieren.
-                    </Callout>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* 3. Schritt 2 mit sk_charlie */}
-            {s.charlieAttackTemp && (
-              <div className="space-y-2">
-                <BtnDanger onClick={doCharlieAttackStep2} disabled={s.charlieAttackMsg !== null} busy={s.busy}>
-                  Schritt 2: sk_charlie anwenden
-                </BtnDanger>
-                {s.charlieAttackMsg !== null && (
+                {s.aliceAttackMsg !== null && (
                   <div className="space-y-3">
                     <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-4 py-3">
-                      <p className="font-mono text-xs text-red-400/70 mb-1">// Charlie liest</p>
+                      <p className="font-mono text-xs text-red-400/70 mb-1">// Alice liest (Versuch)</p>
                       <p className="font-mono text-red-300 text-lg tracking-wide">
-                        {s.charlieAttackMsg.length > 0
-                          ? `"${s.charlieAttackMsg}"`
+                        {s.aliceAttackMsg.length > 0
+                          ? `"${s.aliceAttackMsg}"`
                           : <span className="text-red-400/50 italic text-sm">— leere Ausgabe (Datenmüll) —</span>
                         }
                       </p>
                     </div>
                     <Callout variant="success">
                       <strong>Sicherheitsnachweis abgeschlossen.</strong>{' '}
-                      {s.charlieAttackMsg.length === 0
-                        ? 'Charlie erhält eine leere Ausgabe — das Rauschen überwältigt die Nachricht vollständig.'
-                        : `Charlie liest "${s.charlieAttackMsg}" — reiner Datenmüll, nicht Bobs Nachricht "${s.msgForBob}".`
+                      {s.aliceAttackMsg.length === 0
+                        ? 'Alice erhält eine leere Ausgabe — das Rauschen überwältigt die Nachricht vollständig.'
+                        : `Alice liest "${s.aliceAttackMsg}" — reiner Datenmüll, nicht Bobs Nachricht.`
                       }{' '}
-                      Die Identitätsbindung in <Mono>c0_1</Mono> hat verhindert, dass
-                      Charlies <Mono>hsk</Mono> das Polynom korrekt reduziert.
-                      Selbst ein legitimer, registrierter Nutzer kann fremde Chiffretexte nicht entschlüsseln.
+                      Obwohl Alice eine legitime Empfängerin ist und ihren eigenen Chiffretext
+                      korrekt entschlüsseln kann, schützt die Identitätsbindung in <Mono>c0_1</Mono>{' '}
+                      Bobs Nachricht vor ihr. Kein Empfänger kann fremde Nachrichten lesen.
                     </Callout>
                   </div>
                 )}
@@ -902,7 +884,7 @@ export default function RbePlayground() {
             )}
           </div>
 
-          {s.charlieAttackMsg !== null && (
+          {s.aliceAttackMsg !== null && (
             <div className="mt-6">
               <button
                 onClick={() => setS({ ...INIT })}
