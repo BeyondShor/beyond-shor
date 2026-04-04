@@ -13,6 +13,7 @@ export const routing = defineRouting({
     '/playground':    '/playground',
     '/rss':           '/rss',
     '/verify':        '/verify',
+    '/rbe':          '/rbe',
     '/kontakt':    { de: '/kontakt',    en: '/contact'        },
     '/impressum':  { de: '/impressum',  en: '/imprint'        },
     '/datenschutz': { de: '/datenschutz', en: '/privacy-policy' },
