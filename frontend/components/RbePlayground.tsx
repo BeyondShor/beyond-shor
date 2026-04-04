@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
+import katex from 'katex';
 import type {
   WorkerInMessage, WorkerOutMessage,
   ApiSetupResponse, ApiRegisterResponse, ApiHskResponse,
@@ -124,6 +125,17 @@ function Mono({ children, dim }: { children: React.ReactNode; dim?: boolean }) {
     <code className={`font-mono text-xs ${dim ? 'text-[var(--color-text-dim)]' : 'text-[var(--color-primary)]'}`}>
       {children}
     </code>
+  );
+}
+
+// Inline KaTeX math — re-uses the katex CSS already loaded globally in layout.tsx
+function M({ children }: { children: string }) {
+  const html = katex.renderToString(children, { throwOnError: false, output: 'html' });
+  return (
+    <span
+      className="text-[var(--color-primary)]"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 }
 
@@ -507,7 +519,7 @@ export default function RbePlayground() {
             <strong className="text-[var(--color-text-base)]">Registration-Based Encryption (RBE)</strong> geht
             einen anderen Weg: Ein <strong className="text-[var(--color-text-base)]">Key Curator (KC)</strong> übernimmt
             die Registrierung, kennt aber <em>keinen einzigen Secret Key</em>. Jeder Nutzer generiert sein Schlüsselpaar
-            lokal im Browser und übergibt nur den Public Key an den KC. Dieser addiert alle Public Keys zu einem
+            lokal auf seinem Gerät und übergibt nur den Public Key an den KC. Dieser addiert alle Public Keys zu einem
             einzigen aggregierten Wert <Mono>mpkAgg</Mono> auf — der Sender braucht nur diesen einen Wert
             und den <strong className="text-[var(--color-text-base)]">Namen des Empfängers</strong> (seine Identität).
           </p>
@@ -530,22 +542,22 @@ export default function RbePlayground() {
 
         <div className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed space-y-2">
           <p>
-            Die gesamte Arithmetik findet im <strong className="text-[var(--color-text-base)]">Polynomring
-            R_q = Z_q[X]/(X^N+1)</strong> statt: ganzzahlige Polynome vom Grad &lt; N = {N},
-            deren Koeffizienten modulo q = {Q} gerechnet werden. Multiplikation wird modulo
-            X^{N}+1 reduziert — das macht den Ring für gitterbasierte Kryptografie geeignet.
+            Die gesamte Arithmetik findet im <strong className="text-[var(--color-text-base)]">Polynomring{' '}
+            <M>{`R_q = \\mathbb{Z}_q[X]/(X^N+1)`}</M></strong> statt: ganzzahlige Polynome vom Grad{' '}
+            {'<'} <M>{`N = ${N}`}</M>, deren Koeffizienten modulo <M>{`q = ${Q}`}</M> gerechnet werden.
+            Multiplikation wird modulo <M>{`X^{${N}}+1`}</M> reduziert — das macht den Ring für gitterbasierte Kryptografie geeignet.
           </p>
           <p>
             Der KC wählt zunächst ein <strong className="text-[var(--color-text-base)]">uniformes
-            Polynom</strong> <Mono>a0</Mono> — alle {N} Koeffizienten gleichverteilt in [0, {Q}).
-            Das ist der öffentliche Referenzpunkt für alle Nutzer (Common Reference String).
+            Polynom</strong> <M>{'a_0'}</M> — alle {N} Koeffizienten gleichverteilt in{' '}
+            <M>{`[0, ${Q})`}</M>. Das ist der öffentliche Referenzpunkt für alle Nutzer (Common Reference String).
             Dann zieht er ein <strong className="text-[var(--color-text-base)]">kurzes Polynom</strong>{' '}
-            <Mono>r</Mono> mit Koeffizienten nur aus {'{'}-{B}, …, +{B}{'}'} und berechnet{' '}
-            <Mono>a1 = 1 − a0·r</Mono>. Dadurch gilt die{' '}
+            <M>r</M> mit Koeffizienten nur aus <M>{`\\{-${B}, \\ldots, +${B}\\}`}</M> und berechnet{' '}
+            <M>{'a_1 = 1 - a_0 \\cdot r'}</M>. Dadurch gilt die{' '}
             <strong className="text-[var(--color-text-base)]">Trapdoor-Relation</strong>{' '}
-            <Mono>a0·r + a1 = 1</Mono> (das Einheitspolynom).{' '}
-            <Mono>a0</Mono> und <Mono>a1</Mono> sind vollständig öffentlich —
-            nur <Mono>r</Mono> bleibt als Geheimnis auf dem Server.
+            <M>{'a_0 \\cdot r + a_1 = 1'}</M> (das Einheitspolynom).{' '}
+            <M>{'a_0'}</M> und <M>{'a_1'}</M> sind vollständig öffentlich —
+            nur <M>r</M> bleibt als Geheimnis auf dem Server.
           </p>
         </div>
 
@@ -561,12 +573,12 @@ export default function RbePlayground() {
               equation="1 − a0·r" />
             <Callout variant="info">
               <strong>Warum ist das ein Trapdoor?</strong>{' '}
-              Wer <Mono>r</Mono> kennt, kann aus <Mono>a0</Mono> und <Mono>a1</Mono>
+              Wer <M>r</M> kennt, kann aus <M>{'a_0'}</M> und <M>{'a_1'}</M>
               für jeden Empfänger einen maßgeschneiderten Hilfschlüssel berechnen.
-              Wer <Mono>r</Mono> nicht kennt, müsste dafür das
-              Ring-LWE-Problem lösen — das gilt als quantencomputersicher schwer.
-              N_max = {N_MAX}: In dieser Demo können maximal {N_MAX} Nutzer registriert werden
-              (die sogenannte Bounded-N-Eigenschaft von RBE).
+              Wer <M>r</M> nicht kennt, müsste dafür das Ring-LWE-Problem lösen —
+              das gilt als quantencomputersicher schwer.
+              <M>{`N_{\\max} = ${N_MAX}`}</M>: In dieser Demo können maximal {N_MAX} Nutzer
+              registriert werden (die sogenannte Bounded-N-Eigenschaft von RBE).
             </Callout>
           </div>
         )}
@@ -581,20 +593,21 @@ export default function RbePlayground() {
 
           <div className="text-sm text-[var(--color-text-muted)] mb-5 leading-relaxed space-y-2">
             <p>
-              Jeder Nutzer generiert sein Schlüsselpaar <strong>lokal im Browser</strong>,
-              basierend auf dem Sicherheitsprinzip{' '}
+              Jeder Nutzer generiert sein Schlüsselpaar <strong>lokal auf seinem Gerät</strong>{' '}
+              (in dieser Demo: im Browser — es könnte genauso gut eine App, ein Desktop-Programm
+              oder ein Hardware-Token sein), basierend auf dem Sicherheitsprinzip{' '}
               <strong className="text-[var(--color-text-base)]">Ring-LWE</strong> (Ring Learning With Errors):
-              Man zieht einen geheimen Schlüssel <Mono>sk</Mono> und einen Fehlerterm <Mono>e</Mono> —
-              beide mit Koeffizienten nur aus {'{'}-{B}, …, +{B}{'}'}  (also sehr kleine Werte).
-              Der Public Key ergibt sich dann als{' '}
-              <Mono>pk = a0·sk + e</Mono>. Die Sicherheit beruht darauf, dass es ohne Kenntnis
-              von <Mono>sk</Mono> rechnerisch nicht möglich ist, den kleinen Fehler <Mono>e</Mono>
-              vom Ergebnis zu trennen — selbst mit einem Quantencomputer (unter der Ring-LWE-Annahme).
+              Man zieht einen geheimen Schlüssel <M>sk</M> und einen Fehlerterm <M>e</M> —
+              beide mit Koeffizienten nur aus <M>{`\\{-${B}, \\ldots, +${B}\\}`}</M> (also sehr kleine Werte).
+              Der Public Key ergibt sich dann als <M>{'pk = a_0 \\cdot sk + e'}</M>.
+              Die Sicherheit beruht darauf, dass es ohne Kenntnis von <M>sk</M> rechnerisch
+              nicht möglich ist, den kleinen Fehler <M>e</M> vom Ergebnis zu trennen —
+              selbst mit einem Quantencomputer (unter der Ring-LWE-Annahme).
             </p>
             <p>
-              Nur der Public Key <Mono>pk</Mono> wird an den KC geschickt. Dieser addiert ihn
-              zum aggregierten Public Key <Mono>mpkAgg = pk_alice + pk_bob + pk_charlie</Mono>.
-              Der Secret Key verlässt niemals den Browser.
+              Nur <M>pk</M> wird an den KC geschickt. Dieser addiert ihn zum aggregierten
+              Public Key <M>{'\\mathit{mpkAgg} = pk_{\\text{alice}} + pk_{\\text{bob}} + pk_{\\text{charlie}}'}</M>.
+              Der Secret Key verlässt niemals das Gerät des Nutzers.
             </p>
           </div>
 

@@ -83,8 +83,14 @@ export default async function RbePage({ params }: PageProps) {
             ↗ {t('paperLinkText')}
           </a>
 
-          <div className="overflow-x-auto rounded-xl border border-[var(--color-border)]">
-            <table className="w-full text-sm">
+          <div className="rounded-xl border border-[var(--color-border)]">
+            <table className="w-full text-sm table-fixed">
+              <colgroup>
+                <col className="w-16" />
+                <col className="w-28" />
+                <col className="w-28" />
+                <col />
+              </colgroup>
               <thead>
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-base)]">
                   <th className="px-4 py-3 text-left font-mono text-xs text-[var(--color-text-dim)] uppercase tracking-wider">
@@ -107,13 +113,13 @@ export default async function RbePage({ params }: PageProps) {
                     key={key}
                     className={i % 2 === 0 ? 'bg-[var(--color-bg-surface)]' : 'bg-[var(--color-bg-base)]'}
                   >
-                    <td className="px-4 py-3 font-mono text-[var(--color-accent)] whitespace-nowrap">
+                    <td className="px-4 py-3 font-mono text-[var(--color-accent)]">
                       {t(`param_${key}_name` as Parameters<typeof t>[0])}
                     </td>
-                    <td className="px-4 py-3 font-mono text-[var(--color-text-base)] whitespace-nowrap">
+                    <td className="px-4 py-3 font-mono text-[var(--color-text-base)] break-words">
                       {t(`param_${key}_demo` as Parameters<typeof t>[0])}
                     </td>
-                    <td className="px-4 py-3 font-mono text-[var(--color-text-muted)] whitespace-nowrap">
+                    <td className="px-4 py-3 font-mono text-[var(--color-text-muted)] break-words">
                       {t(`param_${key}_paper` as Parameters<typeof t>[0])}
                     </td>
                     <td className="px-4 py-3 text-[var(--color-text-muted)] hidden md:table-cell leading-relaxed">
