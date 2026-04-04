@@ -84,22 +84,16 @@ export default async function RbePage({ params }: PageProps) {
           </a>
 
           <div className="rounded-xl border border-[var(--color-border)]">
-            <table className="w-full text-sm table-fixed">
-              <colgroup>
-                <col className="w-16" />
-                <col className="w-28" />
-                <col className="w-28" />
-                <col />
-              </colgroup>
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-base)]">
-                  <th className="px-4 py-3 text-left font-mono text-xs text-[var(--color-text-dim)] uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left font-mono text-xs text-[var(--color-text-dim)] uppercase tracking-wider w-[28%]">
                     {t('paramColName')}
                   </th>
-                  <th className="px-4 py-3 text-left font-mono text-xs text-[var(--color-text-dim)] uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left font-mono text-xs text-[var(--color-text-dim)] uppercase tracking-wider w-[22%]">
                     {t('paramColDemo')}
                   </th>
-                  <th className="px-4 py-3 text-left font-mono text-xs text-[var(--color-text-dim)] uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left font-mono text-xs text-[var(--color-text-dim)] uppercase tracking-wider w-[22%] hidden sm:table-cell">
                     {t('paramColPaper')}
                   </th>
                   <th className="px-4 py-3 text-left font-mono text-xs text-[var(--color-text-dim)] uppercase tracking-wider hidden md:table-cell">
@@ -113,16 +107,16 @@ export default async function RbePage({ params }: PageProps) {
                     key={key}
                     className={i % 2 === 0 ? 'bg-[var(--color-bg-surface)]' : 'bg-[var(--color-bg-base)]'}
                   >
-                    <td className="px-4 py-3 font-mono text-[var(--color-accent)]">
+                    <td className="px-4 py-3 font-mono text-[var(--color-accent)] align-top">
                       {t(`param_${key}_name` as Parameters<typeof t>[0])}
                     </td>
-                    <td className="px-4 py-3 font-mono text-[var(--color-text-base)] break-words">
+                    <td className="px-4 py-3 font-mono text-[var(--color-text-base)] align-top">
                       {t(`param_${key}_demo` as Parameters<typeof t>[0])}
                     </td>
-                    <td className="px-4 py-3 font-mono text-[var(--color-text-muted)] break-words">
+                    <td className="px-4 py-3 font-mono text-[var(--color-text-muted)] align-top hidden sm:table-cell">
                       {t(`param_${key}_paper` as Parameters<typeof t>[0])}
                     </td>
-                    <td className="px-4 py-3 text-[var(--color-text-muted)] hidden md:table-cell leading-relaxed">
+                    <td className="px-4 py-3 text-[var(--color-text-muted)] hidden md:table-cell leading-relaxed align-top">
                       {t(`param_${key}_explain` as Parameters<typeof t>[0])}
                     </td>
                   </tr>
