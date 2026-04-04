@@ -33,10 +33,10 @@
 //     r_e·(mpkAgg−pk_charlie).  Since g_bob ≠ g_charlie this is large/wrong polynomial,
 //     and the subsequent sk step leaves irrecoverable noise.
 
-import { Q, N, N_MAX, ENCODE } from './params';
+import { Q, N, ENCODE } from './params';
 import { polyMul, polyAdd, polySub } from './poly';
-import { sampleSmall, polyZero } from './sample';
-import { trapGen, samplePre, hashToRing, polyOne } from './trapgen';
+import { sampleSmall } from './sample';
+import { trapGen, samplePre, hashToRing } from './trapgen';
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
 

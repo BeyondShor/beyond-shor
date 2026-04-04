@@ -65,22 +65,11 @@ export interface TrapGenResult {
 }
 
 export function trapGen(): TrapGenResult {
-  // Keep trying until g_id candidates are invertible (≈98% chance each try)
-  for (;;) {
-    const a0 = sampleUniform();
-    const r  = sampleSmall();
-    // a1 = 1 − a0·r  →  a0·r + a1 = 1  (the trapdoor identity)
-    const one = polyOne();
-    const a1  = polyAdd(one, polyMul(a0.map(v => v === 0 ? 0 : Q - v), r));
-    // Quick sanity: check that (1 + H("alice")) is invertible — if so, proceed
-    try {
-      const gTest = polyAdd(one, hashToRing('alice'));
-      polyInv(gTest); // throws if not invertible
-      return { a0, a1, r };
-    } catch {
-      // Re-sample (very rare)
-    }
-  }
+  const a0 = sampleUniform();
+  const r  = sampleSmall();
+  // a1 = 1 − a0·r  →  a0·r + a1 = 1  (the trapdoor identity)
+  const a1 = polyAdd(polyOne(), polyMul(a0.map(v => v === 0 ? 0 : Q - v), r));
+  return { a0, a1, r };
 }
 
 // ── SamplePre ─────────────────────────────────────────────────────────────────
