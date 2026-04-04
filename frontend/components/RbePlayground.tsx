@@ -496,17 +496,30 @@ export default function RbePlayground() {
           Kontext-Einleitung
       ════════════════════════════════════════════════════════════════════ */}
       <Card>
-        <p className="font-mono text-xs text-[var(--color-primary)] mb-2">// warum kein zertifikat?</p>
-        <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-          In klassischer PKI muss Alice ein <strong className="text-[var(--color-text-base)]">Zertifikat</strong> von
-          einer CA signieren lassen — und Bob muss es prüfen, bevor er ihr schreiben kann.
-          Bei RBE gibt es stattdessen einen <strong className="text-[var(--color-text-base)]">Key Curator (KC)</strong>,
-          der <em>keinen einzigen Secret Key</em> kennt. Jeder Nutzer generiert sein Schlüsselpaar
-          lokal und übergibt nur den Public Key. Der KC aggregiert sie mathematisch zu einem
-          einzigen <Mono>mpkAgg</Mono> — der Sender braucht nur diesen einen Wert und die Identität des Empfängers.
-          Dank <strong className="text-[var(--color-text-base)]">Identitätsbindung</strong> kann Charlie
-          nachweisbar <em>nicht</em> Bobs verschlüsselte Nachricht lesen — das wird in Schritt 6 demonstriert.
-        </p>
+        <p className="font-mono text-xs text-[var(--color-primary)] mb-2">// was ist rbe — und warum kein zertifikat?</p>
+        <div className="text-sm text-[var(--color-text-muted)] leading-relaxed space-y-3">
+          <p>
+            In klassischer PKI muss Alice ein <strong className="text-[var(--color-text-base)]">Zertifikat</strong> von
+            einer Zertifizierungsstelle (CA) signieren lassen. Bob muss dieses Zertifikat prüfen,
+            bevor er Alice schreiben kann — die CA ist ein zentraler Vertrauensanker mit weitreichenden Befugnissen.
+          </p>
+          <p>
+            <strong className="text-[var(--color-text-base)]">Registration-Based Encryption (RBE)</strong> geht
+            einen anderen Weg: Ein <strong className="text-[var(--color-text-base)]">Key Curator (KC)</strong> übernimmt
+            die Registrierung, kennt aber <em>keinen einzigen Secret Key</em>. Jeder Nutzer generiert sein Schlüsselpaar
+            lokal im Browser und übergibt nur den Public Key an den KC. Dieser addiert alle Public Keys zu einem
+            einzigen aggregierten Wert <Mono>mpkAgg</Mono> auf — der Sender braucht nur diesen einen Wert
+            und den <strong className="text-[var(--color-text-base)]">Namen des Empfängers</strong> (seine Identität).
+          </p>
+          <p>
+            Eine <strong className="text-[var(--color-text-base)]">Identität</strong> ist dabei einfach ein
+            eindeutiger String — hier die Namen{' '}
+            <Mono>"alice"</Mono>, <Mono>"bob"</Mono>, <Mono>"charlie"</Mono>. Ein deterministischer
+            Hash-Algorithmus wandelt diesen String in ein Polynom um, das mathematisch in den Chiffretext
+            eingebacken wird. Dadurch kann Charlie nachweisbar <em>nicht</em> Bobs Nachricht lesen,
+            selbst wenn er seinen eigenen legitimen Schlüssel kennt — das wird in Schritt 6 live demonstriert.
+          </p>
+        </div>
       </Card>
 
       {/* ════════════════════════════════════════════════════════════════════
@@ -515,14 +528,26 @@ export default function RbePlayground() {
       <Card active={!hasSetup} done={hasSetup}>
         <StepTitle n={0} title="KC-Setup: Trapdoor-Schlüsselpaar" done={hasSetup} />
 
-        <p className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed">
-          Der KC sampelt ein uniformes Polynom <Mono>a0 ∈ R_q</Mono> und ein kurzes Polynom{' '}
-          <Mono>r ← klein</Mono>, dann berechnet er <Mono>a1 = 1 − a0·r</Mono>.{' '}
-          Es gilt <Mono>a0·r + a1 = 1</Mono> (Einheitspolynom) — das ist der{' '}
-          <strong className="text-[var(--color-text-base)]">G-Gitter-Trapdoor</strong> (MP12).{' '}
-          <Mono>a0</Mono> und <Mono>a1</Mono> sind vollständig öffentlich.{' '}
-          Nur <Mono>r</Mono> bleibt geheim auf dem Server. N_max = {N_MAX}.
-        </p>
+        <div className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed space-y-2">
+          <p>
+            Die gesamte Arithmetik findet im <strong className="text-[var(--color-text-base)]">Polynomring
+            R_q = Z_q[X]/(X^N+1)</strong> statt: ganzzahlige Polynome vom Grad &lt; N = {N},
+            deren Koeffizienten modulo q = {Q} gerechnet werden. Multiplikation wird modulo
+            X^{N}+1 reduziert — das macht den Ring für gitterbasierte Kryptografie geeignet.
+          </p>
+          <p>
+            Der KC wählt zunächst ein <strong className="text-[var(--color-text-base)]">uniformes
+            Polynom</strong> <Mono>a0</Mono> — alle {N} Koeffizienten gleichverteilt in [0, {Q}).
+            Das ist der öffentliche Referenzpunkt für alle Nutzer (Common Reference String).
+            Dann zieht er ein <strong className="text-[var(--color-text-base)]">kurzes Polynom</strong>{' '}
+            <Mono>r</Mono> mit Koeffizienten nur aus {'{'}-{B}, …, +{B}{'}'} und berechnet{' '}
+            <Mono>a1 = 1 − a0·r</Mono>. Dadurch gilt die{' '}
+            <strong className="text-[var(--color-text-base)]">Trapdoor-Relation</strong>{' '}
+            <Mono>a0·r + a1 = 1</Mono> (das Einheitspolynom).{' '}
+            <Mono>a0</Mono> und <Mono>a1</Mono> sind vollständig öffentlich —
+            nur <Mono>r</Mono> bleibt als Geheimnis auf dem Server.
+          </p>
+        </div>
 
         <BtnPrimary onClick={doSetup} disabled={hasSetup} busy={s.busy}>
           KC initialisieren
@@ -530,16 +555,18 @@ export default function RbePlayground() {
 
         {s.a0 && s.a1 && (
           <div className="mt-5 space-y-3">
-            <PolyBox label="a0 — CRS (public, für KeyGen + Entschlüsselung)" poly={s.a0}
+            <PolyBox label="a0 — öffentlicher Referenzpunkt (Common Reference String)" poly={s.a0}
               equation="uniform ∈ R_q" />
-            <PolyBox label="a1 — Komplement (public, für Verschlüsselung)" poly={s.a1}
+            <PolyBox label="a1 — öffentliches Komplement" poly={s.a1}
               equation="1 − a0·r" />
             <Callout variant="info">
-              <strong>Trapdoor-Relation:</strong>{' '}
-              <Mono>a0·r + a1 = 1</Mono> — mit <Mono>r</Mono> (nur KC bekannt) kann für jeden
-              Empfänger ein identitätsgebundenes Helper-Key-Paar berechnet werden.
-              Ohne <Mono>r</Mono> ist diese Vorberechnung für Angreifer ein ungelöstes
-              Ring-LWE-Problem.
+              <strong>Warum ist das ein Trapdoor?</strong>{' '}
+              Wer <Mono>r</Mono> kennt, kann aus <Mono>a0</Mono> und <Mono>a1</Mono>
+              für jeden Empfänger einen maßgeschneiderten Hilfschlüssel berechnen.
+              Wer <Mono>r</Mono> nicht kennt, müsste dafür das
+              Ring-LWE-Problem lösen — das gilt als quantencomputersicher schwer.
+              N_max = {N_MAX}: In dieser Demo können maximal {N_MAX} Nutzer registriert werden
+              (die sogenannte Bounded-N-Eigenschaft von RBE).
             </Callout>
           </div>
         )}
@@ -552,12 +579,24 @@ export default function RbePlayground() {
         <Card active={!allReg} done={allReg}>
           <StepTitle n="1–3" title="Registrierung: Alice, Bob, Charlie" done={allReg} />
 
-          <p className="text-sm text-[var(--color-text-muted)] mb-5 leading-relaxed">
-            Jeder Nutzer generiert sein Schlüsselpaar <strong>lokal im Browser</strong> nach dem Ring-LWE-Prinzip:{' '}
-            <Mono>sk ← klein</Mono>, <Mono>e ← klein</Mono>, <Mono>pk = a0·sk + e</Mono>.
-            Der KC sieht nur <Mono>pk</Mono> — und addiert es zum wachsenden{' '}
-            <Mono>mpkAgg = Σ pk_i</Mono>. Der Secret Key verlässt niemals den Browser.
-          </p>
+          <div className="text-sm text-[var(--color-text-muted)] mb-5 leading-relaxed space-y-2">
+            <p>
+              Jeder Nutzer generiert sein Schlüsselpaar <strong>lokal im Browser</strong>,
+              basierend auf dem Sicherheitsprinzip{' '}
+              <strong className="text-[var(--color-text-base)]">Ring-LWE</strong> (Ring Learning With Errors):
+              Man zieht einen geheimen Schlüssel <Mono>sk</Mono> und einen Fehlerterm <Mono>e</Mono> —
+              beide mit Koeffizienten nur aus {'{'}-{B}, …, +{B}{'}'}  (also sehr kleine Werte).
+              Der Public Key ergibt sich dann als{' '}
+              <Mono>pk = a0·sk + e</Mono>. Die Sicherheit beruht darauf, dass es ohne Kenntnis
+              von <Mono>sk</Mono> rechnerisch nicht möglich ist, den kleinen Fehler <Mono>e</Mono>
+              vom Ergebnis zu trennen — selbst mit einem Quantencomputer (unter der Ring-LWE-Annahme).
+            </p>
+            <p>
+              Nur der Public Key <Mono>pk</Mono> wird an den KC geschickt. Dieser addiert ihn
+              zum aggregierten Public Key <Mono>mpkAgg = pk_alice + pk_bob + pk_charlie</Mono>.
+              Der Secret Key verlässt niemals den Browser.
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <UserColumn name="Alice" who="alice" keys={s.alice} registered={s.aliceReg}
@@ -599,19 +638,33 @@ export default function RbePlayground() {
         <Card active={!bothCts} done={bothCts}>
           <StepTitle n={4} title="Verschlüsselung: Charlie schreibt an Bob und Alice" done={bothCts} />
 
-          <p className="text-sm text-[var(--color-text-muted)] mb-3 leading-relaxed">
-            Charlie braucht nur <Mono>a0</Mono>, <Mono>a1</Mono> und <Mono>mpkAgg</Mono> (alles öffentlich)
-            plus die Identität des Empfängers. Der Chiffretext bindet sich an den Empfänger über{' '}
-            <strong className="text-[var(--color-text-base)]">H(id_target)</strong>:
-          </p>
+          <div className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed space-y-2">
+            <p>
+              Charlie braucht zum Verschlüsseln nur öffentlich bekannte Daten:{' '}
+              <Mono>a0</Mono>, <Mono>a1</Mono>, <Mono>mpkAgg</Mono> — und den{' '}
+              <strong className="text-[var(--color-text-base)]">Namen des Empfängers</strong>{' '}
+              als Identität (hier der String <Mono>"bob"</Mono> bzw. <Mono>"alice"</Mono>).
+              Keine CA-Abfrage, kein Zertifikat, kein vorab ausgetauschter Schlüssel.
+            </p>
+            <p>
+              Der entscheidende Schritt ist die{' '}
+              <strong className="text-[var(--color-text-base)]">Identitätsbindung</strong>:
+              Eine Hash-Funktion <Mono>H</Mono> wandelt den Empfänger-String deterministisch in ein
+              Polynom in R_q um. Dieses Polynom wird in die zweite Chiffretext-Komponente eingebacken,
+              sodass nur der KC mit Kenntnis von <Mono>r</Mono> den passenden Hilfschlüssel für genau
+              diesen Empfänger berechnen kann.
+            </p>
+          </div>
           <div className="mb-4 rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-bg-base)]
-            px-4 py-3 font-mono text-xs text-[var(--color-text-muted)] space-y-1 leading-loose">
-            <div><Mono>r ← klein  (frische Zufälligkeit)</Mono></div>
+            px-4 py-3 font-mono text-xs text-[var(--color-text-muted)] space-y-1.5 leading-loose">
+            <div className="text-[var(--color-text-dim)]">// r wird frisch für jede Nachricht gewählt:</div>
+            <div><Mono>r</Mono><span className="text-[var(--color-text-dim)] ml-2">— kurzes Polynom mit Koeffizienten ∈ {'{'}-{B}, …, +{B}{'}'}</span></div>
+            <div className="pt-1 text-[var(--color-text-dim)]">// drei Komponenten des Chiffretexts:</div>
             <div><Mono>c0_0 = r · a0</Mono></div>
             <div><Mono>c0_1 = r · (a1 + H(id_target))</Mono>
               <span className="text-amber-400/80 ml-2">← Identitätsbindung</span>
             </div>
-            <div><Mono>c1 &nbsp;&nbsp;= r · mpkAgg + encode(msg)</Mono></div>
+            <div><Mono>c1 &nbsp;&nbsp;= r · mpkAgg + encode(msg)</Mono><span className="text-[var(--color-text-dim)] ml-2">← verschlüsselte Nachricht</span></div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -674,15 +727,31 @@ export default function RbePlayground() {
         <Card active={!bothDecoded} done={bothDecoded}>
           <StepTitle n={5} title="Entschlüsselung: Zwei Faktoren — hsk + sk" done={bothDecoded} />
 
-          <p className="text-sm text-[var(--color-text-muted)] mb-3 leading-relaxed">
-            Der KC berechnet für Empfänger <Mono>id_t</Mono> mit seinem Trapdoor <Mono>r</Mono>
-            ein identitätsgebundenes Schlüsselpaar <Mono>(hsk0, hsk1)</Mono>:{' '}
-            <Mono>g_t = 1 + H(id_t)</Mono> ;{' '}
-            <Mono>hsk1 = g_t⁻¹ · (mpkAgg − pk_t)</Mono> ;{' '}
-            <Mono>hsk0 = r · hsk1</Mono>.{' '}
-            Eigenschaft: <Mono>a0·hsk0 + (a1 + H(id_t))·hsk1 = mpkAgg − pk_t</Mono> (exakt).{' '}
-            hsk ist öffentlich übertragbar — allein reicht er trotzdem nicht zur Entschlüsselung.
-          </p>
+          <div className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed space-y-2">
+            <p>
+              Der KC berechnet für jeden Empfänger mit seinem geheimen Trapdoor <Mono>r</Mono>
+              einen <strong className="text-[var(--color-text-base)]">Helper Decryption Key (hsk)</strong> —
+              ein Schlüsselpaar aus zwei Polynomen <Mono>(hsk0, hsk1)</Mono>, das identitätsspezifisch ist:
+            </p>
+            <div className="rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-bg-base)]
+              px-4 py-3 font-mono text-xs text-[var(--color-text-muted)] space-y-1.5 leading-loose">
+              <div className="text-[var(--color-text-dim)]">// g_t = Identitätspolynom des Empfängers:</div>
+              <div><Mono>g_t = 1 + H(id_t)</Mono></div>
+              <div className="text-[var(--color-text-dim)] pt-1">// g_t⁻¹ ist das multiplikative Inverse von g_t in R_q:</div>
+              <div><Mono>hsk1 = g_t⁻¹ · (mpkAgg − pk_t)</Mono></div>
+              <div><Mono>hsk0 = r · hsk1</Mono></div>
+              <div className="text-[var(--color-text-dim)] pt-1">// Daraus folgt die Schlüsseleigenschaft (leicht nachzurechnen):</div>
+              <div><Mono>a0·hsk0 + (a1 + H(id_t))·hsk1 = mpkAgg − pk_t</Mono></div>
+            </div>
+            <p>
+              <Mono>hsk</Mono> darf öffentlich übertragen werden — er ist für sich allein nutzlos,
+              weil er nach Schritt 1 nur eine Ring-LWE-Verschlüsselung unter <Mono>pk_t</Mono> liefert.
+              Erst der geheime Schlüssel <Mono>sk</Mono> (der niemals den Browser verlässt) entschlüsselt
+              in Schritt 2 vollständig. Daher der Begriff{' '}
+              <strong className="text-[var(--color-text-base)]">Zwei-Faktor-Entschlüsselung</strong>:
+              KC-Seite (hsk) + Nutzer-Seite (sk).
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <DecryptColumn name="Bob"   target="bob"   ct={s.ctBob!}   dec={s.decBob}
@@ -720,30 +789,34 @@ export default function RbePlayground() {
             title="Sicherheitsnachweis: Charlie versucht, Bobs Nachricht zu lesen"
             done={s.charlieAttackMsg !== null} />
 
-          <p className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed">
-            Charlie hat seinen eigenen, <em>legitimen</em>{' '}
-            <Mono>hsk_charlie</Mono> — korrekt vom KC mit <Mono>r</Mono> berechnet.
-            Aber: <Mono>hsk_charlie</Mono> ist an <Mono>H("charlie")</Mono> gebunden,
-            während Bobs Chiffretext <Mono>c0_1 = r_e·(a1 + H("bob"))</Mono> an{' '}
-            <Mono>H("bob")</Mono> gebunden ist.{' '}
-            Wegen <Mono>H("charlie") ≠ H("bob")</Mono> bricht die Algebra zusammen:
-            Charlie erhält ein großes, falsches Polynom statt <Mono>r_e·pk_bob</Mono>.
-          </p>
+          <div className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed space-y-2">
+            <p>
+              Charlie ist ein <em>legitimer</em>, registrierter Nutzer mit einem gültig vom KC
+              ausgestellten <Mono>hsk_charlie</Mono>. Trotzdem kann er Bobs Nachricht nicht lesen —
+              und genau das wollen wir jetzt nachweisen.
+            </p>
+            <p>
+              Der Grund liegt in der Identitätsbindung:{' '}
+              <Mono>hsk_charlie</Mono> wurde mit dem Identitätspolynom <Mono>H("charlie")</Mono> berechnet
+              und erfüllt die Gleichung <Mono>a0·hsk0 + (a1 + H("charlie"))·hsk1 = mpkAgg − pk_charlie</Mono>.{' '}
+              Bobs Chiffretext <Mono>c0_1</Mono> enthält aber <Mono>H("bob")</Mono>.
+              Die beiden Polynome sind verschieden — die Gleichung geht nicht auf:
+            </p>
+          </div>
 
           <div className="rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-bg-base)]
-            px-4 py-3 mb-5 font-mono text-xs text-[var(--color-text-muted)] space-y-1 leading-loose">
-            <div className="text-[var(--color-text-dim)]">// Was Charlie berechnet (Schritt 1):</div>
-            <div>
-              <Mono>c0_0·hsk0_charlie + c0_1·hsk1_charlie</Mono>
+            px-4 py-3 mb-5 font-mono text-xs text-[var(--color-text-muted)] space-y-1.5 leading-loose">
+            <div className="text-[var(--color-text-dim)]">// Charlie versucht Schritt 1 mit hsk_charlie auf c_bob:</div>
+            <div><Mono>c0_0·hsk0_charlie + c0_1·hsk1_charlie</Mono></div>
+            <div className="pl-4 text-[var(--color-text-dim)]">// c0_1 enthält H("bob"), hsk1_charlie enthält H("charlie"):</div>
+            <div className="pl-4"><Mono dim>= r_e · hsk1_charlie · (a0·r + a1 + H("bob"))</Mono></div>
+            <div className="pl-4"><Mono dim>= r_e · (1+H("charlie"))⁻¹·(mpkAgg−pk_charlie) · (1 + H("bob"))</Mono></div>
+            <div className="pl-4 text-red-400/80 pt-1">
+              ≠ r_e · (mpkAgg − pk_charlie){' '}
+              <span className="text-[var(--color-text-dim)]">← würde für korrekten Schritt 1 benötigt</span>
             </div>
-            <div className="pl-4">
-              <Mono dim>= r_e · hsk1_charlie · (a0·r + a1 + H("bob"))</Mono>
-            </div>
-            <div className="pl-4">
-              <Mono dim>= r_e · (1+H("charlie"))⁻¹·target_charlie · (1 + H("bob"))</Mono>
-            </div>
-            <div className="pl-4 text-red-400/70">
-              ≠ r_e · target_charlie  <span className="text-[var(--color-text-dim)]">[weil H("bob") ≠ H("charlie")]</span>
+            <div className="pl-4 text-red-400/50 text-xs">
+              [Differenz: der Faktor (1+H("bob")) ≠ 1 verbleibt als irreduzibles Rauschen]
             </div>
           </div>
 
@@ -896,17 +969,20 @@ function DecryptColumn({ name, target, ct, dec, busy, onFetchHsk, onStep1, onSte
 
       {/* hsk fetch */}
       <div className="space-y-2">
-        <p className="text-xs text-[var(--color-text-muted)]">
-          KC berechnet: <Mono>hsk1_{target} = (1+H("{target}"))⁻¹ · (mpkAgg − pk_{target})</Mono>,{' '}
-          <Mono>hsk0_{target} = r · hsk1_{target}</Mono>
+        <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+          Der KC benutzt seinen geheimen Trapdoor <Mono>r</Mono>, um den identitätsgebundenen
+          Hilfschlüssel zu berechnen:{' '}
+          <Mono>g = 1 + H("{target}")</Mono> → <Mono>hsk1 = g⁻¹ · (mpkAgg − pk_{target})</Mono> →{' '}
+          <Mono>hsk0 = r · hsk1</Mono>.
+          Der hsk wird öffentlich übermittelt — er enthüllt weder <Mono>sk</Mono> noch <Mono>r</Mono>.
         </p>
         <BtnOutline onClick={onFetchHsk} disabled={!!dec.hsk} busy={busy}>
-          hsk_{target} laden
+          hsk_{target} vom KC laden
         </BtnOutline>
         {dec.hsk && (
           <div className="space-y-1">
-            <PolyBox label={`hsk0_${target}`} poly={dec.hsk.hsk0} />
-            <PolyBox label={`hsk1_${target}`} poly={dec.hsk.hsk1} />
+            <PolyBox label={`hsk0_${target} = r · hsk1`} poly={dec.hsk.hsk0} />
+            <PolyBox label={`hsk1_${target} = (1+H("${target}"))⁻¹ · (mpkAgg − pk_${target})`} poly={dec.hsk.hsk1} />
           </div>
         )}
       </div>
@@ -914,18 +990,20 @@ function DecryptColumn({ name, target, ct, dec, busy, onFetchHsk, onStep1, onSte
       {/* Step 1 */}
       {dec.hsk && (
         <div className="space-y-2">
-          <p className="text-xs text-[var(--color-text-muted)]">
-            <Mono>temp = c1 − (c0_0·hsk0 + c0_1·hsk1)</Mono>
-            <span className="text-[var(--color-text-dim)] ml-1">= r_e·pk_{target} + encode(msg)</span>
+          <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+            <strong>Schritt 1</strong> subtrahiert mit dem hsk-Paar den "alle anderen Nutzer"-Anteil
+            aus dem Chiffretext heraus. Das Ergebnis ist eine gewöhnliche Ring-LWE-Verschlüsselung
+            von <Mono>msg</Mono> unter dem persönlichen Public Key <Mono>pk_{target}</Mono>:{' '}
+            <Mono>temp = c1 − (c0_0·hsk0 + c0_1·hsk1) = r_e·pk_{target} + encode(msg)</Mono>.
           </p>
           <BtnOutline onClick={onStep1} disabled={!!dec.temp} busy={busy}>
-            Schritt 1 (hsk anwenden)
+            Schritt 1: hsk anwenden
           </BtnOutline>
           {dec.temp && (
             <div className="space-y-1">
-              <PolyBox label="temp — noch Ring-LWE-Chiffretext unter pk" poly={dec.temp} />
+              <PolyBox label="temp = r_e·pk + encode(msg) — noch verschlüsselt!" poly={dec.temp} />
               <p className="text-xs text-[var(--color-text-dim)]">
-                hsk allein reicht nicht — noch verschlüsselt.
+                Nur mit hsk lässt sich die Nachricht noch nicht lesen — sk fehlt noch.
               </p>
             </div>
           )}
@@ -935,12 +1013,15 @@ function DecryptColumn({ name, target, ct, dec, busy, onFetchHsk, onStep1, onSte
       {/* Step 2 */}
       {dec.temp && (
         <div className="space-y-2">
-          <p className="text-xs text-[var(--color-text-muted)]">
-            <Mono>result = temp − c0_0·sk_{target}</Mono>
-            <span className="text-[var(--color-text-dim)] ml-1">= r_e·e + encode(msg) ≈ encode(msg)</span>
+          <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+            <strong>Schritt 2</strong> wendet den geheimen Schlüssel <Mono>sk_{target}</Mono>
+            (nur im Browser bekannt) an:{' '}
+            <Mono>result = temp − c0_0·sk = r_e·e + encode(msg)</Mono>.{' '}
+            Da <Mono>e</Mono> sehr kleine Koeffizienten hat, rundet jede Stelle auf den
+            nächsten Bit-Wert — die Nachricht ist wiederhergestellt.
           </p>
           <BtnPrimary onClick={onStep2} disabled={dec.msg !== null} busy={busy}>
-            Schritt 2 (sk anwenden)
+            Schritt 2: sk anwenden
           </BtnPrimary>
           {dec.msg !== null && <ResultBox name={name} msg={dec.msg} compact />}
         </div>
