@@ -70,9 +70,18 @@ export default async function RbePage({ params }: PageProps) {
           <h2 className="text-xl font-semibold text-[var(--color-text-base)] mb-2">
             {t('paramsTitle')}
           </h2>
-          <p className="text-sm text-[var(--color-text-muted)] mb-6 max-w-2xl">
+          <p className="text-sm text-[var(--color-text-muted)] mb-3 max-w-2xl">
             {t('paramsSubtitle')}
           </p>
+          <a
+            href="https://eprint.iacr.org/2026/628"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 mb-6 text-xs font-mono
+              text-[var(--color-primary)] hover:underline"
+          >
+            ↗ {t('paperLinkText')}
+          </a>
 
           <div className="overflow-x-auto rounded-xl border border-[var(--color-border)]">
             <table className="w-full text-sm">

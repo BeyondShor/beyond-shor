@@ -22,9 +22,14 @@ export async function GET(
     return NextResponse.json({ error: 'user_not_registered' }, { status: 404 });
   }
 
-  // Compute hsk_target = aInv · (mpkAgg − pk_target)
-  // This satisfies: a · hsk = mpkAgg − pk_target  (exact ring equality)
-  const hsk = rbeHelperKey(session.aInv, session.mpkAgg, targetUser.pk);
+  // Compute identity-specific helper key bound to targetId.
+  // hsk satisfies: a0·hsk0 + (a1 + H(targetId))·hsk1 = mpkAgg − pk_target
+  const { hsk0, hsk1 } = rbeHelperKey(
+    session.r,
+    session.mpkAgg,
+    targetUser.pk,
+    targetId,
+  );
 
-  return NextResponse.json({ hsk });
+  return NextResponse.json({ hsk0, hsk1 });
 }

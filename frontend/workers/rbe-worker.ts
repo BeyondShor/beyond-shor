@@ -17,25 +17,25 @@ function post(msg: WorkerOutMessage): void {
     switch (m.type) {
 
       case 'keygen': {
-        const { pk, sk } = rbeKeyGen(m.a);
+        const { pk, sk } = rbeKeyGen(m.a0);
         post({ id: m.id, type: 'keygen_done', pk, sk, ms: performance.now() - t0 });
         break;
       }
 
       case 'encrypt': {
-        const { c0, c1 } = rbeEncrypt(m.a, m.mpkAgg, m.msg);
-        post({ id: m.id, type: 'encrypt_done', c0, c1, ms: performance.now() - t0 });
+        const { c0_0, c0_1, c1 } = rbeEncrypt(m.a0, m.a1, m.mpkAgg, m.msg, m.targetId);
+        post({ id: m.id, type: 'encrypt_done', c0_0, c0_1, c1, ms: performance.now() - t0 });
         break;
       }
 
       case 'dec_step1': {
-        const temp = rbeDecryptStep1(m.c0, m.c1, m.hsk);
+        const temp = rbeDecryptStep1(m.c0_0, m.c0_1, m.hsk0, m.hsk1, m.c1);
         post({ id: m.id, type: 'dec_step1_done', temp, ms: performance.now() - t0 });
         break;
       }
 
       case 'dec_step2': {
-        const { result, msg: decoded } = rbeDecryptStep2(m.c0, m.temp, m.sk);
+        const { result, msg: decoded } = rbeDecryptStep2(m.c0_0, m.temp, m.sk);
         post({ id: m.id, type: 'dec_step2_done', result, msg: decoded, ms: performance.now() - t0 });
         break;
       }

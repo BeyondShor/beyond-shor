@@ -109,6 +109,10 @@ export function polySub(a: number[], b: number[]): number[] {
   return a.map((v, i) => (v - b[i] + Q) % Q);
 }
 
+export function polyNeg(a: number[]): number[] {
+  return a.map(v => v === 0 ? 0 : Q - v);
+}
+
 // a^{-1} mod (X^N + 1, q)  —  exists iff all N NTT components are ≠ 0 mod q.
 export function polyInv(a: number[]): number[] {
   const A = negaNTT(a);

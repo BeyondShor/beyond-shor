@@ -1,43 +1,53 @@
-// RBE core algorithms.
+// RBE core algorithms — Option B: identity-specific encryption.
 //
-// Construction summary (simplified, educational):
+// Construction summary:
 //
-//   Setup:   a ← R_q uniform;  aInv = a^{-1} mod (X^N+1, q)  [KC trapdoor]
-//   KeyGen:  sk ← small;  e ← small;  pk = a·sk + e          [Ring-LWE]
-//   Register: mpkAgg += pk
-//   HelpKey: hsk_t = aInv · (mpkAgg - pk_t)                  [trapdoor preimage]
-//             → satisfies  a · hsk_t = mpkAgg - pk_t  (exactly)
-//   Encrypt:  c0 = r·a ;  c1 = r·mpkAgg + encode(msg)
-//   Decrypt:  temp   = c1 - c0·hsk_t  = r·pk_t + encode(msg)
-//             result = temp - c0·sk_t  = r·e_t  + encode(msg) ≈ encode(msg)
+//   Setup (KC):
+//     a0 ← uniform;  r ← small;  a1 = 1 − a0·r          [trapdoor]
+//     Relation:  a0·r + a1 = 1 in R_q
 //
-// Two-factor property:
-//   · hsk alone → Ring-LWE ciphertext of msg under pk_t (still encrypted).
-//   · sk alone  → large "other-users" noise; cannot decode.
-//   · both      → noise collapses to r·e_t  (small) → correct decoding.
-//   Requires ≥ 2 registered users for the two-factor guarantee.
+//   KeyGen (client):
+//     sk ← small;  e ← small;  pk = a0·sk + e            [Ring-LWE]
+//
+//   Register (KC):
+//     mpkAgg += pk
+//
+//   HelpKey (KC → user id_t):
+//     target = mpkAgg − pk_t
+//     g_t = 1 + H(id_t);  hsk1 = g_t⁻¹ · target;  hsk0 = r · hsk1
+//     → a0·hsk0 + (a1 + H(id_t))·hsk1 = target  ✓
+//
+//   Encrypt (client, to id_target):
+//     r_e ← small
+//     c0_0 = r_e · a0
+//     c0_1 = r_e · (a1 + H(id_target))   ← identity binding
+//     c1   = r_e · mpkAgg + encode(msg)
+//
+//   Decrypt (two factors):
+//     Step 1 (hsk):  temp = c1 − (c0_0·hsk0 + c0_1·hsk1) = r_e·pk_t + encode(msg)
+//     Step 2 (sk):   result = temp − c0_0·sk  = r_e·e_t + encode(msg) ≈ encode(msg)
+//
+//   Why Charlie cannot decrypt Bob's message:
+//     c0_1 is bound to H("bob").  Applying hsk_charlie (bound to H("charlie")) in Step 1
+//     produces  r_e · g_charlie⁻¹·(mpkAgg−pk_charlie)·g_bob  instead of
+//     r_e·(mpkAgg−pk_charlie).  Since g_bob ≠ g_charlie this is large/wrong polynomial,
+//     and the subsequent sk step leaves irrecoverable noise.
 
 import { Q, N, N_MAX, ENCODE } from './params';
-import { polyMul, polyAdd, polySub, polyInv } from './poly';
-import { sampleUniform, sampleSmall, polyZero } from './sample';
+import { polyMul, polyAdd, polySub } from './poly';
+import { sampleSmall, polyZero } from './sample';
+import { trapGen, samplePre, hashToRing, polyOne } from './trapgen';
 
 // ── Setup ─────────────────────────────────────────────────────────────────────
 
 export interface KcSetupResult {
-  a:    number[];   // public CRS element
-  aInv: number[];   // KC-private trapdoor (a^{-1} mod ring)
+  a0: number[];   // public CRS — used for KeyGen and Step-2 decryption
+  a1: number[];   // complement — used for identity-specific encryption
+  r:  number[];   // KC trapdoor (private, stays on server)
 }
 
 export function rbeSetup(): KcSetupResult {
-  for (;;) {
-    try {
-      const a    = sampleUniform();
-      const aInv = polyInv(a);
-      return { a, aInv };
-    } catch {
-      // a was not invertible mod q — resample (probability ≈ 2%)
-    }
-  }
+  return trapGen();
 }
 
 // ── KeyGen (runs client-side in browser) ─────────────────────────────────────
@@ -47,37 +57,42 @@ export interface KeyPair {
   sk: number[];  // secret key — NEVER leaves the browser
 }
 
-export function rbeKeyGen(a: number[]): KeyPair {
+export function rbeKeyGen(a0: number[]): KeyPair {
   const sk = sampleSmall();
   const e  = sampleSmall();
-  const pk = polyAdd(polyMul(a, sk), e); // pk = a·sk + e
+  const pk = polyAdd(polyMul(a0, sk), e);  // pk = a0·sk + e
   return { pk, sk };
 }
 
 // ── Register (runs server-side in KC) ────────────────────────────────────────
 
-export function rbeRegister(
-  mpkAgg: number[],
-  pk: number[],
-): number[] {
-  return polyAdd(mpkAgg, pk); // mpkAgg += pk
+export function rbeRegister(mpkAgg: number[], pk: number[]): number[] {
+  return polyAdd(mpkAgg, pk);
 }
 
-// ── Helper key (runs server-side in KC, uses trapdoor) ────────────────────────
+// ── Helper key (runs server-side in KC, uses trapdoor r) ─────────────────────
+//
+// Returns (hsk0, hsk1) bound to id_target.
+// Satisfies: a0·hsk0 + (a1 + H(id_target))·hsk1 = mpkAgg − pk_target
 
-// hsk_t = aInv · (mpkAgg − pk_t)
-// This satisfies: a · hsk_t = mpkAgg − pk_t  (exact ring equality)
+export interface HskPair {
+  hsk0: number[];
+  hsk1: number[];
+}
+
 export function rbeHelperKey(
-  aInv:    number[],
-  mpkAgg:  number[],
+  r:        number[],
+  mpkAgg:   number[],
   pkTarget: number[],
-): number[] {
-  return polyMul(aInv, polySub(mpkAgg, pkTarget));
+  targetId: string,
+): HskPair {
+  const target = polySub(mpkAgg, pkTarget);
+  const [hsk0, hsk1] = samplePre(r, targetId, target);
+  return { hsk0, hsk1 };
 }
 
-// ── Message encoding  (N coefficients → up to N/8 = 32 ASCII characters) ────
+// ── Message encoding ──────────────────────────────────────────────────────────
 
-// Bit j of character i → coefficient [8·i + j] += ENCODE  if that bit is 1
 function encodeMsgInto(msg: string, poly: number[]): void {
   const maxChars = N >> 3; // 32
   for (let ci = 0; ci < Math.min(msg.length, maxChars); ci++) {
@@ -98,10 +113,9 @@ function decodeMsg(poly: number[]): string {
     let byte = 0;
     for (let bi = 0; bi < 8; bi++) {
       const v = poly[ci * 8 + bi];
-      // Round to nearest: 0 if close to 0 or Q, 1 if close to Q/2
       if (Math.round((2 * v) / Q) % 2 === 1) byte |= 1 << bi;
     }
-    if (byte === 0) break; // null terminator
+    if (byte === 0) break;
     result += String.fromCharCode(byte);
   }
   return result;
@@ -110,48 +124,56 @@ function decodeMsg(poly: number[]): string {
 // ── Encrypt (runs client-side in browser) ────────────────────────────────────
 
 export interface Ciphertext {
-  c0: number[]; // r·a
-  c1: number[]; // r·mpkAgg + encode(msg)
+  c0_0: number[];  // r_e · a0
+  c0_1: number[];  // r_e · (a1 + H(id_target)) — identity binding
+  c1:   number[];  // r_e · mpkAgg + encode(msg)
 }
 
 export function rbeEncrypt(
-  a:       number[],
-  mpkAgg:  number[],
-  msg:     string,
+  a0:       number[],
+  a1:       number[],
+  mpkAgg:   number[],
+  msg:      string,
+  targetId: string,
 ): Ciphertext {
-  const r  = sampleSmall();
-  const c0 = polyMul(r, a);
-  const c1 = polyMul(r, mpkAgg);
+  const r_e  = sampleSmall();
+  const hId  = hashToRing(targetId);
+  const a1h  = polyAdd(a1, hId);           // a1 + H(id_target)
+  const c0_0 = polyMul(r_e, a0);
+  const c0_1 = polyMul(r_e, a1h);
+  const c1   = polyMul(r_e, mpkAgg);
   encodeMsgInto(msg, c1);
-  return { c0, c1 };
+  return { c0_0, c0_1, c1 };
 }
 
-// ── Decrypt  (runs client-side in browser, TWO steps) ────────────────────────
+// ── Decrypt (runs client-side in browser, TWO steps) ─────────────────────────
 
-// Step 1: apply hsk — result is still Ring-LWE ciphertext under pk_t
+// Step 1: apply hsk pair — reduces to Ring-LWE encryption under pk_target
+// If hsk is for the CORRECT identity: result = r_e·pk_target + encode(msg)
+// If hsk is for the WRONG identity:  result = large garbled polynomial
 export function rbeDecryptStep1(
-  c0:  number[],
-  c1:  number[],
-  hsk: number[],
+  c0_0: number[],
+  c0_1: number[],
+  hsk0: number[],
+  hsk1: number[],
+  c1:   number[],
 ): number[] {
-  // temp = c1 - c0·hsk = r·pk_t + encode(msg)
-  return polySub(c1, polyMul(c0, hsk));
+  const inner = polyAdd(polyMul(c0_0, hsk0), polyMul(c0_1, hsk1));
+  return polySub(c1, inner);
 }
 
-// Step 2: apply sk — noise collapses to r·e_t, decode follows
+// Step 2: apply sk — noise collapses to r_e·e, decode follows
 export function rbeDecryptStep2(
-  c0:   number[],
+  c0_0: number[],
   temp: number[],
   sk:   number[],
 ): { result: number[]; msg: string } {
-  // result = temp - c0·sk = r·e_t + encode(msg)  ≈ encode(msg)
-  const result = polySub(temp, polyMul(c0, sk));
+  const result = polySub(temp, polyMul(c0_0, sk));
   return { result, msg: decodeMsg(result) };
 }
 
 // ── Noise estimate helper (for UI display) ────────────────────────────────────
 
-// Returns the maximum absolute coefficient after centering to (-Q/2, Q/2]
 export function polyMaxNoise(poly: number[]): number {
   const half = Q >> 1;
   let max = 0;

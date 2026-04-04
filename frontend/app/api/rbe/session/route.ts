@@ -15,20 +15,22 @@ export async function POST(): Promise<NextResponse<ApiSetupResponse | ApiErrorRe
     return NextResponse.json({ error: 'rate_limit' }, { status: 429 });
   }
 
-  const { a, aInv } = rbeSetup();
-  const sessionId   = randomUUID();
+  const { a0, a1, r } = rbeSetup();
+  const sessionId = randomUUID();
 
   createSession({
     sessionId,
-    a,
-    aInv,
+    a0,
+    a1,
+    r,
     users:   new Map(),
     mpkAgg:  polyZero(),
   });
 
   return NextResponse.json({
     sessionId,
-    a,
+    a0,
+    a1,
     N_max: N_MAX,
     params: { N, Q, B },
   });

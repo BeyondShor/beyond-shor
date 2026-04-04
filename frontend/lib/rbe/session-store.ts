@@ -11,8 +11,9 @@ export interface RbeUser {
 
 export interface KcSession {
   sessionId:  string;
-  a:          number[];   // public CRS polynomial
-  aInv:       number[];   // KC trapdoor (private)
+  a0:         number[];   // public CRS polynomial
+  a1:         number[];   // complement: a0·r + a1 = 1
+  r:          number[];   // KC trapdoor (private)
   users:      Map<string, RbeUser>;
   mpkAgg:     number[];   // Σ pk_i
   createdAt:  number;     // Date.now()
@@ -65,7 +66,6 @@ export function createSession(session: Omit<KcSession, 'createdAt' | 'expiresAt'
   startReaper();
   reap();
   if (store.size >= MAX_SESSIONS) {
-    // Evict the oldest session
     const oldest = [...store.values()].sort((a, b) => a.createdAt - b.createdAt)[0];
     if (oldest) store.delete(oldest.sessionId);
   }

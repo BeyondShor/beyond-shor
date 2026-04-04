@@ -4,10 +4,10 @@
 // ── Worker messages (component → worker) ──────────────────────────────────────
 
 export type WorkerInMessage =
-  | { id: string; type: 'keygen';   a: number[] }
-  | { id: string; type: 'encrypt';  a: number[]; mpkAgg: number[]; msg: string }
-  | { id: string; type: 'dec_step1'; c0: number[]; c1: number[]; hsk: number[] }
-  | { id: string; type: 'dec_step2'; c0: number[]; temp: number[]; sk: number[] };
+  | { id: string; type: 'keygen';    a0: number[] }
+  | { id: string; type: 'encrypt';   a0: number[]; a1: number[]; mpkAgg: number[]; msg: string; targetId: string }
+  | { id: string; type: 'dec_step1'; c0_0: number[]; c0_1: number[]; hsk0: number[]; hsk1: number[]; c1: number[] }
+  | { id: string; type: 'dec_step2'; c0_0: number[]; temp: number[]; sk: number[] };
 
 // ── Worker messages (worker → component) ──────────────────────────────────────
 
@@ -21,7 +21,8 @@ export interface KeyGenResult {
 export interface EncryptResult {
   id:   string;
   type: 'encrypt_done';
-  c0:   number[];
+  c0_0: number[];
+  c0_1: number[];
   c1:   number[];
   ms:   number;
 }
@@ -55,7 +56,8 @@ export type WorkerOutMessage =
 
 export interface ApiSetupResponse {
   sessionId:  string;
-  a:          number[];
+  a0:         number[];   // public CRS for KeyGen / Step-2 decryption
+  a1:         number[];   // complement for identity-specific encryption
   N_max:      number;
   params: {
     N: number;
@@ -75,7 +77,8 @@ export interface ApiRegisterResponse {
 }
 
 export interface ApiHskResponse {
-  hsk: number[];
+  hsk0: number[];
+  hsk1: number[];
 }
 
 export interface ApiErrorResponse {

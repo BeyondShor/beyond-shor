@@ -6,7 +6,7 @@
 export const Q     = 12289;  // Ring modulus
 export const N     = 256;    // Polynomial degree; ring R_q = Z_q[X]/(X^N + 1)
 export const B     = 3;      // Small-polynomial coefficient bound, coeff ∈ [-B, B]
-export const N_MAX = 5;      // Maximum users per demo session
+export const N_MAX = 3;      // Maximum users per demo session (Alice, Bob, Charlie)
 export const ENCODE = (Q + 1) >> 1; // ≈ q/2 = 6145; used to encode a '1' bit
 
 // ── Primitive root and NTT twiddle factor ────────────────────────────────────

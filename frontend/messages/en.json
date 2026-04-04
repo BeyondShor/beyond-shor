@@ -571,10 +571,11 @@
     "param_l_paper": "50",
     "param_l_explain": "Maximum length of a user identity in bits/characters. l = 50 covers most enterprise use cases (IDs, short email addresses).",
     "param_N_name": "Max. users N_max",
-    "param_N_demo": "5",
+    "param_N_demo": "3 (Alice, Bob, Charlie)",
     "param_N_paper": "1,000 / 10,000",
     "param_N_explain": "RBE is a bounded-N system: N_max is fixed at setup and determines the mpk size. For 1,000 users the paper reports a ciphertext size of ~0.148 MB.",
-    "securityNote": "Demo parameters are mathematically correct but not cryptographically secure. Do not use in production."
+    "securityNote": "Demo parameters are mathematically correct but not cryptographically secure. Do not use in production.",
+    "paperLinkText": "Underlying paper (ePrint 2026/628)"
   },
   "notFound": {
     "label": "// 404",
