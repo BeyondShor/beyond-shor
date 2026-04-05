@@ -502,7 +502,11 @@
     "step3PfsX25519": "X25519: client generates an ephemeral key pair → private key deleted immediately after the DH step",
     "step3PfsKem": "KEM: server generates an ephemeral KEM key pair → private key deleted immediately after decapsulation",
     "step3PfsCombined": "Independent mechanisms: an attacker must break both at runtime — retroactive compromise is impossible",
-    "step3PfsMcElieceNote": "Exception McEliece: keygen takes 10–30 s → key often static in production. PFS then via X25519 only."
+    "step3PfsMcElieceIntro": "Classic McEliece key generation takes 10–30 s — per-session ephemeral KEM keys are not practical in production. The server key pair is typically static.",
+    "step3PfsMcElieceKemWarn": "KEM (McEliece) static: an adversary who stores the traffic and later obtains the private KEM key can reconstruct kemSS — no KEM-side PFS.",
+    "step3PfsMcElieceX25519": "X25519: client-side ephemeral key pair → private key irretrievably gone after the DH step → X25519 provides PFS unconditionally.",
+    "step3PfsMcElieceCombined": "Hybrid remains PFS-secure: HKDF requires x25519SS AND kemSS. Knowing only kemSS (static key compromised) is not enough to compute the session key — x25519SS no longer exists.",
+    "step3PfsMcElieceDemoNote": "In this demo, McEliece keys are regenerated each session — this is not representative of production deployments."
   },
   "rss": {
     "label": "// rss",

@@ -1809,32 +1809,52 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
                       </div>
                     </div>
 
-                    {/* PFS callout */}
-                    <div className="rounded-lg border border-[var(--color-primary)]/25 bg-[var(--color-primary)]/5
-                      px-4 py-3 text-sm leading-relaxed text-[var(--color-text-muted)]">
-                      <p className="font-semibold text-[var(--color-text-base)] mb-2">{t('step3PfsTitle')}</p>
-                      <p className="mb-3">{t('step3PfsText')}</p>
-                      <ul className="space-y-1.5">
-                        <li className="flex gap-2 items-start">
-                          <span className="text-[var(--color-primary)] flex-shrink-0 font-mono">→</span>
-                          <span className="font-mono text-xs">{t('step3PfsX25519')}</span>
-                        </li>
-                        <li className="flex gap-2 items-start">
-                          <span className={`flex-shrink-0 font-mono ${s1.kem === 'mceliece' ? 'text-amber-400' : 'text-[var(--color-primary)]'}`}>→</span>
-                          <span className="font-mono text-xs">{t('step3PfsKem')}</span>
-                        </li>
-                        {s1.kem === 'mceliece' && (
+                    {/* PFS callout — McEliece has different semantics */}
+                    {s1.kem === 'mceliece' ? (
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5
+                        px-4 py-3 text-sm leading-relaxed text-[var(--color-text-muted)]">
+                        <p className="font-semibold text-[var(--color-text-base)] mb-2">{t('step3PfsTitle')}</p>
+                        <p className="mb-3">{t('step3PfsMcElieceIntro')}</p>
+                        <ul className="space-y-1.5">
                           <li className="flex gap-2 items-start">
                             <span className="text-amber-400 flex-shrink-0 font-mono">⚠</span>
-                            <span className="font-mono text-xs text-amber-300/80">{t('step3PfsMcElieceNote')}</span>
+                            <span className="font-mono text-xs text-amber-300/80">{t('step3PfsMcElieceKemWarn')}</span>
                           </li>
-                        )}
-                        <li className="flex gap-2 items-start">
-                          <span className="text-emerald-400 flex-shrink-0 font-mono">✓</span>
-                          <span className="font-mono text-xs">{t('step3PfsCombined')}</span>
-                        </li>
-                      </ul>
-                    </div>
+                          <li className="flex gap-2 items-start">
+                            <span className="text-[var(--color-primary)] flex-shrink-0 font-mono">→</span>
+                            <span className="font-mono text-xs">{t('step3PfsMcElieceX25519')}</span>
+                          </li>
+                          <li className="flex gap-2 items-start">
+                            <span className="text-emerald-400 flex-shrink-0 font-mono">✓</span>
+                            <span className="font-mono text-xs">{t('step3PfsMcElieceCombined')}</span>
+                          </li>
+                          <li className="flex gap-2 items-start">
+                            <span className="text-[var(--color-text-dim)] flex-shrink-0 font-mono text-xs">i</span>
+                            <span className="font-mono text-xs text-[var(--color-text-dim)]">{t('step3PfsMcElieceDemoNote')}</span>
+                          </li>
+                        </ul>
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-[var(--color-primary)]/25 bg-[var(--color-primary)]/5
+                        px-4 py-3 text-sm leading-relaxed text-[var(--color-text-muted)]">
+                        <p className="font-semibold text-[var(--color-text-base)] mb-2">{t('step3PfsTitle')}</p>
+                        <p className="mb-3">{t('step3PfsText')}</p>
+                        <ul className="space-y-1.5">
+                          <li className="flex gap-2 items-start">
+                            <span className="text-[var(--color-primary)] flex-shrink-0 font-mono">→</span>
+                            <span className="font-mono text-xs">{t('step3PfsX25519')}</span>
+                          </li>
+                          <li className="flex gap-2 items-start">
+                            <span className="text-[var(--color-primary)] flex-shrink-0 font-mono">→</span>
+                            <span className="font-mono text-xs">{t('step3PfsKem')}</span>
+                          </li>
+                          <li className="flex gap-2 items-start">
+                            <span className="text-emerald-400 flex-shrink-0 font-mono">✓</span>
+                            <span className="font-mono text-xs">{t('step3PfsCombined')}</span>
+                          </li>
+                        </ul>
+                      </div>
+                    )}
                   </>
                 }
               />
