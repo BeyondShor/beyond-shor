@@ -83,8 +83,8 @@ export default async function RbePage({ params }: PageProps) {
             ↗ {t('paperLinkText')}
           </a>
 
-          <div className="rounded-xl border border-[var(--color-border)]">
-            <table className="w-full text-sm">
+          <div className="rounded-xl border border-[var(--color-border)] overflow-x-auto">
+            <table className="w-full min-w-[480px] text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-bg-base)]">
                   <th className="px-4 py-3 text-left font-mono text-xs text-[var(--color-text-dim)] uppercase tracking-wider w-[28%]">

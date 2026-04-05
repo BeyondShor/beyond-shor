@@ -306,12 +306,13 @@ function BreachedBadge({ label }: { label: string }) {
 
 // ── SplitStepCard ──────────────────────────────────────────────────────────
 
-function SplitStepCard({ number, title, desc, left, right, leftLabel, rightLabel, exchange, badge }: {
+function SplitStepCard({ number, title, desc, left, right, leftLabel, rightLabel, exchange, badge, footer }: {
   number: string; title: string; desc: string;
   left: React.ReactNode; right: React.ReactNode;
   leftLabel: string; rightLabel: string;
   exchange?: Array<{ label: string; direction: '→' | '←' | '↔' }>;
   badge?: React.ReactNode;
+  footer?: React.ReactNode;
 }) {
   return (
     <div className="glass-panel rounded-xl border border-[var(--color-glass-border)] p-5 flex flex-col gap-4 animate-fade-up">
@@ -339,6 +340,7 @@ function SplitStepCard({ number, title, desc, left, right, leftLabel, rightLabel
           {right}
         </div>
       </div>
+      {footer && <div className="flex flex-col gap-3">{footer}</div>}
     </div>
   );
 }
@@ -1775,6 +1777,65 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
                       </div>
                     )
                     : <HexField label={t('kemSecretServerLabel')} bytes={s3.kemSecretServer} isPrivate={true} alwaysExpanded />
+                }
+                footer={
+                  <>
+                    {/* KEM protocol formula */}
+                    <div className="rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-bg-base)]
+                      px-4 py-3 font-mono text-xs text-[var(--color-text-muted)] space-y-1.5 leading-loose
+                      overflow-x-auto">
+                      <div className="text-[var(--color-text-dim)]">{t('step3FormulaTitle')}</div>
+                      <div className="pt-1 text-[var(--color-text-dim)]">{t('step3EncapComment')}</div>
+                      <div className="whitespace-nowrap">
+                        <span className="text-[var(--color-primary)]">(ciphertext, sharedSecret)</span>
+                        {' ← Encapsulate('}
+                        <span className="text-[var(--color-primary)]">pk_server</span>
+                        {')'}
+                      </div>
+                      <div className="pl-4 text-[var(--color-text-dim)] whitespace-nowrap">
+                        {t('step3EncapNote')}
+                      </div>
+                      <div className="pl-4 text-[var(--color-text-dim)]">{t('step3EncapSent')}</div>
+                      <div className="pl-4 text-[var(--color-text-dim)]">{t('step3EncapKept')}</div>
+                      <div className="pt-1 text-[var(--color-text-dim)]">{t('step3DecapComment')}</div>
+                      <div className="whitespace-nowrap">
+                        <span className="text-[var(--color-primary)]">sharedSecret</span>
+                        {' ← Decapsulate('}
+                        <span className="text-red-400/80">sk_server</span>
+                        {', ciphertext)'}
+                      </div>
+                      <div className="pl-4 text-amber-400/70 whitespace-nowrap">
+                        {'// '}{t('step3DecapEphNote')}
+                      </div>
+                    </div>
+
+                    {/* PFS callout */}
+                    <div className="rounded-lg border border-[var(--color-primary)]/25 bg-[var(--color-primary)]/5
+                      px-4 py-3 text-sm leading-relaxed text-[var(--color-text-muted)]">
+                      <p className="font-semibold text-[var(--color-text-base)] mb-2">{t('step3PfsTitle')}</p>
+                      <p className="mb-3">{t('step3PfsText')}</p>
+                      <ul className="space-y-1.5">
+                        <li className="flex gap-2 items-start">
+                          <span className="text-[var(--color-primary)] flex-shrink-0 font-mono">→</span>
+                          <span className="font-mono text-xs">{t('step3PfsX25519')}</span>
+                        </li>
+                        <li className="flex gap-2 items-start">
+                          <span className={`flex-shrink-0 font-mono ${s1.kem === 'mceliece' ? 'text-amber-400' : 'text-[var(--color-primary)]'}`}>→</span>
+                          <span className="font-mono text-xs">{t('step3PfsKem')}</span>
+                        </li>
+                        {s1.kem === 'mceliece' && (
+                          <li className="flex gap-2 items-start">
+                            <span className="text-amber-400 flex-shrink-0 font-mono">⚠</span>
+                            <span className="font-mono text-xs text-amber-300/80">{t('step3PfsMcElieceNote')}</span>
+                          </li>
+                        )}
+                        <li className="flex gap-2 items-start">
+                          <span className="text-emerald-400 flex-shrink-0 font-mono">✓</span>
+                          <span className="font-mono text-xs">{t('step3PfsCombined')}</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </>
                 }
               />
             )}

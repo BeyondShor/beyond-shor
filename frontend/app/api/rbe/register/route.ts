@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { N_MAX }                     from '@/lib/rbe/params';
+import { N, Q, N_MAX }               from '@/lib/rbe/params';
 import { rbeRegister }               from '@/lib/rbe/core';
 import { getSession }                from '@/lib/rbe/session-store';
 import type { ApiRegisterRequest, ApiRegisterResponse, ApiErrorResponse } from '@/lib/rbe-types';
@@ -31,7 +31,7 @@ export async function POST(
   }
 
   // Validate pk length
-  if (pk.length !== 256 || pk.some(v => typeof v !== 'number' || v < 0 || v >= 12289)) {
+  if (pk.length !== N || pk.some(v => typeof v !== 'number' || v < 0 || v >= Q)) {
     return NextResponse.json({ error: 'invalid_pk' }, { status: 422 });
   }
 

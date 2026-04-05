@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import katex from 'katex';
 import type {
   WorkerInMessage, WorkerOutMessage,
@@ -46,8 +47,8 @@ const INIT: RbeState = {
   bob:   null, bobReg:   false,
   charlie: null, charlieReg: false,
   mpkAgg: null,
-  msgForBob:   'Hallo Bob! Geheime Nachricht.',
-  msgForAlice: 'Hallo Alice! Nur für dich.',
+  msgForBob:   '',
+  msgForAlice: '',
   ctBob: null, ctAlice: null,
   decBob: EMPTY_DEC, decAlice: EMPTY_DEC,
   aliceAttackTemp: null, aliceAttackMsg: null,
@@ -93,12 +94,14 @@ function StepBadge({ n, done }: { n: number | string; done?: boolean }) {
   );
 }
 
-function StepTitle({ n, title, done }: { n: number | string; title: string; done?: boolean }) {
+function StepTitle({ n, title, done, doneLbl }: {
+  n: number | string; title: string; done?: boolean; doneLbl: string;
+}) {
   return (
     <div className="flex items-center gap-3 mb-4">
       <StepBadge n={n} done={done} />
       <h3 className="font-semibold text-[var(--color-text-base)]">{title}</h3>
-      {done && <span className="ml-auto text-xs font-mono text-emerald-400/70">abgeschlossen</span>}
+      {done && <span className="ml-auto text-xs font-mono text-emerald-400/70">{doneLbl}</span>}
     </div>
   );
 }
@@ -252,15 +255,15 @@ function BtnDanger({ onClick, disabled, busy, children }: {
   );
 }
 
-function MsgInput({ value, onChange, disabled, label }: {
-  value: string; onChange: (v: string) => void; disabled?: boolean; label: string;
+function MsgInput({ value, onChange, disabled, label, maxCharsLabel }: {
+  value: string; onChange: (v: string) => void; disabled?: boolean; label: string; maxCharsLabel: string;
 }) {
   return (
     <div>
       <label className="block mb-1.5"><Label>{label}</Label></label>
       <input
         type="text"
-        maxLength={32}
+        maxLength={100}
         value={value}
         onChange={e => onChange(e.target.value)}
         disabled={disabled}
@@ -271,7 +274,7 @@ function MsgInput({ value, onChange, disabled, label }: {
           focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]/30
           disabled:opacity-40 disabled:cursor-not-allowed"
       />
-      <span className="ml-2 font-mono text-xs text-[var(--color-text-dim)]">max. 32 Zeichen</span>
+      <span className="ml-2 font-mono text-xs text-[var(--color-text-dim)]">{maxCharsLabel}</span>
     </div>
   );
 }
@@ -279,7 +282,14 @@ function MsgInput({ value, onChange, disabled, label }: {
 // ── Main Playground ───────────────────────────────────────────────────────────
 
 export default function RbePlayground() {
-  const [s, setS]  = useState<RbeState>(INIT);
+  const t      = useTranslations('rbePlayground');
+  const locale = useLocale();
+
+  const [s, setS]  = useState<RbeState>(() => ({
+    ...INIT,
+    msgForBob:   t('defaultMsgForBob'),
+    msgForAlice: t('defaultMsgForAlice'),
+  }));
   const workerRef  = useRef<Worker | null>(null);
   const cbRef      = useRef(new Map<string, (m: WorkerOutMessage) => void>());
 
@@ -295,7 +305,12 @@ export default function RbePlayground() {
 
   function callWorker<T extends WorkerOutMessage>(msg: WorkerInMessage): Promise<T> {
     return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        cbRef.current.delete(msg.id);
+        reject(new Error('Worker timeout'));
+      }, 30_000);
       cbRef.current.set(msg.id, (res) => {
+        clearTimeout(timer);
         if (res.type === 'error') reject(new Error((res as { msg: string }).msg));
         else resolve(res as T);
       });
@@ -313,7 +328,7 @@ export default function RbePlayground() {
   // ── Actions ───────────────────────────────────────────────────────────────
 
   async function doSetup() {
-    setBusy('KC wird initialisiert…');
+    setBusy(t('busyKcInit'));
     try {
       const res  = await fetch('/api/rbe/session', { method: 'POST' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -325,7 +340,7 @@ export default function RbePlayground() {
   async function doKeyGen(who: UserId) {
     if (!s.a0) return;
     const name = who === 'alice' ? 'Alice' : who === 'bob' ? 'Bob' : 'Charlie';
-    setBusy(`${name}: Schlüsselpaar wird im Browser generiert…`);
+    setBusy(t('busyKeyGen', { name }));
     try {
       type KgDone = { id: string; type: 'keygen_done'; pk: number[]; sk: number[]; ms: number };
       const res = await callWorker<KgDone>({ id: uid(), type: 'keygen', a0: s.a0 });
@@ -337,7 +352,7 @@ export default function RbePlayground() {
     const keys = who === 'alice' ? s.alice : who === 'bob' ? s.bob : s.charlie;
     if (!s.sessionId || !keys) return;
     const name = who === 'alice' ? 'Alice' : who === 'bob' ? 'Bob' : 'Charlie';
-    setBusy(`${name} wird beim KC registriert…`);
+    setBusy(t('busyRegister', { name }));
     try {
       const res = await fetch('/api/rbe/register', {
         method: 'POST',
@@ -352,9 +367,9 @@ export default function RbePlayground() {
 
   async function doEncrypt(target: 'alice' | 'bob') {
     if (!s.a0 || !s.a1 || !s.mpkAgg) return;
-    const name = target === 'bob' ? 'Bob' : 'Alice';
-    const msg  = target === 'bob' ? s.msgForBob : s.msgForAlice;
-    setBusy(`Charlie verschlüsselt für ${name}…`);
+    const name  = target === 'bob' ? 'Bob' : 'Alice';
+    const msg   = target === 'bob' ? s.msgForBob : s.msgForAlice;
+    setBusy(t('busyEncrypt', { name }));
     try {
       type EncDone = { id: string; type: 'encrypt_done'; c0_0: number[]; c0_1: number[]; c1: number[]; ms: number };
       const res = await callWorker<EncDone>({
@@ -368,9 +383,10 @@ export default function RbePlayground() {
 
   async function doFetchHsk(target: 'alice' | 'bob') {
     if (!s.sessionId) return;
-    setBusy(`hsk_${target} vom KC laden…`);
+    setBusy(t('busyFetchHsk', { target }));
     try {
-      const res = await fetch(`/api/rbe/hsk?sessionId=${s.sessionId}&targetId=${target}`);
+      const qs  = new URLSearchParams({ sessionId: s.sessionId, targetId: target });
+      const res = await fetch(`/api/rbe/hsk?${qs}`);
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
       const data = await res.json() as ApiHskResponse;
       const hsk: HskPair = { hsk0: data.hsk0, hsk1: data.hsk1 };
@@ -389,7 +405,8 @@ export default function RbePlayground() {
     const ct  = target === 'bob' ? s.ctBob   : s.ctAlice;
     const dec = target === 'bob' ? s.decBob  : s.decAlice;
     if (!ct || !dec.hsk) return;
-    setBusy(`Schritt 1 für ${target === 'bob' ? 'Bob' : 'Alice'}: temp = c1 − (c0_0·hsk0 + c0_1·hsk1)`);
+    const name = target === 'bob' ? 'Bob' : 'Alice';
+    setBusy(t('busyDecStep1', { name }));
     try {
       type S1Done = { id: string; type: 'dec_step1_done'; temp: number[]; ms: number };
       const res = await callWorker<S1Done>({
@@ -413,7 +430,7 @@ export default function RbePlayground() {
     const keys = target === 'bob' ? s.bob    : s.alice;
     if (!ct || !dec.temp || !keys) return;
     const name = target === 'bob' ? 'Bob' : 'Alice';
-    setBusy(`Schritt 2 für ${name}: result = temp − c0_0·sk`);
+    setBusy(t('busyDecStep2', { name }));
     try {
       type S2Done = { id: string; type: 'dec_step2_done'; result: number[]; msg: string; ms: number };
       const res = await callWorker<S2Done>({
@@ -431,10 +448,9 @@ export default function RbePlayground() {
   }
 
   // Alice's attack: use hsk_alice (bound to Alice) on c_bob (bound to Bob)
-  // Alice's hsk is already available from her own decryption in step 5.
   async function doAliceAttackStep1() {
     if (!s.ctBob || !s.decAlice.hsk) return;
-    setBusy('Alice wendet hsk_alice auf c_bob an (falsche Identitätsbindung!)…');
+    setBusy(t('busyAttack1'));
     try {
       type S1Done = { id: string; type: 'dec_step1_done'; temp: number[]; ms: number };
       const res = await callWorker<S1Done>({
@@ -451,7 +467,7 @@ export default function RbePlayground() {
 
   async function doAliceAttackStep2() {
     if (!s.ctBob || !s.aliceAttackTemp || !s.alice) return;
-    setBusy('Alice wendet sk_alice an…');
+    setBusy(t('busyAttack2'));
     try {
       type S2Done = { id: string; type: 'dec_step2_done'; result: number[]; msg: string; ms: number };
       const res = await callWorker<S2Done>({
@@ -480,7 +496,7 @@ export default function RbePlayground() {
       {s.error && (
         <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3
           font-mono text-sm text-red-300">
-          Fehler: {s.error}
+          {t('errorLabel')} {s.error}
         </div>
       )}
 
@@ -495,125 +511,235 @@ export default function RbePlayground() {
       )}
 
       {/* ════════════════════════════════════════════════════════════════════
-          Kontext-Einleitung
+          Context intro
       ════════════════════════════════════════════════════════════════════ */}
       <Card>
-        <p className="font-mono text-xs text-[var(--color-primary)] mb-2">// was ist rbe — und warum kein zertifikat?</p>
+        <p className="font-mono text-xs text-[var(--color-primary)] mb-2">{t('introComment')}</p>
         <div className="text-sm text-[var(--color-text-muted)] leading-relaxed space-y-3">
           <p>
-            In klassischer PKI muss Alice ein <strong className="text-[var(--color-text-base)]">Zertifikat</strong> von
-            einer Zertifizierungsstelle (CA) signieren lassen. Bob muss dieses Zertifikat prüfen,
-            bevor er Alice schreiben kann — die CA ist ein zentraler Vertrauensanker mit weitreichenden Befugnissen.
+            {locale === 'de' ? (
+              <>
+                In klassischer PKI muss Alice ein <strong className="text-[var(--color-text-base)]">Zertifikat</strong> von
+                einer Zertifizierungsstelle (CA) signieren lassen. Bob muss dieses Zertifikat prüfen,
+                bevor er Alice schreiben kann — die CA ist ein zentraler <strong className="text-[var(--color-text-base)]">Vertrauensanker</strong> mit weitreichenden Befugnissen.
+              </>
+            ) : (
+              <>
+                In classical PKI, Alice must have a <strong className="text-[var(--color-text-base)]">certificate</strong> signed
+                by a Certificate Authority (CA). Bob must verify that certificate before he can write to Alice —
+                the CA is a central <strong className="text-[var(--color-text-base)]">trust anchor</strong> with far-reaching powers.
+              </>
+            )}
           </p>
           <p>
-            <strong className="text-[var(--color-text-base)]">Registration-Based Encryption (RBE)</strong> geht
-            einen anderen Weg: Ein <strong className="text-[var(--color-text-base)]">Key Curator (KC)</strong> übernimmt
-            die Registrierung, kennt aber <em>keinen einzigen Secret Key</em>. Jeder Nutzer generiert sein Schlüsselpaar
-            lokal auf seinem Gerät und übergibt nur den Public Key an den KC. Dieser addiert alle Public Keys zu einem
-            einzigen aggregierten Wert <Mono>mpkAgg</Mono> auf — der Sender braucht nur diesen einen Wert
-            und den <strong className="text-[var(--color-text-base)]">Namen des Empfängers</strong> (seine Identität).
+            {locale === 'de' ? (
+              <>
+                <strong className="text-[var(--color-text-base)]">Registration-Based Encryption (RBE)</strong> geht
+                einen anderen Weg: Ein <strong className="text-[var(--color-text-base)]">Key Curator (KC)</strong> übernimmt
+                die Registrierung, kennt aber <em>keinen einzigen Secret Key</em>. Jeder Nutzer generiert sein Schlüsselpaar
+                lokal auf seinem Gerät und übergibt nur den Public Key an den KC. Dieser addiert alle Public Keys zu einem
+                einzigen aggregierten Wert <Mono>mpkAgg</Mono> auf — der Sender braucht nur diesen einen Wert
+                und den <strong className="text-[var(--color-text-base)]">Namen des Empfängers</strong> (seine Identität).
+              </>
+            ) : (
+              <>
+                <strong className="text-[var(--color-text-base)]">Registration-Based Encryption (RBE)</strong> takes
+                a different approach: a <strong className="text-[var(--color-text-base)]">Key Curator (KC)</strong> handles
+                registration but <em>knows not a single secret key</em>. Each user generates their key pair
+                locally on their device and submits only the public key to the KC. The KC adds all public keys into
+                a single aggregated value <Mono>mpkAgg</Mono> — the sender needs only this one value
+                and the <strong className="text-[var(--color-text-base)]">recipient&apos;s name</strong> (their identity).
+              </>
+            )}
           </p>
           <p>
-            Eine <strong className="text-[var(--color-text-base)]">Identität</strong> ist dabei einfach ein
-            eindeutiger String — hier die Namen{' '}
-            <Mono>"alice"</Mono>, <Mono>"bob"</Mono>, <Mono>"charlie"</Mono>. Ein deterministischer
-            Hash-Algorithmus wandelt diesen String in ein Polynom um, das mathematisch in den Chiffretext
-            eingebacken wird. Dadurch kann Charlie nachweisbar <em>nicht</em> Bobs Nachricht lesen,
-            selbst wenn er seinen eigenen legitimen Schlüssel kennt — das wird in Schritt 6 live demonstriert.
+            {locale === 'de' ? (
+              <>
+                Eine <strong className="text-[var(--color-text-base)]">Identität</strong> ist dabei einfach ein
+                eindeutiger String — hier die Namen{' '}
+                <Mono>&quot;alice&quot;</Mono>, <Mono>&quot;bob&quot;</Mono>, <Mono>&quot;charlie&quot;</Mono>. Ein deterministischer
+                Hash-Algorithmus wandelt diesen String in ein Polynom um, das mathematisch in den Chiffretext
+                eingebacken wird. Dadurch kann Charlie nachweisbar <em>nicht</em> Bobs Nachricht lesen,
+                selbst wenn er seinen eigenen legitimen Schlüssel kennt — das wird in Schritt 6 live demonstriert.
+              </>
+            ) : (
+              <>
+                An <strong className="text-[var(--color-text-base)]">identity</strong> is simply a
+                unique string — here the names{' '}
+                <Mono>&quot;alice&quot;</Mono>, <Mono>&quot;bob&quot;</Mono>, <Mono>&quot;charlie&quot;</Mono>. A deterministic
+                hash algorithm turns this string into a polynomial that is mathematically baked into the ciphertext.
+                This means Charlie demonstrably <em>cannot</em> read Bob&apos;s message,
+                even though he is a legitimate user with his own valid key — this is demonstrated live in step 6.
+              </>
+            )}
           </p>
         </div>
       </Card>
 
       {/* ════════════════════════════════════════════════════════════════════
-          SCHRITT 0 — KC Setup
+          STEP 0 — KC Setup
       ════════════════════════════════════════════════════════════════════ */}
       <Card active={!hasSetup} done={hasSetup}>
-        <StepTitle n={0} title="KC-Setup: Trapdoor-Schlüsselpaar" done={hasSetup} />
+        <StepTitle n={0} title={t('step0Title')} done={hasSetup} doneLbl={t('stepDone')} />
 
         <div className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed space-y-2">
+          {/* Paragraph 1 — polynomial ring definition (math-heavy) */}
           <p>
-            Die gesamte Arithmetik findet im <strong className="text-[var(--color-text-base)]">Polynomring{' '}
-            <M>{`R_q = \\mathbb{Z}_q[X]/(X^N+1)`}</M></strong> statt: ganzzahlige Polynome vom Grad{' '}
-            {'<'} <M>{`N = ${N}`}</M>, deren Koeffizienten modulo <M>{`q = ${Q}`}</M> gerechnet werden.
-            Multiplikation wird modulo <M>{`X^{${N}}+1`}</M> reduziert — das macht den Ring für gitterbasierte Kryptografie geeignet.
+            {locale === 'de' ? (
+              <>
+                Die gesamte Arithmetik findet im <strong className="text-[var(--color-text-base)]">Polynomring{' '}
+                <M>{`R_q = \\mathbb{Z}_q[X]/(X^N+1)`}</M></strong> statt: ganzzahlige Polynome vom Grad{' '}
+                {'<'} <M>{`N = ${N}`}</M>, deren Koeffizienten modulo <M>{`q = ${Q}`}</M> gerechnet werden.
+                Multiplikation wird modulo <M>{`X^{${N}}+1`}</M> reduziert — das macht den Ring für gitterbasierte Kryptografie geeignet.
+              </>
+            ) : (
+              <>
+                All arithmetic takes place in the <strong className="text-[var(--color-text-base)]">polynomial ring{' '}
+                <M>{`R_q = \\mathbb{Z}_q[X]/(X^N+1)`}</M></strong>: integer polynomials of degree{' '}
+                {'<'} <M>{`N = ${N}`}</M>, whose coefficients are computed modulo <M>{`q = ${Q}`}</M>.
+                Multiplication is reduced modulo <M>{`X^{${N}}+1`}</M> — making the ring well-suited for lattice-based cryptography.
+              </>
+            )}
           </p>
+          {/* Paragraph 2 — trapdoor construction (math-heavy) */}
           <p>
-            Der KC wählt zunächst ein <strong className="text-[var(--color-text-base)]">uniformes
-            Polynom</strong> <M>{'a_0'}</M> — alle {N} Koeffizienten gleichverteilt in{' '}
-            <M>{`[0, ${Q})`}</M>. Das ist der öffentliche Referenzpunkt für alle Nutzer (Common Reference String).
-            Dann zieht er ein <strong className="text-[var(--color-text-base)]">kurzes Polynom</strong>{' '}
-            <M>r</M> mit Koeffizienten nur aus <M>{`\\{-${B}, \\ldots, +${B}\\}`}</M> und berechnet{' '}
-            <M>{'a_1 = 1 - a_0 \\cdot r'}</M>. Dadurch gilt die{' '}
-            <strong className="text-[var(--color-text-base)]">Trapdoor-Relation</strong>{' '}
-            <M>{'a_0 \\cdot r + a_1 = 1'}</M> (das Einheitspolynom).{' '}
-            <M>{'a_0'}</M> und <M>{'a_1'}</M> sind vollständig öffentlich —
-            nur <M>r</M> bleibt als Geheimnis auf dem Server.
+            {locale === 'de' ? (
+              <>
+                Der KC wählt zunächst ein <strong className="text-[var(--color-text-base)]">uniformes
+                Polynom</strong> <M>{'a_0'}</M> — alle {N} Koeffizienten gleichverteilt in{' '}
+                <M>{`[0, ${Q})`}</M>. Das ist der öffentliche Referenzpunkt für alle Nutzer (Common Reference String).
+                Dann zieht er ein <strong className="text-[var(--color-text-base)]">kurzes Polynom</strong>{' '}
+                <M>r</M> mit Koeffizienten nur aus <M>{`\\{-${B}, \\ldots, +${B}\\}`}</M> und berechnet{' '}
+                <M>{'a_1 = 1 - a_0 \\cdot r'}</M>. Dadurch gilt die{' '}
+                <strong className="text-[var(--color-text-base)]">Trapdoor-Relation</strong>{' '}
+                <M>{'a_0 \\cdot r + a_1 = 1'}</M> (das Einheitspolynom).{' '}
+                <M>{'a_0'}</M> und <M>{'a_1'}</M> sind vollständig öffentlich —
+                nur <M>r</M> bleibt als Geheimnis auf dem Server.
+              </>
+            ) : (
+              <>
+                The KC first chooses a <strong className="text-[var(--color-text-base)]">uniform
+                polynomial</strong> <M>{'a_0'}</M> — all {N} coefficients uniformly distributed in{' '}
+                <M>{`[0, ${Q})`}</M>. This is the public reference point for all users (Common Reference String).
+                It then draws a <strong className="text-[var(--color-text-base)]">short polynomial</strong>{' '}
+                <M>r</M> with coefficients only from <M>{`\\{-${B}, \\ldots, +${B}\\}`}</M> and computes{' '}
+                <M>{'a_1 = 1 - a_0 \\cdot r'}</M>. This yields the{' '}
+                <strong className="text-[var(--color-text-base)]">trapdoor relation</strong>{' '}
+                <M>{'a_0 \\cdot r + a_1 = 1'}</M> (the unit polynomial).{' '}
+                <M>{'a_0'}</M> and <M>{'a_1'}</M> are fully public —
+                only <M>r</M> remains secret on the server.
+              </>
+            )}
           </p>
         </div>
 
         <BtnPrimary onClick={doSetup} disabled={hasSetup} busy={s.busy}>
-          KC initialisieren
+          {t('step0BtnInit')}
         </BtnPrimary>
 
         {s.a0 && s.a1 && (
           <div className="mt-5 space-y-3">
-            <PolyBox label="a0 — öffentlicher Referenzpunkt (Common Reference String)" poly={s.a0}
-              equation="uniform ∈ R_q" />
-            <PolyBox label="a1 — öffentliches Komplement" poly={s.a1}
-              equation="1 − a0·r" />
+            <PolyBox label={t('step0LabelA0')} poly={s.a0} equation="uniform ∈ R_q" />
+            <PolyBox label={t('step0LabelA1')} poly={s.a1} equation="1 − a0·r" />
             <Callout variant="info">
-              <strong>Warum ist das ein Trapdoor?</strong>{' '}
-              Wer <M>r</M> kennt, kann aus <M>{'a_0'}</M> und <M>{'a_1'}</M>
-              für jeden Empfänger einen maßgeschneiderten Hilfschlüssel berechnen.
-              Wer <M>r</M> nicht kennt, müsste dafür das Ring-LWE-Problem lösen —
-              das gilt als quantencomputersicher schwer.
-              <M>{`N_{\\max} = ${N_MAX}`}</M>: In dieser Demo können maximal {N_MAX} Nutzer
-              registriert werden (die sogenannte Bounded-N-Eigenschaft von RBE).
+              <strong>{t('step0CalloutQ')}</strong>{' '}
+              {locale === 'de' ? (
+                <>
+                  Wer <M>r</M> kennt, kann aus <M>{'a_0'}</M> und <M>{'a_1'}</M>
+                  für jeden Empfänger einen maßgeschneiderten Hilfschlüssel berechnen.
+                  Wer <M>r</M> nicht kennt, müsste dafür das Ring-LWE-Problem lösen —
+                  das gilt als quantencomputersicher schwer.{' '}
+                  <M>{`N_{\\max} = ${N_MAX}`}</M>: {t('step0CalloutNmaxPre')} {N_MAX} {t('step0CalloutNmaxPost')}
+                </>
+              ) : (
+                <>
+                  Anyone who knows <M>r</M> can compute a tailored helper key from <M>{'a_0'}</M> and <M>{'a_1'}</M>
+                  for any recipient.
+                  Anyone who does not know <M>r</M> would have to solve the Ring-LWE problem —
+                  which is considered hard even for quantum computers.{' '}
+                  <M>{`N_{\\max} = ${N_MAX}`}</M>: {t('step0CalloutNmaxPre')} {N_MAX} {t('step0CalloutNmaxPost')}
+                </>
+              )}
             </Callout>
           </div>
         )}
       </Card>
 
       {/* ════════════════════════════════════════════════════════════════════
-          SCHRITTE 1–3 — Registrierung
+          STEPS 1–3 — Registration
       ════════════════════════════════════════════════════════════════════ */}
       {hasSetup && (
         <Card active={!allReg} done={allReg}>
-          <StepTitle n="1–3" title="Registrierung: Alice, Bob, Charlie" done={allReg} />
+          <StepTitle n="1–3" title={t('step13Title')} done={allReg} doneLbl={t('stepDone')} />
 
           <div className="text-sm text-[var(--color-text-muted)] mb-5 leading-relaxed space-y-2">
+            {/* Paragraph 1 — Ring-LWE key generation (math-heavy) */}
             <p>
-              Jeder Nutzer generiert sein Schlüsselpaar <strong>lokal auf seinem Gerät</strong>{' '}
-              (in dieser Demo: im Browser — es könnte genauso gut eine App, ein Desktop-Programm
-              oder ein Hardware-Token sein), basierend auf dem Sicherheitsprinzip{' '}
-              <strong className="text-[var(--color-text-base)]">Ring-LWE</strong> (Ring Learning With Errors):
-              Man zieht einen geheimen Schlüssel <M>sk</M> und einen Fehlerterm <M>e</M> —
-              beide mit Koeffizienten nur aus <M>{`\\{-${B}, \\ldots, +${B}\\}`}</M> (also sehr kleine Werte).
-              Der Public Key ergibt sich dann als <M>{'pk = a_0 \\cdot sk + e'}</M>.
-              Die Sicherheit beruht darauf, dass es ohne Kenntnis von <M>sk</M> rechnerisch
-              nicht möglich ist, den kleinen Fehler <M>e</M> vom Ergebnis zu trennen —
-              selbst mit einem Quantencomputer (unter der Ring-LWE-Annahme).
+              {locale === 'de' ? (
+                <>
+                  Jeder Nutzer generiert sein Schlüsselpaar <strong>lokal auf seinem Gerät</strong>{' '}
+                  (in dieser Demo: im Browser — es könnte genauso gut eine App, ein Desktop-Programm
+                  oder ein Hardware-Token sein), basierend auf dem Sicherheitsprinzip{' '}
+                  <strong className="text-[var(--color-text-base)]">Ring-LWE</strong> (Ring Learning With Errors):
+                  Man zieht einen geheimen Schlüssel <M>sk</M> und einen Fehlerterm <M>e</M> —
+                  beide mit Koeffizienten nur aus <M>{`\\{-${B}, \\ldots, +${B}\\}`}</M> (also sehr kleine Werte).
+                  Der Public Key ergibt sich dann als <M>{'pk = a_0 \\cdot sk + e'}</M>.
+                  Die Sicherheit beruht darauf, dass es ohne Kenntnis von <M>sk</M> rechnerisch
+                  nicht möglich ist, den kleinen Fehler <M>e</M> vom Ergebnis zu trennen —
+                  selbst mit einem Quantencomputer (unter der Ring-LWE-Annahme).
+                </>
+              ) : (
+                <>
+                  Each user generates their key pair <strong>locally on their device</strong>{' '}
+                  (in this demo: in the browser — it could just as well be an app, desktop program,
+                  or hardware token), based on the security principle{' '}
+                  <strong className="text-[var(--color-text-base)]">Ring-LWE</strong> (Ring Learning With Errors):
+                  draw a secret key <M>sk</M> and an error term <M>e</M> —
+                  both with coefficients only from <M>{`\\{-${B}, \\ldots, +${B}\\}`}</M> (very small values).
+                  The public key is then <M>{'pk = a_0 \\cdot sk + e'}</M>.
+                  The security rests on the fact that without knowledge of <M>sk</M> it is computationally
+                  infeasible to separate the small error <M>e</M> from the result —
+                  even with a quantum computer (under the Ring-LWE assumption).
+                </>
+              )}
             </p>
+            {/* Paragraph 2 — mpkAgg aggregation */}
             <p>
-              Nur <M>pk</M> wird an den KC geschickt. Dieser addiert ihn zum aggregierten
-              Public Key <M>{'\\mathit{mpkAgg} = pk_{\\text{alice}} + pk_{\\text{bob}} + pk_{\\text{charlie}}'}</M>.
-              Der Secret Key verlässt niemals das Gerät des Nutzers.
+              {locale === 'de' ? (
+                <>
+                  Nur <M>pk</M> wird an den KC geschickt. Dieser addiert ihn zum aggregierten
+                  Public Key <M>{'\\mathit{mpkAgg} = pk_{\\text{alice}} + pk_{\\text{bob}} + pk_{\\text{charlie}}'}</M>.
+                  Der Secret Key verlässt niemals das Gerät des Nutzers.
+                </>
+              ) : (
+                <>
+                  Only <M>pk</M> is sent to the KC. It is added to the aggregated
+                  public key <M>{'\\mathit{mpkAgg} = pk_{\\text{alice}} + pk_{\\text{bob}} + pk_{\\text{charlie}}'}</M>.
+                  The secret key never leaves the user&apos;s device.
+                </>
+              )}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <UserColumn name="Alice" who="alice" keys={s.alice} registered={s.aliceReg}
-              busy={s.busy} onKeyGen={() => doKeyGen('alice')} onRegister={() => doRegister('alice')} />
+              busy={s.busy} onKeyGen={() => doKeyGen('alice')} onRegister={() => doRegister('alice')}
+              t={t} />
             <UserColumn name="Bob"   who="bob"   keys={s.bob}   registered={s.bobReg}
-              busy={s.busy} onKeyGen={() => doKeyGen('bob')}   onRegister={() => doRegister('bob')} />
+              busy={s.busy} onKeyGen={() => doKeyGen('bob')}   onRegister={() => doRegister('bob')}
+              t={t} />
             <UserColumn name="Charlie" who="charlie" keys={s.charlie} registered={s.charlieReg}
-              busy={s.busy} onKeyGen={() => doKeyGen('charlie')} onRegister={() => doRegister('charlie')} />
+              busy={s.busy} onKeyGen={() => doKeyGen('charlie')} onRegister={() => doRegister('charlie')}
+              t={t} />
           </div>
 
           {s.mpkAgg && (
             <div className="mt-5 space-y-3">
               <PolyBox
-                label={`mpkAgg — aggregierter Public Key (${[s.aliceReg, s.bobReg, s.charlieReg].filter(Boolean).length}/${N_MAX} Nutzer)`}
+                label={`mpkAgg — ${t('step13MpkLabelPre')} (${t('step13Users', {
+                  count: [s.aliceReg, s.bobReg, s.charlieReg].filter(Boolean).length,
+                  max: N_MAX,
+                })})`}
                 poly={s.mpkAgg}
                 equation={[
                   s.aliceReg   ? 'pk_alice'   : null,
@@ -623,10 +749,8 @@ export default function RbePlayground() {
               />
               {allReg && (
                 <Callout variant="success">
-                  <strong>N_max = {N_MAX} erreicht.</strong> Alle drei Nutzer haben nur ihren Public Key
-                  übermittelt — der KC hat keinen einzigen Secret Key gesehen. Ein klassischer PKI-Ansatz
-                  hätte drei CA-Signaturen, drei Zertifikate und drei CRL-Einträge erfordert.
-                  Hier: ein einzelnes <Mono>mpkAgg</Mono>.
+                  <strong>{t('step13Nmax', { nMax: N_MAX })}</strong>{' '}
+                  {t('step13CalloutSuffix')} <Mono>mpkAgg</Mono>.
                 </Callout>
               )}
             </div>
@@ -635,73 +759,100 @@ export default function RbePlayground() {
       )}
 
       {/* ════════════════════════════════════════════════════════════════════
-          SCHRITT 4 — Verschlüsselung (zwei Nachrichten)
+          STEP 4 — Encryption
       ════════════════════════════════════════════════════════════════════ */}
       {allReg && (
         <Card active={!bothCts} done={bothCts}>
-          <StepTitle n={4} title="Verschlüsselung: Charlie schreibt an Bob und Alice" done={bothCts} />
+          <StepTitle n={4} title={t('step4Title')} done={bothCts} doneLbl={t('stepDone')} />
 
           <div className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed space-y-2">
             <p>
-              Charlie braucht zum Verschlüsseln nur öffentlich bekannte Daten:{' '}
-              <Mono>a0</Mono>, <Mono>a1</Mono>, <Mono>mpkAgg</Mono> — und den{' '}
-              <strong className="text-[var(--color-text-base)]">Namen des Empfängers</strong>{' '}
-              als Identität (hier der String <Mono>"bob"</Mono> bzw. <Mono>"alice"</Mono>).
-              Keine CA-Abfrage, kein Zertifikat, kein vorab ausgetauschter Schlüssel.
+              {locale === 'de' ? (
+                <>
+                  Charlie braucht zum Verschlüsseln nur öffentlich bekannte Daten:{' '}
+                  <Mono>a0</Mono>, <Mono>a1</Mono>, <Mono>mpkAgg</Mono> — und den{' '}
+                  <strong className="text-[var(--color-text-base)]">Namen des Empfängers</strong>{' '}
+                  als Identität (hier der String <Mono>&quot;bob&quot;</Mono> bzw. <Mono>&quot;alice&quot;</Mono>).
+                  Keine CA-Abfrage, kein Zertifikat, kein vorab ausgetauschter Schlüssel.
+                </>
+              ) : (
+                <>
+                  To encrypt, Charlie only needs publicly known data:{' '}
+                  <Mono>a0</Mono>, <Mono>a1</Mono>, <Mono>mpkAgg</Mono> — and the{' '}
+                  <strong className="text-[var(--color-text-base)]">recipient&apos;s name</strong>{' '}
+                  as identity (here the string <Mono>&quot;bob&quot;</Mono> or <Mono>&quot;alice&quot;</Mono>).
+                  No CA query, no certificate, no pre-shared key.
+                </>
+              )}
             </p>
             <p>
-              Der entscheidende Schritt ist die{' '}
-              <strong className="text-[var(--color-text-base)]">Identitätsbindung</strong>:
-              Eine Hash-Funktion <Mono>H</Mono> wandelt den Empfänger-String deterministisch in ein
-              Polynom in R_q um. Dieses Polynom wird in die zweite Chiffretext-Komponente eingebacken,
-              sodass nur der KC mit Kenntnis von <Mono>r</Mono> den passenden Hilfschlüssel für genau
-              diesen Empfänger berechnen kann.
+              {locale === 'de' ? (
+                <>
+                  Der entscheidende Schritt ist die{' '}
+                  <strong className="text-[var(--color-text-base)]">Identitätsbindung</strong>:
+                  Eine Hash-Funktion <Mono>H</Mono> wandelt den Empfänger-String deterministisch in ein
+                  Polynom in R_q um. Dieses Polynom wird in die zweite Chiffretext-Komponente eingebacken,
+                  sodass nur der KC mit Kenntnis von <Mono>r</Mono> den passenden Hilfschlüssel für genau
+                  diesen Empfänger berechnen kann.
+                </>
+              ) : (
+                <>
+                  The key step is{' '}
+                  <strong className="text-[var(--color-text-base)]">identity binding</strong>:
+                  a hash function <Mono>H</Mono> deterministically maps the recipient string to a
+                  polynomial in R_q. This polynomial is baked into the second ciphertext component,
+                  so only the KC — knowing <Mono>r</Mono> — can compute the matching helper key for
+                  exactly this recipient.
+                </>
+              )}
             </p>
           </div>
           <div className="mb-4 rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-bg-base)]
             px-4 py-3 font-mono text-xs text-[var(--color-text-muted)] space-y-1.5 leading-loose">
-            <div className="text-[var(--color-text-dim)]">// r wird frisch für jede Nachricht gewählt:</div>
-            <div><Mono>r</Mono><span className="text-[var(--color-text-dim)] ml-2">— kurzes Polynom mit Koeffizienten ∈ {'{'}-{B}, …, +{B}{'}'}</span></div>
-            <div className="pt-1 text-[var(--color-text-dim)]">// drei Komponenten des Chiffretexts:</div>
+            <div className="text-[var(--color-text-dim)]">{t('step4CommentR')}</div>
+            <div><Mono>r</Mono><span className="text-[var(--color-text-dim)] ml-2">— {locale === 'de' ? `kurzes Polynom mit Koeffizienten ∈ {-${B}, …, +${B}}` : `short polynomial with coefficients ∈ {-${B}, …, +${B}}`}</span></div>
+            <div className="pt-1 text-[var(--color-text-dim)]">{t('step4CommentCt')}</div>
             <div><Mono>c0_0 = r · a0</Mono></div>
             <div><Mono>c0_1 = r · (a1 + H(id_target))</Mono>
-              <span className="text-amber-400/80 ml-2">← Identitätsbindung</span>
+              <span className="text-amber-400/80 ml-2">{t('step4IdentityBinding')}</span>
             </div>
-            <div><Mono>c1 &nbsp;&nbsp;= r · mpkAgg + encode(msg)</Mono><span className="text-[var(--color-text-dim)] ml-2">← verschlüsselte Nachricht</span></div>
+            <div><Mono>c1 &nbsp;&nbsp;= r · mpkAgg + encode(msg)</Mono><span className="text-[var(--color-text-dim)] ml-2">{t('step4EncMsg')}</span></div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Nachricht für Bob */}
+            {/* Message for Bob */}
             <div className="space-y-3">
-              <Label>Nachricht für Bob</Label>
-              <MsgInput label="Klartext" value={s.msgForBob}
-                onChange={v => setS(p => ({ ...p, msgForBob: v }))} disabled={!!s.ctBob} />
+              <Label>{t('msgForBobLabel')}</Label>
+              <MsgInput label={t('plaintextLabel')} value={s.msgForBob}
+                onChange={v => setS(p => ({ ...p, msgForBob: v }))} disabled={!!s.ctBob}
+                maxCharsLabel={t('maxChars')} />
               <BtnPrimary onClick={() => doEncrypt('bob')} disabled={!!s.ctBob} busy={s.busy}>
-                Für Bob verschlüsseln
+                {t('btnEncryptBob')}
               </BtnPrimary>
               {s.ctBob && (
                 <div className="space-y-2">
                   <PolyBox label="c0_0 = r · a0" poly={s.ctBob.c0_0} />
                   <PolyBox label='c0_1 = r · (a1 + H("bob"))' poly={s.ctBob.c0_1}
-                    equation='Identitätsbindung an "bob"' />
+                    equation={t('c0_1BobEq')} />
                   <PolyBox label="c1 = r · mpkAgg + encode(msg)" poly={s.ctBob.c1} />
                 </div>
               )}
             </div>
 
-            {/* Nachricht für Alice */}
+            {/* Message for Alice */}
             <div className="space-y-3">
-              <Label>Nachricht für Alice</Label>
-              <MsgInput label="Klartext" value={s.msgForAlice}
-                onChange={v => setS(p => ({ ...p, msgForAlice: v }))} disabled={!!s.ctAlice} />
+              <Label>{t('msgForAliceLabel')}</Label>
+              <MsgInput label={t('plaintextLabel')} value={s.msgForAlice}
+                onChange={v => setS(p => ({ ...p, msgForAlice: v }))} disabled={!!s.ctAlice}
+                maxCharsLabel={t('maxChars')} />
               <BtnPrimary onClick={() => doEncrypt('alice')} disabled={!!s.ctAlice} busy={s.busy}>
-                Für Alice verschlüsseln
+                {t('btnEncryptAlice')}
               </BtnPrimary>
               {s.ctAlice && (
                 <div className="space-y-2">
                   <PolyBox label="c0_0 = r · a0" poly={s.ctAlice.c0_0} />
                   <PolyBox label='c0_1 = r · (a1 + H("alice"))' poly={s.ctAlice.c0_1}
-                    equation='Identitätsbindung an "alice"' />
+                    equation={t('c0_1AliceEq')} />
                   <PolyBox label="c1 = r · mpkAgg + encode(msg)" poly={s.ctAlice.c1} />
                 </div>
               )}
@@ -711,12 +862,26 @@ export default function RbePlayground() {
           {bothCts && s.ctBob && s.ctAlice && (
             <div className="mt-5">
               <Callout variant="warn">
-                <strong>Beobachtung:</strong> Beide c0_1-Komponenten sind durch unterschiedliche
-                Identitäts-Hashes <Mono>H("bob") ≠ H("alice")</Mono> verschieden gebunden —{' '}
-                {polyDiffers(s.ctBob.c0_1, s.ctAlice.c0_1)
-                  ? 'c0_1_bob ≠ c0_1_alice ✓'
-                  : 'c0_1_bob = c0_1_alice (zufällige Kollision)'}.
-                Diese Bindung ist es, die verhindert, dass Charlie Bobs Nachricht lesen kann.
+                <strong>{t('step4ObsTitle')}</strong>{' '}
+                {locale === 'de' ? (
+                  <>
+                    Beide c0_1-Komponenten sind durch unterschiedliche
+                    Identitäts-Hashes <Mono>H(&quot;bob&quot;) ≠ H(&quot;alice&quot;)</Mono> verschieden gebunden —{' '}
+                    {polyDiffers(s.ctBob.c0_1, s.ctAlice.c0_1)
+                      ? t('step4ObsDiffResult')
+                      : t('step4ObsCollideResult')}.{' '}
+                    Diese Bindung ist es, die verhindert, dass Charlie Bobs Nachricht lesen kann.
+                  </>
+                ) : (
+                  <>
+                    Both c0_1 components are bound differently via distinct
+                    identity hashes <Mono>H(&quot;bob&quot;) ≠ H(&quot;alice&quot;)</Mono> —{' '}
+                    {polyDiffers(s.ctBob.c0_1, s.ctAlice.c0_1)
+                      ? t('step4ObsDiffResult')
+                      : t('step4ObsCollideResult')}.{' '}
+                    This binding is exactly what prevents Charlie from reading Bob&apos;s message.
+                  </>
+                )}
               </Callout>
             </div>
           )}
@@ -724,59 +889,97 @@ export default function RbePlayground() {
       )}
 
       {/* ════════════════════════════════════════════════════════════════════
-          SCHRITT 5 — Entschlüsselung (Bob und Alice)
+          STEP 5 — Decryption
       ════════════════════════════════════════════════════════════════════ */}
       {bothCts && (
         <Card active={!bothDecoded} done={bothDecoded}>
-          <StepTitle n={5} title="Entschlüsselung: Zwei Faktoren — hsk + sk" done={bothDecoded} />
+          <StepTitle n={5} title={t('step5Title')} done={bothDecoded} doneLbl={t('stepDone')} />
 
           <div className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed space-y-2">
             <p>
-              Der KC berechnet für jeden Empfänger mit seinem geheimen Trapdoor <Mono>r</Mono>
-              einen <strong className="text-[var(--color-text-base)]">Helper Decryption Key (hsk)</strong> —
-              ein Schlüsselpaar aus zwei Polynomen <Mono>(hsk0, hsk1)</Mono>, das identitätsspezifisch ist:
+              {locale === 'de' ? (
+                <>
+                  Der KC berechnet für jeden Empfänger mit seinem geheimen Trapdoor <Mono>r</Mono>
+                  einen <strong className="text-[var(--color-text-base)]">Helper Decryption Key (hsk)</strong> —
+                  ein Schlüsselpaar aus zwei Polynomen <Mono>(hsk0, hsk1)</Mono>, das identitätsspezifisch ist:
+                </>
+              ) : (
+                <>
+                  The KC computes a <strong className="text-[var(--color-text-base)]">Helper Decryption Key (hsk)</strong> for
+                  each recipient using its secret trapdoor <Mono>r</Mono> —
+                  a key pair of two polynomials <Mono>(hsk0, hsk1)</Mono> that is identity-specific:
+                </>
+              )}
             </p>
             <div className="rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-bg-base)]
               px-4 py-3 font-mono text-xs text-[var(--color-text-muted)] space-y-1.5 leading-loose">
-              <div className="text-[var(--color-text-dim)]">// g_t = Identitätspolynom des Empfängers:</div>
+              <div className="text-[var(--color-text-dim)]">{t('step5CommentGt')}</div>
               <div><Mono>g_t = 1 + H(id_t)</Mono></div>
-              <div className="text-[var(--color-text-dim)] pt-1">// g_t⁻¹ ist das multiplikative Inverse von g_t in R_q:</div>
+              <div className="text-[var(--color-text-dim)] pt-1">{t('step5CommentGtInv')}</div>
               <div><Mono>hsk1 = g_t⁻¹ · (mpkAgg − pk_t)</Mono></div>
               <div><Mono>hsk0 = r · hsk1</Mono></div>
-              <div className="text-[var(--color-text-dim)] pt-1">// Daraus folgt die Schlüsseleigenschaft (leicht nachzurechnen):</div>
+              <div className="text-[var(--color-text-dim)] pt-1">{t('step5CommentResult')}</div>
               <div><Mono>a0·hsk0 + (a1 + H(id_t))·hsk1 = mpkAgg − pk_t</Mono></div>
             </div>
             <p>
-              <Mono>hsk</Mono> darf öffentlich übertragen werden — er ist für sich allein nutzlos,
-              weil er nach Schritt 1 nur eine Ring-LWE-Verschlüsselung unter <Mono>pk_t</Mono> liefert.
-              Erst der geheime Schlüssel <Mono>sk</Mono> (der niemals den Browser verlässt) entschlüsselt
-              in Schritt 2 vollständig. Daher der Begriff{' '}
-              <strong className="text-[var(--color-text-base)]">Zwei-Faktor-Entschlüsselung</strong>:
-              KC-Seite (hsk) + Nutzer-Seite (sk).
+              {locale === 'de' ? (
+                <>
+                  <Mono>hsk</Mono> darf öffentlich übertragen werden — er ist für sich allein nutzlos,
+                  weil er nach Schritt 1 nur eine Ring-LWE-Verschlüsselung unter <Mono>pk_t</Mono> liefert.
+                  Erst der geheime Schlüssel <Mono>sk</Mono> (der niemals den Browser verlässt) entschlüsselt
+                  in Schritt 2 vollständig. Daher der Begriff{' '}
+                  <strong className="text-[var(--color-text-base)]">Zwei-Faktor-Entschlüsselung</strong>:
+                  KC-Seite (hsk) + Nutzer-Seite (sk).
+                </>
+              ) : (
+                <>
+                  <Mono>hsk</Mono> may be transmitted publicly — it is useless on its own,
+                  because after step 1 it only yields a Ring-LWE encryption under <Mono>pk_t</Mono>.
+                  Only the secret key <Mono>sk</Mono> (which never leaves the browser) completes
+                  decryption in step 2. Hence the term{' '}
+                  <strong className="text-[var(--color-text-base)]">two-factor decryption</strong>:
+                  KC-side (hsk) + user-side (sk).
+                </>
+              )}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <DecryptColumn name="Bob"   target="bob"   ct={s.ctBob!}   dec={s.decBob}
               busy={s.busy} onFetchHsk={() => doFetchHsk('bob')}
-              onStep1={() => doDecStep1('bob')} onStep2={() => doDecStep2('bob')} />
+              onStep1={() => doDecStep1('bob')} onStep2={() => doDecStep2('bob')}
+              locale={locale} t={t} />
             <DecryptColumn name="Alice" target="alice" ct={s.ctAlice!} dec={s.decAlice}
               busy={s.busy} onFetchHsk={() => doFetchHsk('alice')}
-              onStep1={() => doDecStep1('alice')} onStep2={() => doDecStep2('alice')} />
+              onStep1={() => doDecStep1('alice')} onStep2={() => doDecStep2('alice')}
+              locale={locale} t={t} />
           </div>
 
           {bothDecoded && (
             <div className="mt-6 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <ResultBox name="Bob"   msg={s.decBob.msg!} />
-                <ResultBox name="Alice" msg={s.decAlice.msg!} />
+                <ResultBox name="Bob"   msg={s.decBob.msg!}   t={t} />
+                <ResultBox name="Alice" msg={s.decAlice.msg!} t={t} />
               </div>
               <Callout variant="success">
-                <strong>Zwei-Faktor-Eigenschaft bestätigt:</strong> Weder der KC (kennt kein <Mono>sk</Mono>)
-                noch ein Angreifer mit nur <Mono>hsk</Mono> kann die Nachricht lesen.
-                Erst die Kombination aus dem server-seitigen <Mono>hsk</Mono> und dem
-                browser-lokalen <Mono>sk</Mono> kollabiert das Rauschen auf <Mono>r·e ≈ 0</Mono>.
-                Kein Master-Geheimnis. Kein Key Escrow.
+                <strong>{t('step5CalloutTitle')}</strong>{' '}
+                {locale === 'de' ? (
+                  <>
+                    Weder der KC (kennt kein <Mono>sk</Mono>)
+                    noch ein Angreifer mit nur <Mono>hsk</Mono> kann die Nachricht lesen.
+                    Erst die Kombination aus dem server-seitigen <Mono>hsk</Mono> und dem
+                    browser-lokalen <Mono>sk</Mono> kollabiert das Rauschen auf <Mono>r·e ≈ 0</Mono>.
+                    Kein Master-Geheimnis. Kein Key Escrow.
+                  </>
+                ) : (
+                  <>
+                    Neither the KC (it knows no <Mono>sk</Mono>)
+                    nor an attacker with only <Mono>hsk</Mono> can read the message.
+                    Only the combination of the server-side <Mono>hsk</Mono> and the
+                    browser-local <Mono>sk</Mono> collapses the noise to <Mono>r·e ≈ 0</Mono>.
+                    No master secret. No key escrow.
+                  </>
+                )}
               </Callout>
             </div>
           )}
@@ -784,99 +987,161 @@ export default function RbePlayground() {
       )}
 
       {/* ════════════════════════════════════════════════════════════════════
-          SCHRITT 6 — Sicherheitsnachweis: Alice schlägt fehl
+          STEP 6 — Security proof: Alice fails
       ════════════════════════════════════════════════════════════════════ */}
       {bothDecoded && s.alice && s.ctBob && s.decAlice.hsk && (
         <Card active={s.aliceAttackMsg === null}>
           <StepTitle n={6}
-            title="Sicherheitsnachweis: Alice versucht, Bobs Nachricht zu lesen"
-            done={s.aliceAttackMsg !== null} />
+            title={t('step6Title')}
+            done={s.aliceAttackMsg !== null}
+            doneLbl={t('stepDone')} />
 
           <div className="text-sm text-[var(--color-text-muted)] mb-4 leading-relaxed space-y-2">
             <p>
-              Alice hat in Schritt 5 ihre eigene Nachricht erfolgreich entschlüsselt —
-              sie ist eine <em>legitime</em> Nutzerin mit einem gültig vom KC ausgestellten{' '}
-              <Mono>hsk_alice</Mono>. Jetzt versucht sie, denselben Schlüssel zu benutzen,
-              um auch Bobs Nachricht zu lesen.
+              {locale === 'de' ? (
+                <>
+                  Alice hat in Schritt 5 ihre eigene Nachricht erfolgreich entschlüsselt —
+                  sie ist eine <em>legitime</em> Nutzerin mit einem gültig vom KC ausgestellten{' '}
+                  <Mono>hsk_alice</Mono>. Jetzt versucht sie, denselben Schlüssel zu benutzen,
+                  um auch Bobs Nachricht zu lesen.
+                </>
+              ) : (
+                <>
+                  In step 5, Alice successfully decrypted her own message —
+                  she is a <em>legitimate</em> user with a valid <Mono>hsk_alice</Mono> issued by the KC.
+                  Now she tries to use that same key to read Bob&apos;s message too.
+                </>
+              )}
             </p>
             <p>
-              Das schlägt fehl, weil <Mono>hsk_alice</Mono> mit dem Identitätspolynom{' '}
-              <Mono>H("alice")</Mono> berechnet wurde und die Gleichung{' '}
-              <Mono>a0·hsk0 + (a1 + H("alice"))·hsk1 = mpkAgg − pk_alice</Mono> erfüllt.{' '}
-              Bobs Chiffretext enthält aber <Mono>H("bob")</Mono> in <Mono>c0_1</Mono>.{' '}
-              Da <Mono>H("alice") ≠ H("bob")</Mono>, geht die Gleichung nicht auf:
+              {locale === 'de' ? (
+                <>
+                  Das schlägt fehl, weil <Mono>hsk_alice</Mono> mit dem Identitätspolynom{' '}
+                  <Mono>H(&quot;alice&quot;)</Mono> berechnet wurde und die Gleichung{' '}
+                  <Mono>a0·hsk0 + (a1 + H(&quot;alice&quot;))·hsk1 = mpkAgg − pk_alice</Mono> erfüllt.{' '}
+                  Bobs Chiffretext enthält aber <Mono>H(&quot;bob&quot;)</Mono> in <Mono>c0_1</Mono>.{' '}
+                  Da <Mono>H(&quot;alice&quot;) ≠ H(&quot;bob&quot;)</Mono>, geht die Gleichung nicht auf:
+                </>
+              ) : (
+                <>
+                  This fails because <Mono>hsk_alice</Mono> was computed using the identity polynomial{' '}
+                  <Mono>H(&quot;alice&quot;)</Mono> and satisfies{' '}
+                  <Mono>a0·hsk0 + (a1 + H(&quot;alice&quot;))·hsk1 = mpkAgg − pk_alice</Mono>.{' '}
+                  But Bob&apos;s ciphertext contains <Mono>H(&quot;bob&quot;)</Mono> in <Mono>c0_1</Mono>.{' '}
+                  Since <Mono>H(&quot;alice&quot;) ≠ H(&quot;bob&quot;)</Mono>, the equation does not hold:
+                </>
+              )}
             </p>
           </div>
 
           <div className="rounded-lg border border-[var(--color-glass-border)] bg-[var(--color-bg-base)]
             px-4 py-3 mb-5 font-mono text-xs text-[var(--color-text-muted)] space-y-1.5 leading-loose">
-            <div className="text-[var(--color-text-dim)]">// Alice versucht Schritt 1 mit hsk_alice auf c_bob:</div>
+            <div className="text-[var(--color-text-dim)]">
+              {locale === 'de'
+                ? '// Alice versucht Schritt 1 mit hsk_alice auf c_bob:'
+                : '// Alice attempts step 1 with hsk_alice on c_bob:'}
+            </div>
             <div><Mono>c0_0·hsk0_alice + c0_1·hsk1_alice</Mono></div>
-            <div className="pl-4 text-[var(--color-text-dim)]">// c0_1 enthält H("bob"), hsk1_alice enthält H("alice"):</div>
-            <div className="pl-4"><Mono dim>= r_e · hsk1_alice · (a0·r + a1 + H("bob"))</Mono></div>
-            <div className="pl-4"><Mono dim>= r_e · (1+H("alice"))⁻¹·(mpkAgg−pk_alice) · (1 + H("bob"))</Mono></div>
+            <div className="pl-4 text-[var(--color-text-dim)]">
+              {locale === 'de'
+                ? '// c0_1 enthält H("bob"), hsk1_alice enthält H("alice"):'
+                : '// c0_1 contains H("bob"), hsk1_alice contains H("alice"):'}
+            </div>
+            <div className="pl-4"><Mono dim>= r_e · hsk1_alice · (a0·r + a1 + H(&quot;bob&quot;))</Mono></div>
+            <div className="pl-4"><Mono dim>= r_e · (1+H(&quot;alice&quot;))⁻¹·(mpkAgg−pk_alice) · (1 + H(&quot;bob&quot;))</Mono></div>
             <div className="pl-4 text-red-400/80 pt-1">
               ≠ r_e · (mpkAgg − pk_alice){' '}
-              <span className="text-[var(--color-text-dim)]">← würde für korrekten Schritt 1 benötigt</span>
+              <span className="text-[var(--color-text-dim)]">
+                {locale === 'de'
+                  ? '← würde für korrekten Schritt 1 benötigt'
+                  : '← required for a correct step 1'}
+              </span>
             </div>
             <div className="pl-4 text-red-400/50 text-xs">
-              [Differenz: der Faktor (1+H("bob")) ≠ 1 verbleibt als irreduzibles Rauschen]
+              {locale === 'de'
+                ? '[Differenz: der Faktor (1+H("bob")) ≠ 1 verbleibt als irreduzibles Rauschen]'
+                : '[Difference: the factor (1+H("bob")) ≠ 1 remains as irreducible noise]'}
             </div>
           </div>
 
           <div className="space-y-3">
 
-            {/* hsk_alice ist bereits aus Schritt 5 vorhanden — kein extra Fetch nötig */}
+            {/* hsk_alice already available from step 5 */}
             <Callout variant="info">
-              <Mono>hsk_alice</Mono> wurde bereits in Schritt 5 vom KC geladen.
-              Alice verwendet ihn jetzt auf dem falschen Chiffretext.
+              <Mono>hsk_alice</Mono> {t('step6AttackHskNote')}
             </Callout>
 
-            {/* Schritt 1 mit falscher Identitätsbindung */}
+            {/* Step 1 with wrong identity binding */}
             <div className="space-y-2">
               <BtnDanger onClick={doAliceAttackStep1} disabled={!!s.aliceAttackTemp} busy={s.busy}>
-                Schritt 1: hsk_alice auf c_bob anwenden (Identitätsfehler!)
+                {t('btnAttack1')}
               </BtnDanger>
               {s.aliceAttackTemp && (
                 <div className="space-y-2">
-                  <PolyBox label='temp_alice_attack — kein r_e·pk_alice + encode(msg)!'
-                    poly={s.aliceAttackTemp} garbled />
+                  <PolyBox label={
+                    locale === 'de'
+                      ? 'temp_alice_attack — kein r_e·pk_alice + encode(msg)!'
+                      : 'temp_alice_attack — not r_e·pk_alice + encode(msg)!'
+                  } poly={s.aliceAttackTemp} garbled />
                   <Callout variant="danger">
-                    <strong>Identitätsbindung greift.</strong>{' '}
-                    Das Ergebnis ist <Mono>r_e · (1+H("alice"))⁻¹·(mpkAgg−pk_alice) · (1+H("bob"))</Mono> —
-                    kein gültiger Ring-LWE-Chiffretext unter <Mono>pk_alice</Mono>.{' '}
-                    Schritt 2 kann dieses Rauschen nicht herausrechnen.
+                    <strong>{t('step6DangerTitle')}</strong>{' '}
+                    {locale === 'de' ? (
+                      <>
+                        Das Ergebnis ist <Mono>r_e · (1+H(&quot;alice&quot;))⁻¹·(mpkAgg−pk_alice) · (1+H(&quot;bob&quot;))</Mono> —
+                        kein gültiger Ring-LWE-Chiffretext unter <Mono>pk_alice</Mono>.{' '}
+                        Schritt 2 kann dieses Rauschen nicht herausrechnen.
+                      </>
+                    ) : (
+                      <>
+                        The result is <Mono>r_e · (1+H(&quot;alice&quot;))⁻¹·(mpkAgg−pk_alice) · (1+H(&quot;bob&quot;))</Mono> —
+                        not a valid Ring-LWE ciphertext under <Mono>pk_alice</Mono>.{' '}
+                        Step 2 cannot remove this noise.
+                      </>
+                    )}
                   </Callout>
                 </div>
               )}
             </div>
 
-            {/* Schritt 2 mit sk_alice */}
+            {/* Step 2 with sk_alice */}
             {s.aliceAttackTemp && (
               <div className="space-y-2">
                 <BtnDanger onClick={doAliceAttackStep2} disabled={s.aliceAttackMsg !== null} busy={s.busy}>
-                  Schritt 2: sk_alice anwenden
+                  {t('btnAttack2')}
                 </BtnDanger>
                 {s.aliceAttackMsg !== null && (
                   <div className="space-y-3">
                     <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-4 py-3">
-                      <p className="font-mono text-xs text-red-400/70 mb-1">// Alice liest (Versuch)</p>
-                      <p className="font-mono text-red-300 text-lg tracking-wide">
+                      <p className="font-mono text-xs text-red-400/70 mb-1">{t('aliceReadsLabel')}</p>
+                      <p className="font-mono text-red-300 break-all leading-relaxed
+                        text-sm tracking-wide">
                         {s.aliceAttackMsg.length > 0
                           ? `"${s.aliceAttackMsg}"`
-                          : <span className="text-red-400/50 italic text-sm">— leere Ausgabe (Datenmüll) —</span>
+                          : <span className="text-red-400/50 italic">{t('emptyOutput')}</span>
                         }
                       </p>
                     </div>
                     <Callout variant="success">
-                      <strong>Sicherheitsnachweis abgeschlossen.</strong>{' '}
+                      <strong>{t('step6SuccessTitle')}</strong>{' '}
                       {s.aliceAttackMsg.length === 0
-                        ? 'Alice erhält eine leere Ausgabe — das Rauschen überwältigt die Nachricht vollständig.'
-                        : `Alice liest "${s.aliceAttackMsg}" — reiner Datenmüll, nicht Bobs Nachricht.`
+                        ? t('step6SuccessEmpty')
+                        : (locale === 'de'
+                            ? `Alice liest "${s.aliceAttackMsg}" — reiner Datenmüll, nicht Bobs Nachricht.`
+                            : `Alice reads "${s.aliceAttackMsg}" — pure garbage, not Bob's message.`)
                       }{' '}
-                      Obwohl Alice eine legitime Empfängerin ist und ihren eigenen Chiffretext
-                      korrekt entschlüsseln kann, schützt die Identitätsbindung in <Mono>c0_1</Mono>{' '}
-                      Bobs Nachricht vor ihr. Kein Empfänger kann fremde Nachrichten lesen.
+                      {locale === 'de' ? (
+                        <>
+                          Obwohl Alice eine legitime Empfängerin ist und ihren eigenen Chiffretext
+                          korrekt entschlüsseln kann, schützt die Identitätsbindung in <Mono>c0_1</Mono>{' '}
+                          Bobs Nachricht vor ihr. Kein Empfänger kann fremde Nachrichten lesen.
+                        </>
+                      ) : (
+                        <>
+                          Even though Alice is a legitimate recipient who can correctly decrypt her own ciphertext,
+                          the identity binding in <Mono>c0_1</Mono> protects Bob&apos;s message from her.
+                          No recipient can read messages intended for others.
+                        </>
+                      )}
                     </Callout>
                   </div>
                 )}
@@ -887,11 +1152,11 @@ export default function RbePlayground() {
           {s.aliceAttackMsg !== null && (
             <div className="mt-6">
               <button
-                onClick={() => setS({ ...INIT })}
+                onClick={() => setS({ ...INIT, msgForBob: t('defaultMsgForBob'), msgForAlice: t('defaultMsgForAlice') })}
                 className="font-mono text-xs text-[var(--color-text-dim)]
                   hover:text-[var(--color-text-muted)] underline cursor-pointer"
               >
-                Demo zurücksetzen
+                {t('resetDemo')}
               </button>
             </div>
           )}
@@ -903,11 +1168,14 @@ export default function RbePlayground() {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function UserColumn({ name, who, keys, registered, busy, onKeyGen, onRegister }: {
+type TFn = ReturnType<typeof useTranslations<'rbePlayground'>>;
+
+function UserColumn({ name, who, keys, registered, busy, onKeyGen, onRegister, t }: {
   name: string; who: UserId;
   keys: UserKeys | null; registered: boolean;
   busy: boolean;
   onKeyGen: () => void; onRegister: () => void;
+  t: TFn;
 }) {
   return (
     <div className="rounded-lg border border-[var(--color-glass-border)] p-4 space-y-3
@@ -917,7 +1185,7 @@ function UserColumn({ name, who, keys, registered, busy, onKeyGen, onRegister }:
         {registered && (
           <span className="text-xs font-mono text-emerald-400 border border-emerald-500/30
             bg-emerald-500/10 px-2 py-0.5 rounded-full">
-            registriert ✓
+            {t('userRegistered')}
           </span>
         )}
       </div>
@@ -929,7 +1197,7 @@ function UserColumn({ name, who, keys, registered, busy, onKeyGen, onRegister }:
       ) : (
         <div className="space-y-2">
           <div className="rounded border border-red-500/20 bg-red-500/5 px-3 py-2">
-            <span className="font-mono text-xs text-red-300/80 block mb-1">sk (bleibt hier)</span>
+            <span className="font-mono text-xs text-red-300/80 block mb-1">{t('userSkLabel')}</span>
             <code className="font-mono text-xs text-red-300/60 break-all leading-relaxed">
               {fmtPoly(keys.sk, 3)}
             </code>
@@ -942,7 +1210,7 @@ function UserColumn({ name, who, keys, registered, busy, onKeyGen, onRegister }:
           </div>
           {!registered && (
             <BtnOutline onClick={onRegister} busy={busy}>
-              Beim KC registrieren
+              {t('userBtnRegister')}
             </BtnOutline>
           )}
         </div>
@@ -951,11 +1219,12 @@ function UserColumn({ name, who, keys, registered, busy, onKeyGen, onRegister }:
   );
 }
 
-function DecryptColumn({ name, target, ct, dec, busy, onFetchHsk, onStep1, onStep2 }: {
+function DecryptColumn({ name, target, ct, dec, busy, onFetchHsk, onStep1, onStep2, locale, t }: {
   name: string; target: 'alice' | 'bob';
   ct: EncResult; dec: DecState;
   busy: boolean;
   onFetchHsk: () => void; onStep1: () => void; onStep2: () => void;
+  locale: string; t: TFn;
 }) {
   return (
     <div className="rounded-lg border border-[var(--color-glass-border)] p-4 space-y-4
@@ -965,14 +1234,26 @@ function DecryptColumn({ name, target, ct, dec, busy, onFetchHsk, onStep1, onSte
       {/* hsk fetch */}
       <div className="space-y-2">
         <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-          Der KC benutzt seinen geheimen Trapdoor <Mono>r</Mono>, um den identitätsgebundenen
-          Hilfschlüssel zu berechnen:{' '}
-          <Mono>g = 1 + H("{target}")</Mono> → <Mono>hsk1 = g⁻¹ · (mpkAgg − pk_{target})</Mono> →{' '}
-          <Mono>hsk0 = r · hsk1</Mono>.
-          Der hsk wird öffentlich übermittelt — er enthüllt weder <Mono>sk</Mono> noch <Mono>r</Mono>.
+          {locale === 'de' ? (
+            <>
+              Der KC benutzt seinen geheimen Trapdoor <Mono>r</Mono>, um den identitätsgebundenen
+              Hilfschlüssel zu berechnen:{' '}
+              <Mono>g = 1 + H(&quot;{target}&quot;)</Mono> → <Mono>hsk1 = g⁻¹ · (mpkAgg − pk_{target})</Mono> →{' '}
+              <Mono>hsk0 = r · hsk1</Mono>.
+              Der hsk wird öffentlich übermittelt — er enthüllt weder <Mono>sk</Mono> noch <Mono>r</Mono>.
+            </>
+          ) : (
+            <>
+              The KC uses its secret trapdoor <Mono>r</Mono> to compute the identity-bound
+              helper key:{' '}
+              <Mono>g = 1 + H(&quot;{target}&quot;)</Mono> → <Mono>hsk1 = g⁻¹ · (mpkAgg − pk_{target})</Mono> →{' '}
+              <Mono>hsk0 = r · hsk1</Mono>.
+              The hsk is transmitted publicly — it reveals neither <Mono>sk</Mono> nor <Mono>r</Mono>.
+            </>
+          )}
         </p>
         <BtnOutline onClick={onFetchHsk} disabled={!!dec.hsk} busy={busy}>
-          hsk_{target} vom KC laden
+          {t('decBtnFetchHsk', { target })}
         </BtnOutline>
         {dec.hsk && (
           <div className="space-y-1">
@@ -986,20 +1267,33 @@ function DecryptColumn({ name, target, ct, dec, busy, onFetchHsk, onStep1, onSte
       {dec.hsk && (
         <div className="space-y-2">
           <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-            <strong>Schritt 1</strong> subtrahiert mit dem hsk-Paar den "alle anderen Nutzer"-Anteil
-            aus dem Chiffretext heraus. Das Ergebnis ist eine gewöhnliche Ring-LWE-Verschlüsselung
-            von <Mono>msg</Mono> unter dem persönlichen Public Key <Mono>pk_{target}</Mono>:{' '}
-            <Mono>temp = c1 − (c0_0·hsk0 + c0_1·hsk1) = r_e·pk_{target} + encode(msg)</Mono>.
+            {locale === 'de' ? (
+              <>
+                <strong>Schritt 1</strong> subtrahiert mit dem hsk-Paar den &quot;alle anderen Nutzer&quot;-Anteil
+                aus dem Chiffretext heraus. Das Ergebnis ist eine gewöhnliche Ring-LWE-Verschlüsselung
+                von <Mono>msg</Mono> unter dem persönlichen Public Key <Mono>pk_{target}</Mono>:{' '}
+                <Mono>temp = c1 − (c0_0·hsk0 + c0_1·hsk1) = r_e·pk_{target} + encode(msg)</Mono>.
+              </>
+            ) : (
+              <>
+                <strong>Step 1</strong> uses the hsk pair to subtract the &quot;all other users&quot; component
+                from the ciphertext. The result is an ordinary Ring-LWE encryption
+                of <Mono>msg</Mono> under the personal public key <Mono>pk_{target}</Mono>:{' '}
+                <Mono>temp = c1 − (c0_0·hsk0 + c0_1·hsk1) = r_e·pk_{target} + encode(msg)</Mono>.
+              </>
+            )}
           </p>
           <BtnOutline onClick={onStep1} disabled={!!dec.temp} busy={busy}>
-            Schritt 1: hsk anwenden
+            {t('decBtnStep1')}
           </BtnOutline>
           {dec.temp && (
             <div className="space-y-1">
-              <PolyBox label="temp = r_e·pk + encode(msg) — noch verschlüsselt!" poly={dec.temp} />
-              <p className="text-xs text-[var(--color-text-dim)]">
-                Nur mit hsk lässt sich die Nachricht noch nicht lesen — sk fehlt noch.
-              </p>
+              <PolyBox label={
+                locale === 'de'
+                  ? 'temp = r_e·pk + encode(msg) — noch verschlüsselt!'
+                  : 'temp = r_e·pk + encode(msg) — still encrypted!'
+              } poly={dec.temp} />
+              <p className="text-xs text-[var(--color-text-dim)]">{t('decStep1OnlyHsk')}</p>
             </div>
           )}
         </div>
@@ -1009,30 +1303,44 @@ function DecryptColumn({ name, target, ct, dec, busy, onFetchHsk, onStep1, onSte
       {dec.temp && (
         <div className="space-y-2">
           <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-            <strong>Schritt 2</strong> wendet den geheimen Schlüssel <Mono>sk_{target}</Mono>
-            (nur im Browser bekannt) an:{' '}
-            <Mono>result = temp − c0_0·sk = r_e·e + encode(msg)</Mono>.{' '}
-            Da <Mono>e</Mono> sehr kleine Koeffizienten hat, rundet jede Stelle auf den
-            nächsten Bit-Wert — die Nachricht ist wiederhergestellt.
+            {locale === 'de' ? (
+              <>
+                <strong>Schritt 2</strong> wendet den geheimen Schlüssel <Mono>sk_{target}</Mono>
+                (nur im Browser bekannt) an:{' '}
+                <Mono>result = temp − c0_0·sk = r_e·e + encode(msg)</Mono>.{' '}
+                Da <Mono>e</Mono> sehr kleine Koeffizienten hat, rundet jede Stelle auf den
+                nächsten Bit-Wert — die Nachricht ist wiederhergestellt.
+              </>
+            ) : (
+              <>
+                <strong>Step 2</strong> applies the secret key <Mono>sk_{target}</Mono>
+                (known only in the browser):{' '}
+                <Mono>result = temp − c0_0·sk = r_e·e + encode(msg)</Mono>.{' '}
+                Since <Mono>e</Mono> has very small coefficients, each position rounds to the
+                nearest bit — the message is recovered.
+              </>
+            )}
           </p>
           <BtnPrimary onClick={onStep2} disabled={dec.msg !== null} busy={busy}>
-            Schritt 2: sk anwenden
+            {t('decBtnStep2')}
           </BtnPrimary>
-          {dec.msg !== null && <ResultBox name={name} msg={dec.msg} compact />}
+          {dec.msg !== null && <ResultBox name={name} msg={dec.msg} compact t={t} />}
         </div>
       )}
     </div>
   );
 }
 
-function ResultBox({ name, msg, compact }: { name: string; msg: string; compact?: boolean }) {
+function ResultBox({ name, msg, compact, t }: { name: string; msg: string; compact?: boolean; t: TFn }) {
+  const isLong = msg.length > 32;
   return (
     <div className={`rounded-lg border border-emerald-500/30 bg-emerald-500/8
       ${compact ? 'px-3 py-2' : 'px-4 py-4'}`}>
       {!compact && (
-        <p className="font-mono text-xs text-emerald-400/70 mb-1">// {name} liest</p>
+        <p className="font-mono text-xs text-emerald-400/70 mb-1">{t('readsLabel', { name })}</p>
       )}
-      <p className={`font-mono text-emerald-300 ${compact ? 'text-sm' : 'text-lg'} tracking-wide`}>
+      <p className={`font-mono text-emerald-300 break-all leading-relaxed
+        ${compact || isLong ? 'text-sm' : 'text-lg'} tracking-wide`}>
         &quot;{msg}&quot;
       </p>
     </div>

@@ -4,7 +4,7 @@
 // These parameters are NOT cryptographically secure. Educational use only.
 
 export const Q     = 12289;  // Ring modulus
-export const N     = 256;    // Polynomial degree; ring R_q = Z_q[X]/(X^N + 1)
+export const N     = 1024;   // Polynomial degree; ring R_q = Z_q[X]/(X^N + 1)
 export const B     = 3;      // Small-polynomial coefficient bound, coeff ∈ [-B, B]
 export const N_MAX = 3;      // Maximum users per demo session (Alice, Bob, Charlie)
 export const ENCODE = (Q + 1) >> 1; // ≈ q/2 = 6145; used to encode a '1' bit
@@ -28,4 +28,4 @@ const G = 11;
 
 // PSI is a primitive 2N-th (512th) root of unity mod q.
 // PSI^(2N) ≡ 1 and PSI^N ≡ -1 (mod q) — required for negacyclic NTT.
-export const PSI: number = modPow(G, (Q - 1) / (2 * N), Q); // = 11^24 mod 12289
+export const PSI: number = modPow(G, (Q - 1) / (2 * N), Q); // = 11^6 mod 12289 for N=1024
