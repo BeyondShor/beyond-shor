@@ -26,7 +26,7 @@
     "heroTitle": "Securing the Post-Quantum Era",
     "heroSubtitle": "Deep-dives into lattice-based cryptography, NIST-standardised algorithms, and practical quantum-safe migration paths — written for CISOs and cryptography engineers alike.",
     "ctaBlog": "Read the Blog",
-    "ctaAbout": "About",
+    "ctaAbout": "About me",
     "ticker0Label": "NIST Standards",
     "ticker0Value": "FIPS 203/204/205",
     "ticker1Label": "Immediate Risk",
@@ -518,7 +518,12 @@
     "copied": "Copied ✓",
     "previewLabel": "// what it looks like",
     "previewEmpty": "No articles published yet.",
-    "backToBlog": "← Back to Blog"
+    "backToBlog": "← Back to Blog",
+    "shareLabel": "Share",
+    "shareLinkedIn": "LinkedIn",
+    "shareX": "X / Twitter",
+    "shareCopyLink": "Copy link",
+    "shareLinkCopied": "Copied ✓"
   },
   "cbom": {
     "pageTitle": "Cryptographic Infrastructure",

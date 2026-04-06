@@ -9,6 +9,7 @@ import JsonLd from '@/components/JsonLd';
 import PqcSignatureBadge from '@/components/PqcSignatureBadge';
 import ArticleCard from '@/components/ArticleCard';
 import TableOfContents from '@/components/TableOfContents';
+import ShareArticle from '@/components/ShareArticle';
 import { extractHeadings } from '@/lib/headings';
 
 // ─── Static Params ─────────────────────────────────────────────────────────────
@@ -207,14 +208,23 @@ export default async function ArticlePage({ params }: PageProps) {
 
         <TableOfContents headings={headings} locale={locale} />
 
-        {/* Back link */}
-        <div className="mt-16 pt-8 border-t border-[var(--color-border)]">
+        {/* Back link + Share */}
+        <div className="mt-16 pt-8 border-t border-[var(--color-border)] flex items-center justify-between">
           <Link
             href="/blog"
             className="mono-label text-[var(--color-primary)] hover:underline"
           >
             {t('backToBlog')}
           </Link>
+          <ShareArticle
+            title={article.title}
+            url={`${process.env.NEXT_PUBLIC_SITE_URL ?? ''}/${locale}/blog/${article.slug}`}
+            labelShare={t('shareLabel')}
+            labelCopied={t('shareLinkCopied')}
+            labelLinkedIn={t('shareLinkedIn')}
+            labelX={t('shareX')}
+            labelCopy={t('shareCopyLink')}
+          />
         </div>
       </article>
 

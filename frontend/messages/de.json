@@ -26,7 +26,7 @@
     "heroTitle": "Das Post-Quanten-Zeitalter absichern",
     "heroSubtitle": "Tiefgehende Analysen zu gitterbasierter Kryptografie, NIST-standardisierten Algorithmen und praktischen quanten-sicheren Migrationspfaden — geschrieben für CISOs und Kryptografie-Ingenieure.",
     "ctaBlog": "Zum Blog",
-    "ctaAbout": "Über uns",
+    "ctaAbout": "Über mich",
     "ticker0Label": "NIST-Standards",
     "ticker0Value": "FIPS 203/204/205",
     "ticker1Label": "Akutes Risiko",
@@ -518,7 +518,12 @@
     "copied": "Kopiert ✓",
     "previewLabel": "// so sieht es aus",
     "previewEmpty": "Noch keine Artikel veröffentlicht.",
-    "backToBlog": "← Zurück zum Blog"
+    "backToBlog": "← Zurück zum Blog",
+    "shareLabel": "Teilen",
+    "shareLinkedIn": "LinkedIn",
+    "shareX": "X / Twitter",
+    "shareCopyLink": "Link kopieren",
+    "shareLinkCopied": "Kopiert ✓"
   },
   "cbom": {
     "pageTitle": "Kryptografische Infrastruktur",

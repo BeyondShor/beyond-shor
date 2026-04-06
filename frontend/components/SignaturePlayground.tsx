@@ -1598,10 +1598,17 @@ export default function SignaturePlayground({ snippetHtmls, realWorldItems, init
                     }`}>
                     {t(tamperMode ? 'sigTamperToggleActive' : 'sigTamperToggle')}
                   </button>
-                  <button onClick={handleShare}
-                    className="ml-auto font-mono text-xs px-3 py-1.5 rounded-lg border border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors">
-                    {shareCopied ? t('shareCopied') : t('shareButton')}
-                  </button>
+                  <div className="ml-auto flex gap-2">
+                    <button onClick={handleShare}
+                      className="font-mono text-xs px-3 py-1.5 rounded-lg border border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors">
+                      {shareCopied ? t('shareCopied') : t('shareButton')}
+                    </button>
+                    <button
+                      onClick={() => { setStep1(null); setStep2(null); setStep3(null); setPhase('idle'); setTamperMode(false); setTamperResult(null); }}
+                      className="font-mono text-xs px-3 py-1.5 rounded-lg border border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:border-[var(--color-glass-border)] hover:text-[var(--color-text-base)] transition-colors">
+                      {t('benchmarkClose')}
+                    </button>
+                  </div>
                 </>
               )}
             </div>
