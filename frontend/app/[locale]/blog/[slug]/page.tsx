@@ -58,9 +58,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: 'article',
       publishedTime: article.publishedAt,
       authors: article.author?.name ? [article.author.name] : undefined,
-      images: coverUrl
-        ? [{ url: coverUrl, alt: article.cover?.alternativeText ?? article.title }]
-        : [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Beyond Shor — Post-Quantum Cryptography' }],
+      images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Beyond Shor — Post-Quantum Cryptography' }],
     },
   };
 }
