@@ -46,9 +46,14 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Beyond Shor' }],
   robots: { index: true, follow: true },
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+  },
   openGraph: {
     type: 'website',
     siteName: 'Beyond Shor',
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Beyond Shor — Post-Quantum Cryptography' }],
   },
 };
 
