@@ -16,6 +16,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: t('title'),
     description: t('intro'),
+    robots: { index: false, follow: false },
   };
 }
 
