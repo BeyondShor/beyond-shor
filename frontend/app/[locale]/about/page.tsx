@@ -13,6 +13,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: t('fallbackTitle'),
     description: 'About this Post-Quantum Cryptography blog and its authors.',
+    robots: { index: false, follow: false },
   };
 }
 

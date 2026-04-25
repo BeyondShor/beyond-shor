@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
+import LogoMark from './LogoMark';
 
 export default function Footer() {
   const t = useTranslations('footer');
@@ -61,13 +62,8 @@ export default function Footer() {
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           {/* Branding */}
           <div className="flex items-center gap-2">
-            <span className="font-mono text-[var(--color-primary)] font-bold" aria-hidden="true">
-              [
-            </span>
+            <LogoMark className="w-5 h-5 shrink-0 text-[var(--color-primary)]" />
             <span className="mono-label text-[var(--color-text-muted)]">Beyond Shor</span>
-            <span className="font-mono text-[var(--color-primary)] font-bold" aria-hidden="true">
-              ]
-            </span>
           </div>
 
           {/* Tagline */}

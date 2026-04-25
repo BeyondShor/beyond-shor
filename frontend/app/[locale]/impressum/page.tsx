@@ -13,6 +13,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: { absolute: `${t('fallbackTitle')} — Beyond Shor` },
     description: 'Impressum und Anbieterkennzeichnung gemäß § 5 TMG.',
+    robots: { index: false, follow: false },
   };
 }
 

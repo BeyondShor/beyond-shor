@@ -1,0 +1,13 @@
+{
+  "name": "Beyond Shor",
+  "short_name": "Beyond Shor",
+  "description": "Expert insights on Post-Quantum Cryptography",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#030712",
+  "background_color": "#030712",
+  "icons": [
+    { "src": "/favicon-32x32.png",    "sizes": "32x32",   "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}

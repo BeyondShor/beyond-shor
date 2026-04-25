@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+
+  <!-- Background: dark rounded rect for contrast on both light & dark browser chrome -->
+  <rect width="100" height="100" rx="18" fill="#0f172a"/>
+
+  <!--
+    Render order: lines + arc first, then solid dots on top.
+    The filled circles cover the line ends inside them → lines appear to stop cleanly
+    at the outer circle edge without any complex geometric trimming.
+  -->
+
+  <!-- "b" stem + bowl arc + graph edges -->
+  <g stroke="#06b6d4" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-width="6.5">
+    <line x1="46" y1="14" x2="46" y2="86"/>
+    <path d="M 46,50 A 25,25 0 1,1 46,86"/>
+    <line x1="46" y1="14" x2="14" y2="50"/>
+    <line x1="14" y1="50" x2="46" y2="86"/>
+  </g>
+
+  <!-- Solid dots drawn on top — covers line ends, creates clean "stops at boundary" look -->
+  <g fill="#06b6d4">
+    <circle cx="46" cy="14" r="9"/>
+    <circle cx="14" cy="50" r="9"/>
+    <circle cx="46" cy="86" r="9"/>
+  </g>
+
+</svg>

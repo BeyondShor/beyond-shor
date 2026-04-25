@@ -13,6 +13,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: { absolute: `${t('fallbackTitle')} — Beyond Shor` },
     description: 'Datenschutzerklärung gemäß DSGVO.',
+    robots: { index: false, follow: false },
   };
 }
 

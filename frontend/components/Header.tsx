@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import LanguageSwitcher from './LanguageSwitcher';
+import LogoMark from './LogoMark';
 
 export default function Header() {
   const t = useTranslations('nav');
@@ -45,23 +46,12 @@ export default function Header() {
           {/* Logo */}
           <Link
             href="/"
-            className="group flex items-center gap-2"
+            className="group flex items-center gap-2.5"
             aria-label="Beyond Shor — Home"
           >
-            <span
-              className="font-mono text-[var(--color-primary)] text-lg font-bold select-none"
-              aria-hidden="true"
-            >
-              [
-            </span>
+            <LogoMark className="w-7 h-7 shrink-0 text-[var(--color-primary)] transition-opacity group-hover:opacity-75" />
             <span className="font-mono text-[var(--color-text-base)] text-sm font-semibold tracking-wide uppercase group-hover:text-[var(--color-primary)] transition-colors">
               Beyond Shor
-            </span>
-            <span
-              className="font-mono text-[var(--color-primary)] text-lg font-bold select-none"
-              aria-hidden="true"
-            >
-              ]
             </span>
           </Link>
 
