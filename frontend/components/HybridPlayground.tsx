@@ -1524,8 +1524,8 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
               snippetLabel={t('implSnippetLabel')} packageName="@oqs/liboqs-js"
               packageUrl="https://github.com/openforge-sh/liboqs-node"
               snippetHtml={snippetHtmls.frodokem} prose={t('frodoKemImplProse')}
-              articleIntro={t('implArticleIntro')} articleSlug={null}
-              articleLinkText={t('implArticleLink')} articleComingSoon={t('implArticleComingSoonFrodoKem')} />
+              articleIntro={t('implArticleIntro')} articleSlug="frodokem"
+              articleLinkText={t('implArticleLink')} articleComingSoon="" />
           )}
 
           {/* Plaintext input */}
