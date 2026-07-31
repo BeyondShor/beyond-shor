@@ -45,15 +45,6 @@ Unterstützte Signaturverfahren (inkl. 20× Benchmark):
 ### 📋 Signiertes Kryptografie-Inventar (ShorSight)
 Das vollständige Scan-Ergebnis von **ShorSight** als Cryptography Bill of Materials nach [CycloneDX v1.7](https://cyclonedx.org). ShorSight durchsucht die Codebase nach kryptografischen Assets, belegt jedes mit Datei und Zeile, vergibt einen Evidenzgrad (literal / abgeleitet / nur Name) und bewertet Quantum- wie klassischen Status. Ergänzt wird das um eine Risikoanalyse nach **BSI-Standard 200-3** mit **Mosca** als Dringlichkeitsmaß — inklusive Impact-Bewertung, zweier Risikomatrizen und der dokumentierten Risikobehandlung je Objekt. Die CBOM wird mit ML-DSA-65 signiert und ist unter [beyond-shor.eu/cbom](https://beyond-shor.eu/cbom) abrufbar; die Signatur lässt sich direkt im Browser prüfen.
 
-Neu scannen und veröffentlichen:
-
-```bash
-shorsight scan . -o shorsight/cbom.raw.json
-shorsight govern shorsight/cbom.raw.json \
-  --config shorsight/governance.beyond-shor.json -o frontend/data/governance.json
-node scripts/sign-cbom.mjs shorsight/cbom.raw.json
-```
-
 ### 📅 Interaktive Q-Day Timeline
 Eine chronologische, interaktive Timeline von 1994 bis ~2040 — von Shors Algorithmus über die NIST-Standardisierung bis zu regulatorischen Deadlines und Q-Day-Schätzungen. Ereignisse sind nach Kategorien (Geschichte, Standard, Hardware, Regulierung, Prognose) farblich kodiert und per Klick aufklappbar.
 
