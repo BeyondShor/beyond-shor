@@ -3,7 +3,8 @@ import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { createHighlighter } from 'shiki';
-import CbomViewer from '@/components/CbomViewer';
+import ShorSightReport from '@/components/ShorSightReport';
+import { model } from '@/lib/shorsight';
 import cbomData from '@/public/cbom.json';
 
 interface PageProps {
@@ -17,10 +18,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'cbom' });
-  const count = cbomData.components.length;
   return {
     title:       t('pageTitle'),
-    description: t('metaDescription', { count }),
+    description: t('metaDescription', { count: model.algos.length, libs: model.libs.length }),
   };
 }
 
@@ -39,8 +39,8 @@ export default async function CbomPage({ params }: PageProps) {
 
   return (
     <div className="bg-[var(--color-bg-surface)]">
-      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
-        <CbomViewer cbomSig={cbomSig} cbomHtml={cbomHtml} />
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+        <ShorSightReport cbomSig={cbomSig} cbomHtml={cbomHtml} />
       </div>
     </div>
   );

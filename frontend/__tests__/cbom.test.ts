@@ -1,42 +1,44 @@
 /**
  * CBOM validation tests.
  *
- * These tests do NOT re-run the scanner — they validate the already-generated
- * frontend/public/cbom.json against the CycloneDX 1.6 structure and our
- * expected cryptographic asset inventory.
+ * These tests do NOT run a scan — they validate the published
+ * frontend/public/cbom.json against the CycloneDX 1.7 structure ShorSight emits,
+ * and check that the ML-DSA-65 signature next to it covers those exact bytes.
  *
- * Run `node scripts/scan-cbom.mjs` from the project root to regenerate.
+ * To regenerate:
+ *   shorsight scan . -o shorsight/cbom.raw.json
+ *   node scripts/sign-cbom.mjs shorsight/cbom.raw.json
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const CBOM_PATH = join(__dirname, '../public/cbom.json');
+const __dirname   = dirname(fileURLToPath(import.meta.url));
+const CBOM_PATH   = join(__dirname, '../public/cbom.json');
+const SIG_PATH    = join(__dirname, '../public/cbom.sig');
+const GOV_PATH    = join(__dirname, '../data/governance.json');
 
-interface AlgorithmProperties {
-  primitive: string;
-  nistQuantumSecurityLevel: number;
-}
-
-interface CryptoProperties {
-  assetType: string;
-  algorithmProperties: AlgorithmProperties;
-}
+interface Property { name: string; value: string }
 
 interface Component {
   'bom-ref': string;
   type: string;
   name: string;
-  description: string;
-  cryptoProperties: CryptoProperties;
-}
-
-interface Dependency {
-  ref: string;
-  dependsOn: string[];
+  version?: string;
+  purl?: string;
+  cryptoProperties?: {
+    assetType: string;
+    oid?: string;
+    algorithmProperties?: {
+      primitive?: string;
+      nistQuantumSecurityLevel?: number;
+    };
+  };
+  evidence?: { occurrences?: { location: string; line?: number }[] };
+  properties?: Property[];
 }
 
 interface Cbom {
@@ -47,17 +49,45 @@ interface Cbom {
   metadata: {
     timestamp: string;
     component: { type: string; name: string };
-    tools: { name: string }[];
+    tools: { components: { type: string; name: string; version?: string }[] };
+    properties?: Property[];
   };
   components: Component[];
-  dependencies: Dependency[];
+  dependencies: { ref: string; dependsOn?: string[]; provides?: string[] }[];
 }
 
+interface Governance {
+  risk: {
+    params: { crqcYear: number; crqcYearSignatures: number; yearsUntilCrqc: number };
+    buckets: { acute: number; quantum: number; none: number };
+    items: { component: string; category: string }[];
+    assets: { asset: string; owner: string; riskOwner: string; impactState: string }[];
+    riskMatrix: {
+      axes: Record<string, string[]>;
+      acute: { cells: { impact: number; urgency: number; count: number; tuples: unknown[] }[] };
+      quantum: { cells: { impact: number; urgency: number; count: number; tuples: { component: string; treatment: string }[] }[] };
+    };
+  };
+}
+
+let rawText: string;
 let cbom: Cbom;
+let gov: Governance;
+let cryptoAssets: Component[];
+let libraries: Component[];
+let bomRefs: Set<string>;
+
+function firstProp(c: Component, name: string): string | undefined {
+  return c.properties?.find(p => p.name === name)?.value;
+}
 
 beforeAll(() => {
-  const raw = readFileSync(CBOM_PATH, 'utf8');
-  cbom = JSON.parse(raw) as Cbom;
+  rawText = readFileSync(CBOM_PATH, 'utf8');
+  cbom = JSON.parse(rawText) as Cbom;
+  gov  = JSON.parse(readFileSync(GOV_PATH, 'utf8')) as Governance;
+  cryptoAssets = cbom.components.filter(c => c.type === 'cryptographic-asset');
+  libraries    = cbom.components.filter(c => c.type === 'library');
+  bomRefs      = new Set(cbom.components.map(c => c['bom-ref']));
 });
 
 // ── CycloneDX envelope ────────────────────────────────────────────────────────
@@ -67,213 +97,221 @@ describe('CycloneDX envelope', () => {
     expect(cbom.bomFormat).toBe('CycloneDX');
   });
 
-  it('has specVersion "1.6"', () => {
-    expect(cbom.specVersion).toBe('1.6');
+  it('has specVersion "1.7"', () => {
+    expect(cbom.specVersion).toBe('1.7');
   });
 
   it('has a positive integer version', () => {
-    expect(typeof cbom.version).toBe('number');
+    expect(Number.isInteger(cbom.version)).toBe(true);
     expect(cbom.version).toBeGreaterThan(0);
   });
 
-  it('has a valid URN serialNumber', () => {
+  it('has a urn:uuid serialNumber', () => {
     expect(cbom.serialNumber).toMatch(/^urn:uuid:[0-9a-f-]{36}$/i);
   });
 
-  it('has metadata with application component', () => {
+  it('names the scanned application as the metadata component', () => {
     expect(cbom.metadata.component.type).toBe('application');
-    expect(cbom.metadata.component.name).toBeTruthy();
+    expect(cbom.metadata.component.name).toBe('beyond-shor');
   });
 
-  it('has an ISO 8601 timestamp', () => {
-    expect(cbom.metadata.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+  it('records ShorSight as the producing tool', () => {
+    const tool = cbom.metadata.tools.components[0];
+    expect(tool.name).toBe('shorsight');
+    expect(tool.version).toMatch(/^\d+\.\d+\.\d+/);
+  });
+
+  it('has an ISO-8601 timestamp', () => {
+    expect(() => new Date(cbom.metadata.timestamp).toISOString()).not.toThrow();
+    expect(Number.isNaN(Date.parse(cbom.metadata.timestamp))).toBe(false);
   });
 });
 
-// ── Components structure ──────────────────────────────────────────────────────
+// ── Components ────────────────────────────────────────────────────────────────
 
-describe('components', () => {
-  it('contains at least one component', () => {
-    expect(cbom.components.length).toBeGreaterThan(0);
+describe('Components', () => {
+  it('contains cryptographic assets and libraries', () => {
+    expect(cryptoAssets.length).toBeGreaterThan(0);
+    expect(libraries.length).toBeGreaterThan(0);
+    // every component is one of the two kinds the viewer knows how to render
+    expect(cryptoAssets.length + libraries.length).toBe(cbom.components.length);
   });
 
-  it('every component has required fields', () => {
-    for (const c of cbom.components) {
-      expect(c['bom-ref'], `bom-ref missing on ${c.name}`).toBeTruthy();
-      expect(c.type).toBe('cryptographic-asset');
-      expect(c.name).toBeTruthy();
+  it('gives every component a unique bom-ref', () => {
+    expect(bomRefs.size).toBe(cbom.components.length);
+  });
+
+  it('namespaces bom-refs by kind', () => {
+    for (const c of cryptoAssets) expect(c['bom-ref']).toMatch(/^crypto\//);
+    for (const c of libraries)    expect(c['bom-ref']).toMatch(/^lib\//);
+  });
+
+  it('marks every crypto asset with assetType "algorithm"', () => {
+    for (const c of cryptoAssets) {
       expect(c.cryptoProperties?.assetType).toBe('algorithm');
-      expect(c.cryptoProperties?.algorithmProperties?.primitive).toBeTruthy();
-      expect(typeof c.cryptoProperties?.algorithmProperties?.nistQuantumSecurityLevel).toBe('number');
     }
   });
 
-  it('bom-refs follow the "algo-id:context" convention', () => {
-    for (const c of cbom.components) {
-      expect(c['bom-ref']).toMatch(/^[\w-]+:[\w-]+$/);
+  it('gives every crypto asset a quantum and a classical status', () => {
+    for (const c of cryptoAssets) {
+      expect(['safe', 'unsafe', 'unknown']).toContain(firstProp(c, 'crypto:quantumStatus'));
+      expect(['secure', 'weak', 'broken', 'unknown']).toContain(firstProp(c, 'crypto:classicalStatus'));
     }
   });
 
-  it('bom-refs are unique', () => {
-    const refs = cbom.components.map(c => c['bom-ref']);
-    const unique = new Set(refs);
-    expect(unique.size).toBe(refs.length);
-  });
-});
-
-// ── Expected inventory ────────────────────────────────────────────────────────
-
-describe('expected cryptographic assets', () => {
-  let bomRefs: Set<string>;
-
-  beforeAll(() => {
-    bomRefs = new Set(cbom.components.map(c => c['bom-ref']));
-  });
-
-  // Playground KEMs
-  it('contains ML-KEM-1024 in playground context', () => {
-    expect(bomRefs.has('ml-kem-1024:playground')).toBe(true);
-  });
-
-  it('contains Classic McEliece 8192128 in playground context', () => {
-    expect(bomRefs.has('classic-mceliece-8192128:playground')).toBe(true);
-  });
-
-  it('contains FrodoKEM-1344 in playground context', () => {
-    expect(bomRefs.has('frodokem-1344:playground')).toBe(true);
-  });
-
-  // Playground signatures
-  it('contains ML-DSA-65 in playground context', () => {
-    expect(bomRefs.has('ml-dsa-65:playground')).toBe(true);
-  });
-
-  it('contains SLH-DSA-SHA2-128s in playground context', () => {
-    expect(bomRefs.has('slh-dsa-sha2-128s:playground')).toBe(true);
-  });
-
-  it('contains SLH-DSA-SHA2-128f in playground context', () => {
-    expect(bomRefs.has('slh-dsa-sha2-128f:playground')).toBe(true);
-  });
-
-  it('contains ECDSA P-256 in playground context', () => {
-    expect(bomRefs.has('ecdsa-p256:playground')).toBe(true);
-  });
-
-  // Article signing
-  it('contains ML-DSA-65 in article-signing context', () => {
-    expect(bomRefs.has('ml-dsa-65:article-signing')).toBe(true);
-  });
-
-  it('contains ML-DSA-65 in cbom-signing context', () => {
-    expect(bomRefs.has('ml-dsa-65:cbom-signing')).toBe(true);
-  });
-
-  // Supporting primitives
-  it('contains SHAKE-256 implicitly added from ML-DSA-65 usage', () => {
-    // Must appear in all contexts where ML-DSA-65 is present
-    expect(bomRefs.has('shake-256:article-signing')).toBe(true);
-    expect(bomRefs.has('shake-256:cbom-signing')).toBe(true);
-    expect(bomRefs.has('shake-256:playground')).toBe(true);
-  });
-
-  it('contains SHA-256 implicitly added from article-signing', () => {
-    expect(bomRefs.has('sha-256:article-signing')).toBe(true);
-  });
-
-  it('contains HKDF-SHA-256 and AES-256-GCM in playground', () => {
-    expect(bomRefs.has('hkdf-sha256:playground')).toBe(true);
-    expect(bomRefs.has('aes-256-gcm:playground')).toBe(true);
-  });
-
-  it('contains X25519 in playground', () => {
-    expect(bomRefs.has('x25519:playground')).toBe(true);
-  });
-
-  // Contact form
-  it('contains HMAC-SHA-256 in contact-form context', () => {
-    expect(bomRefs.has('hmac-sha256:contact-form')).toBe(true);
-  });
-
-  // Strapi
-  it('contains HS256 JWT in strapi context', () => {
-    expect(bomRefs.has('hs256-jwt:strapi')).toBe(true);
-  });
-});
-
-// ── Quantum-safety classification ─────────────────────────────────────────────
-
-describe('quantum-safety classification', () => {
-  it('quantum-vulnerable algorithms have nistQuantumSecurityLevel === 0', () => {
-    const vulnerable = ['ecdsa-p256', 'x25519'];
-    for (const c of cbom.components) {
-      const algoId = c['bom-ref'].split(':')[0];
-      if (vulnerable.includes(algoId)) {
-        expect(c.cryptoProperties.algorithmProperties.nistQuantumSecurityLevel, `${c['bom-ref']} should be level 0`)
-          .toBe(0);
-      }
+  it('grades the evidence behind every crypto asset', () => {
+    for (const c of cryptoAssets) {
+      expect(['literal', 'resolved', 'name-only']).toContain(firstProp(c, 'crypto:confidence'));
     }
   });
 
-  it('post-quantum algorithms have nistQuantumSecurityLevel > 0', () => {
-    const postQuantum = ['ml-kem-1024', 'ml-dsa-65', 'slh-dsa-sha2-128s', 'slh-dsa-sha2-128f',
-                         'classic-mceliece-8192128', 'frodokem-1344', 'shake-256'];
-    for (const c of cbom.components) {
-      const algoId = c['bom-ref'].split(':')[0];
-      if (postQuantum.includes(algoId)) {
-        expect(c.cryptoProperties.algorithmProperties.nistQuantumSecurityLevel, `${c['bom-ref']} should be > 0`)
-          .toBeGreaterThan(0);
-      }
+  it('backs every crypto asset with at least one located occurrence', () => {
+    for (const c of cryptoAssets) {
+      const occ = c.evidence?.occurrences ?? [];
+      expect(occ.length).toBeGreaterThan(0);
+      for (const o of occ) expect(o.location).toBeTruthy();
+    }
+  });
+
+  it('explains every crypto asset with a rationale', () => {
+    for (const c of cryptoAssets) {
+      expect(firstProp(c, 'crypto:rationale')).toBeTruthy();
     }
   });
 });
 
-// ── Dependencies ──────────────────────────────────────────────────────────────
+// ── The algorithms this site actually runs ────────────────────────────────────
 
-describe('dependencies', () => {
-  let bomRefs: Set<string>;
-
-  beforeAll(() => {
-    bomRefs = new Set(cbom.components.map(c => c['bom-ref']));
+describe('Expected inventory', () => {
+  it('finds the PQC signature schemes', () => {
+    expect(bomRefs.has('crypto/ml-dsa-65')).toBe(true);
+    expect(bomRefs.has('crypto/slh-dsa-sha2-128s')).toBe(true);
+    expect(bomRefs.has('crypto/slh-dsa-sha2-128f')).toBe(true);
   });
 
-  it('dependencies array has same length as components', () => {
-    expect(cbom.dependencies.length).toBe(cbom.components.length);
+  it('finds the PQC KEMs', () => {
+    expect(bomRefs.has('crypto/ml-kem-1024')).toBe(true);
+    expect(bomRefs.has('crypto/frodokem-1344-aes')).toBe(true);
+    expect(bomRefs.has('crypto/classic-mceliece')).toBe(true);
   });
 
-  it('every dependency.ref is a known bom-ref', () => {
+  it('finds the classical primitives kept as reference points', () => {
+    expect(bomRefs.has('crypto/x25519')).toBe(true);
+    expect(bomRefs.has('crypto/ec-p256')).toBe(true);
+  });
+
+  it('flags exactly the classical asymmetric assets as quantum-unsafe', () => {
+    const unsafe = cryptoAssets
+      .filter(c => firstProp(c, 'crypto:quantumStatus') === 'unsafe')
+      .map(c => c['bom-ref'])
+      .sort();
+    expect(unsafe).toEqual(['crypto/ec-p256', 'crypto/x25519']);
+  });
+
+  it('assigns a NIST PQ level to the FIPS-standardised schemes', () => {
+    const levels: Record<string, number> = {
+      'crypto/ml-dsa-65':    3,
+      'crypto/ml-kem-1024':  5,
+      'crypto/frodokem-1344-aes': 5,
+    };
+    for (const [ref, level] of Object.entries(levels)) {
+      const c = cryptoAssets.find(x => x['bom-ref'] === ref);
+      expect(c?.cryptoProperties?.algorithmProperties?.nistQuantumSecurityLevel).toBe(level);
+    }
+  });
+
+  it('pins the libraries it can pin', () => {
+    const noble = libraries.find(l => l['bom-ref'] === 'lib/noble-post-quantum');
+    expect(noble?.version).toMatch(/^\d+\.\d+\.\d+/);
+    expect(noble?.purl).toMatch(/^pkg:npm\/@noble\/post-quantum@/);
+    expect(firstProp(noble!, 'crypto:versionPrecision')).toBe('exact');
+  });
+});
+
+// ── Dependency graph ──────────────────────────────────────────────────────────
+
+describe('Dependency graph', () => {
+  it('references only components that exist', () => {
     for (const dep of cbom.dependencies) {
-      expect(bomRefs.has(dep.ref), `Unknown ref: ${dep.ref}`).toBe(true);
-    }
-  });
-
-  it('every dependsOn entry is a known bom-ref', () => {
-    for (const dep of cbom.dependencies) {
-      for (const ref of dep.dependsOn) {
-        expect(bomRefs.has(ref), `Unknown dependsOn ref: ${ref} (from ${dep.ref})`).toBe(true);
+      const known = bomRefs.has(dep.ref) || dep.ref.startsWith('target/');
+      expect(known, `unknown ref ${dep.ref}`).toBe(true);
+      for (const r of [...(dep.dependsOn ?? []), ...(dep.provides ?? [])]) {
+        expect(bomRefs.has(r), `unknown ref ${r}`).toBe(true);
       }
     }
   });
 
-  it('AES-256-GCM:playground depends on HKDF-SHA-256:playground', () => {
-    const aesDep = cbom.dependencies.find(d => d.ref === 'aes-256-gcm:playground');
-    expect(aesDep?.dependsOn).toContain('hkdf-sha256:playground');
+  it('attributes every crypto asset to a providing library', () => {
+    const provided = new Set(cbom.dependencies.flatMap(d => d.provides ?? []));
+    for (const c of cryptoAssets) {
+      expect(provided.has(c['bom-ref']), `${c['bom-ref']} has no provider`).toBe(true);
+    }
   });
 
-  it('HKDF-SHA-256:playground depends on KEM and X25519 entries', () => {
-    const hkdfDep = cbom.dependencies.find(d => d.ref === 'hkdf-sha256:playground');
-    expect(hkdfDep?.dependsOn).toContain('ml-kem-1024:playground');
-    expect(hkdfDep?.dependsOn).toContain('x25519:playground');
+  it('roots the graph at the scanned application', () => {
+    const root = cbom.dependencies.find(d => d.ref.startsWith('target/'));
+    expect(root?.dependsOn?.length).toBeGreaterThan(0);
+    for (const r of root!.dependsOn!) expect(r).toMatch(/^lib\//);
+  });
+});
+
+// ── Signature ─────────────────────────────────────────────────────────────────
+
+describe('ML-DSA-65 signature', () => {
+  it('verifies over the exact bytes served at /cbom.json', () => {
+    if (!existsSync(SIG_PATH) || !process.env.ML_DSA_PUBLIC_KEY) {
+      // no key in the environment (e.g. a fresh clone) — the page degrades to
+      // showing no badge, so this is a skip rather than a failure
+      return;
+    }
+    const sig    = Buffer.from(readFileSync(SIG_PATH, 'utf8').trim(), 'hex');
+    const pubKey = Buffer.from(process.env.ML_DSA_PUBLIC_KEY, 'hex');
+    const msg    = new TextEncoder().encode(rawText);
+    expect(ml_dsa65.verify(sig, msg, pubKey)).toBe(true);
+  });
+});
+
+// ── Governance / risk analysis ────────────────────────────────────────────────
+
+describe('Risk analysis', () => {
+  it('covers every crypto asset exactly once', () => {
+    expect(gov.risk.items.length).toBe(cryptoAssets.length);
+    const names = new Set(gov.risk.items.map(i => i.component));
+    for (const c of cryptoAssets) expect(names.has(c.name), `${c.name} unassessed`).toBe(true);
   });
 
-  it('ML-DSA-65:article-signing depends on SHAKE-256 and SHA-256', () => {
-    const dsaDep = cbom.dependencies.find(d => d.ref === 'ml-dsa-65:article-signing');
-    expect(dsaDep?.dependsOn).toContain('shake-256:article-signing');
-    expect(dsaDep?.dependsOn).toContain('sha-256:article-signing');
+  it('has buckets that add up to the asset count', () => {
+    const { acute, quantum, none } = gov.risk.buckets;
+    expect(acute + quantum + none).toBe(cryptoAssets.length);
   });
 
-  it('ML-DSA-65:cbom-signing depends on SHAKE-256:cbom-signing', () => {
-    const dsaDep = cbom.dependencies.find(d => d.ref === 'ml-dsa-65:cbom-signing');
-    expect(dsaDep?.dependsOn).toContain('shake-256:cbom-signing');
+  it('puts the quantum-unsafe assets in the quantum bucket', () => {
+    const quantum = gov.risk.items.filter(i => i.category === 'quantum').map(i => i.component).sort();
+    expect(quantum).toEqual(['EC-P256', 'X25519']);
+  });
+
+  it('resolves the asset key, so the human input is not silently dropped', () => {
+    // The governance config addresses the asset as `beyond-shor`. A mismatched key
+    // is ignored without error, which leaves owner/objectives empty and every
+    // impact provisional — this test is what makes that failure loud.
+    const asset = gov.risk.assets[0];
+    expect(asset.asset).toBe('beyond-shor');
+    expect(asset.owner).toBeTruthy();
+    expect(asset.riskOwner).toBeTruthy();
+    expect(asset.impactState).toBe('confirmed');
+  });
+
+  it('carries a treatment decision for every object in a matrix', () => {
+    const tuples = gov.risk.riskMatrix.quantum.cells.flatMap(c => c.tuples);
+    expect(tuples.length).toBe(gov.risk.buckets.quantum);
+    for (const t of tuples) {
+      expect(['avoid', 'reduce', 'transfer', 'accept'], `${t.component} untreated`).toContain(t.treatment);
+    }
+  });
+
+  it('labels all four axes of the risk matrices', () => {
+    for (const axis of ['impact', 'urgencyAcute', 'urgencyQuantum', 'category']) {
+      expect(gov.risk.riskMatrix.axes[axis]).toHaveLength(4);
+    }
   });
 });

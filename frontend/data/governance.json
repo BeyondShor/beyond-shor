@@ -1,0 +1,687 @@
+{
+  "risk": {
+    "params": {
+      "crqcYear": 2035,
+      "crqcYearSignatures": 2030,
+      "migrationYears": 1,
+      "yearsUntilCrqc": 9,
+      "yearsUntilCrqcSignatures": 4,
+      "defaultShelfLifeYears": 5
+    },
+    "buckets": {
+      "acute": 0,
+      "quantum": 2,
+      "none": 11
+    },
+    "items": [
+      {
+        "component": "EC-P256",
+        "name": "EC",
+        "primitive": "key-agree",
+        "category": "quantum",
+        "role": "confidentiality",
+        "quantum": "unsafe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 2,
+        "summary": "Secure today, but a future quantum computer (Shor's algorithm) can break it.",
+        "mosca": "Protects data ~5y; migration ~1y vs ~9y until 2035. 5+1=6 ≤ 9 → there is time; plan the migration.",
+        "deadlineYear": 2035,
+        "startByYear": 2034,
+        "migrationStatus": "not applicable",
+        "vendorDependency": false
+      },
+      {
+        "component": "X25519",
+        "name": "X25519",
+        "primitive": "key-agree",
+        "category": "quantum",
+        "role": "confidentiality",
+        "quantum": "unsafe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 2,
+        "summary": "Secure today, but a future quantum computer (Shor's algorithm) can break it.",
+        "mosca": "Protects data ~5y; migration ~1y vs ~9y until 2035. 5+1=6 ≤ 9 → there is time; plan the migration.",
+        "deadlineYear": 2035,
+        "startByYear": 2034,
+        "migrationStatus": "hybrid",
+        "vendorDependency": false
+      },
+      {
+        "component": "AES-256-GCM",
+        "name": "AES",
+        "primitive": "ae",
+        "category": "none",
+        "role": "confidentiality",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "not-started",
+        "vendorDependency": false
+      },
+      {
+        "component": "AES-GCM",
+        "name": "AES",
+        "primitive": "ae",
+        "category": "none",
+        "role": "confidentiality",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "not-started",
+        "vendorDependency": false
+      },
+      {
+        "component": "Classic-McEliece",
+        "name": "Classic McEliece",
+        "primitive": "kem",
+        "category": "none",
+        "role": "confidentiality",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "pqc-only",
+        "vendorDependency": false
+      },
+      {
+        "component": "FrodoKEM-1344-AES",
+        "name": "FrodoKEM",
+        "primitive": "kem",
+        "category": "none",
+        "role": "confidentiality",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "pqc-only",
+        "vendorDependency": false
+      },
+      {
+        "component": "HKDF",
+        "name": "HKDF",
+        "primitive": "kdf",
+        "category": "none",
+        "role": "confidentiality",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "not-started",
+        "vendorDependency": false
+      },
+      {
+        "component": "HMAC",
+        "name": "HMAC",
+        "primitive": "mac",
+        "category": "none",
+        "role": "confidentiality",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "not-started",
+        "vendorDependency": false
+      },
+      {
+        "component": "ML-DSA-65",
+        "name": "ML-DSA",
+        "primitive": "signature",
+        "category": "none",
+        "role": "signature",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "pqc-only",
+        "vendorDependency": false
+      },
+      {
+        "component": "ML-KEM-1024",
+        "name": "ML-KEM",
+        "primitive": "kem",
+        "category": "none",
+        "role": "confidentiality",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "pqc-only",
+        "vendorDependency": false
+      },
+      {
+        "component": "SHA-256",
+        "name": "SHA-256",
+        "primitive": "hash",
+        "category": "none",
+        "role": "confidentiality",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "not-started",
+        "vendorDependency": false
+      },
+      {
+        "component": "SLH-DSA-SHA2-128f",
+        "name": "SLH-DSA",
+        "primitive": "signature",
+        "category": "none",
+        "role": "signature",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "pqc-only",
+        "vendorDependency": false
+      },
+      {
+        "component": "SLH-DSA-SHA2-128s",
+        "name": "SLH-DSA",
+        "primitive": "signature",
+        "category": "none",
+        "role": "signature",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "pqc-only",
+        "vendorDependency": false
+      }
+    ],
+    "assets": [
+      {
+        "asset": "beyond-shor",
+        "kind": "local",
+        "shelfLifeYears": 5,
+        "criticality": "medium",
+        "owner": "Beyond Shor",
+        "riskOwner": "Marvin Sprey",
+        "dataClassification": "public",
+        "acute": 0,
+        "quantum": 2,
+        "none": 11,
+        "urgent": false,
+        "verdicts": [
+          "AES-256-GCM [none]",
+          "AES-GCM [none]",
+          "Classic-McEliece [none]",
+          "EC-P256 [quantum]",
+          "FrodoKEM-1344-AES [none]",
+          "HKDF [none]",
+          "HMAC [none]",
+          "ML-DSA-65 [none]",
+          "ML-KEM-1024 [none]",
+          "SHA-256 [none]",
+          "SLH-DSA-SHA2-128f [none]",
+          "SLH-DSA-SHA2-128s [none]",
+          "X25519 [quantum]"
+        ],
+        "deadlineYear": 2035,
+        "securityObjectives": {
+          "confidentiality": 1,
+          "integrity": 4,
+          "authenticity": 4,
+          "nonRepudiation": 3
+        },
+        "economicDamage": 2,
+        "migrationYears": 1,
+        "impactState": "confirmed"
+      }
+    ],
+    "unknowns": [],
+    "riskMatrix": {
+      "axes": {
+        "impact": [
+          "negligible",
+          "limited",
+          "substantial",
+          "existential"
+        ],
+        "urgencyAcute": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ],
+        "urgencyQuantum": [
+          "watch",
+          "mid-term",
+          "urgent",
+          "overdue"
+        ],
+        "category": [
+          "low",
+          "medium",
+          "high",
+          "very high"
+        ]
+      },
+      "acute": {
+        "cells": [
+          {
+            "urgency": 1,
+            "impact": 4,
+            "category": "high",
+            "categoryRank": 3,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 2,
+            "impact": 4,
+            "category": "high",
+            "categoryRank": 3,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 3,
+            "impact": 4,
+            "category": "very high",
+            "categoryRank": 4,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 4,
+            "impact": 4,
+            "category": "very high",
+            "categoryRank": 4,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 1,
+            "impact": 3,
+            "category": "medium",
+            "categoryRank": 2,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 2,
+            "impact": 3,
+            "category": "medium",
+            "categoryRank": 2,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 3,
+            "impact": 3,
+            "category": "high",
+            "categoryRank": 3,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 4,
+            "impact": 3,
+            "category": "very high",
+            "categoryRank": 4,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 1,
+            "impact": 2,
+            "category": "low",
+            "categoryRank": 1,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 2,
+            "impact": 2,
+            "category": "medium",
+            "categoryRank": 2,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 3,
+            "impact": 2,
+            "category": "medium",
+            "categoryRank": 2,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 4,
+            "impact": 2,
+            "category": "high",
+            "categoryRank": 3,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 1,
+            "impact": 1,
+            "category": "low",
+            "categoryRank": 1,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 2,
+            "impact": 1,
+            "category": "low",
+            "categoryRank": 1,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 3,
+            "impact": 1,
+            "category": "low",
+            "categoryRank": 1,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 4,
+            "impact": 1,
+            "category": "medium",
+            "categoryRank": 2,
+            "count": 0,
+            "tuples": []
+          }
+        ]
+      },
+      "quantum": {
+        "cells": [
+          {
+            "urgency": 1,
+            "impact": 4,
+            "category": "high",
+            "categoryRank": 3,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 2,
+            "impact": 4,
+            "category": "high",
+            "categoryRank": 3,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 3,
+            "impact": 4,
+            "category": "very high",
+            "categoryRank": 4,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 4,
+            "impact": 4,
+            "category": "very high",
+            "categoryRank": 4,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 1,
+            "impact": 3,
+            "category": "medium",
+            "categoryRank": 2,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 2,
+            "impact": 3,
+            "category": "medium",
+            "categoryRank": 2,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 3,
+            "impact": 3,
+            "category": "high",
+            "categoryRank": 3,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 4,
+            "impact": 3,
+            "category": "very high",
+            "categoryRank": 4,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 1,
+            "impact": 2,
+            "category": "low",
+            "categoryRank": 1,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 2,
+            "impact": 2,
+            "category": "medium",
+            "categoryRank": 2,
+            "count": 2,
+            "tuples": [
+              {
+                "component": "EC-P256",
+                "asset": "beyond-shor",
+                "role": "confidentiality",
+                "primitive": "key-agree",
+                "urgency": 2,
+                "impactLevel": 2,
+                "impactState": "confirmed",
+                "category": "medium",
+                "categoryRank": 2,
+                "allowedTreatments": [
+                  "avoid",
+                  "reduce",
+                  "transfer",
+                  "accept"
+                ],
+                "treatment": "accept",
+                "treatmentNote": "ECDSA P-256 is kept as the classical reference point in the signature benchmark.",
+                "decidedBy": "Marvin Sprey",
+                "migrationStatus": "not applicable",
+                "vendorDependency": false,
+                "quantum": "unsafe",
+                "classical": "secure"
+              },
+              {
+                "component": "X25519",
+                "asset": "beyond-shor",
+                "role": "confidentiality",
+                "primitive": "key-agree",
+                "urgency": 2,
+                "impactLevel": 2,
+                "impactState": "confirmed",
+                "category": "medium",
+                "categoryRank": 2,
+                "allowedTreatments": [
+                  "avoid",
+                  "reduce",
+                  "transfer",
+                  "accept"
+                ],
+                "treatment": "accept",
+                "treatmentNote": "Deliberate: X25519 is the classical half of the hybrid handshake and is paired with ML-KEM-1024.",
+                "decidedBy": "Marvin Sprey",
+                "migrationStatus": "hybrid",
+                "vendorDependency": false,
+                "quantum": "unsafe",
+                "classical": "secure"
+              }
+            ]
+          },
+          {
+            "urgency": 3,
+            "impact": 2,
+            "category": "medium",
+            "categoryRank": 2,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 4,
+            "impact": 2,
+            "category": "high",
+            "categoryRank": 3,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 1,
+            "impact": 1,
+            "category": "low",
+            "categoryRank": 1,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 2,
+            "impact": 1,
+            "category": "low",
+            "categoryRank": 1,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 3,
+            "impact": 1,
+            "category": "low",
+            "categoryRank": 1,
+            "count": 0,
+            "tuples": []
+          },
+          {
+            "urgency": 4,
+            "impact": 1,
+            "category": "medium",
+            "categoryRank": 2,
+            "count": 0,
+            "tuples": []
+          }
+        ]
+      }
+    }
+  }
+}

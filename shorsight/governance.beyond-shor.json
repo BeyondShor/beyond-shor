@@ -1,0 +1,80 @@
+{
+  "_README": [
+    "Risk-Management input for beyond-shor.eu — consumed by `shorsight govern`.",
+    "The asset key is the SOURCE LABEL as ShorSight reports it ('beyond-shor'), NOT",
+    "'beyond-shor (local)' — the '(local)' suffix is the source *kind* and is not part of",
+    "the key. A mismatched key is silently ignored: owner, security objectives, economic",
+    "damage and treatments are then all dropped and every impact stays 'provisional'.",
+    "securityObjectives / economicDamage: 1-4 (BSI-style anchors, 4 = existential).",
+    "shelfLifeYears = X (how long the data must stay confidential), migrationYears = Y."
+  ],
+  "risk": {
+    "crqcYear": 2035,
+    "crqcYearSignatures": 2030,
+    "migrationYears": 1,
+    "defaultShelfLifeYears": 5
+  },
+  "assets": {
+    "beyond-shor": {
+      "shelfLifeYears": 5,
+      "migrationYears": 1,
+      "criticality": "medium",
+      "owner": "Beyond Shor",
+      "riskOwner": "Marvin Sprey",
+      "dataClassification": "public",
+      "securityObjectives": {
+        "confidentiality": 1,
+        "integrity": 4,
+        "authenticity": 4,
+        "nonRepudiation": 3
+      },
+      "economicDamage": 2
+    }
+  },
+  "components": {
+    "ML-DSA-65": {
+      "migrationStatus": "pqc-only",
+      "vendorDependency": false
+    },
+    "ML-KEM-1024": {
+      "migrationStatus": "pqc-only",
+      "vendorDependency": false
+    },
+    "SLH-DSA-SHA2-128s": {
+      "migrationStatus": "pqc-only",
+      "vendorDependency": false
+    },
+    "SLH-DSA-SHA2-128f": {
+      "migrationStatus": "pqc-only",
+      "vendorDependency": false
+    },
+    "FrodoKEM-1344-AES": {
+      "migrationStatus": "pqc-only",
+      "vendorDependency": false
+    },
+    "Classic-McEliece": {
+      "migrationStatus": "pqc-only",
+      "vendorDependency": false
+    },
+    "X25519": {
+      "migrationStatus": "hybrid",
+      "vendorDependency": false
+    },
+    "EC-P256": {
+      "migrationStatus": "not applicable",
+      "vendorDependency": false
+    }
+  },
+  "treatments": {
+    "beyond-shor :: X25519": {
+      "option": "accept",
+      "decidedBy": "Marvin Sprey",
+      "note": "Deliberate: X25519 is the classical half of the hybrid handshake and is paired with ML-KEM-1024."
+    },
+    "beyond-shor :: EC-P256": {
+      "option": "accept",
+      "decidedBy": "Marvin Sprey",
+      "note": "ECDSA P-256 is kept as the classical reference point in the signature benchmark."
+    }
+  }
+}
