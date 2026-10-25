@@ -513,11 +513,11 @@ function Donut({ counts, total, label }: {
   counts: Record<string, number>; total: number; label: string;
 }) {
   const sum = QUANTUM_ORDER.reduce((s, k) => s + (counts[k] ?? 0), 0) || 1;
-  let acc = 0;
-  const segments = QUANTUM_ORDER.map(k => {
-    const from = (acc / sum) * 100;
-    acc += counts[k] ?? 0;
-    return `${STATUS_FILL[k]} ${from}% ${(acc / sum) * 100}%`;
+  // each segment runs from the sum of the counts before it to that sum plus its own
+  const segments = QUANTUM_ORDER.map((k, i) => {
+    const before = QUANTUM_ORDER.slice(0, i).reduce((s, j) => s + (counts[j] ?? 0), 0);
+    const until = before + (counts[k] ?? 0);
+    return `${STATUS_FILL[k]} ${(before / sum) * 100}% ${(until / sum) * 100}%`;
   }).join(', ');
 
   return (

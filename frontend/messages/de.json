@@ -522,7 +522,6 @@
     "metaCommit": "Commit",
     "embedLabel": "// shorsight · schreibgeschützt",
     "embedTitle": "ShorSight: Kryptografie-Inventar und Risikomanagement von beyond-shor.eu",
-    "openStandalone": "In eigenem Tab öffnen ↗",
     "exportTitle": "Export",
     "downloadBtn": "cbom.json herunterladen ↓",
     "downloadNote": "CycloneDX {spec}, signiert mit ML-DSA-65, im Browser prüfbar",
@@ -891,6 +890,7 @@
     "btnAttack": "hsk_alice und sk_alice auf Bobs Chiffretext anwenden",
     "aliceReadsLabel": "// Alice liest (Versuch)",
     "emptyOutput": "(nichts Lesbares)",
-    "step6Done": "<b>Die Identitätsbindung hält.</b> Alice kann ihre eigenen Nachrichten lesen, Bobs aber nicht. Ihr Rauschen liegt bei fast 100 % der Toleranz: Die Koeffizienten sind praktisch gleichverteilt, und beim Runden entsteht nur Zufall."
+    "step6Done": "<b>Die Identitätsbindung hält.</b> Alice kann ihre eigenen Nachrichten lesen, Bobs aber nicht. Ihr Rauschen liegt bei fast 100 % der Toleranz: Die Koeffizienten sind praktisch gleichverteilt, und beim Runden entsteht nur Zufall.",
+    "param_nR_explain": "Grad des Rings R_q = Z_q[X]/(X^n_R + 1). Mit 256 bleibt das Rauschen bei 26 Bit in jeder gemessenen Sitzung mindestens elf Standardabweichungen unter der Grenze q/4. Bei 512 hängt die Reserve stark von den Schlüsseln ab und sinkt in ungünstigen Sitzungen auf etwa drei Standardabweichungen, dann scheitern einzelne Entschlüsselungen. Für 1024 bräuchte es einen größeren Modulus."
   }
 }

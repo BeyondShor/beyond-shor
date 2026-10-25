@@ -119,7 +119,7 @@ describe('RBE scheme', () => {
 
   it('each recipient decrypts their own message', () => {
     ids.forEach((id, u) => {
-      const msg = new TextEncoder().encode(`Geheime Nachricht für ${names[u]} – äöü ✓`);
+      const msg = new TextEncoder().encode(`Für ${names[u]}: äöü ✓`);
       const ct = encrypt(ctx, crs, mpk, id, msg);
       const pt = decryptStep2(ctx, decryptStep1(ctx, ct, helperKey(ctx, regs, id)), keys[u].sk);
       expect(new TextDecoder().decode(pt.message)).toBe(new TextDecoder().decode(msg));
@@ -136,20 +136,31 @@ describe('RBE scheme', () => {
     expect(new TextDecoder().decode(wrongSk.message)).not.toBe('Nur für Bob');
   });
 
-  it('keeps a wide noise margin', () => {
-    // Decryption fails once a coefficient's noise exceeds q/4. Measure the noise
-    // spread over many encryptions of the all-zero message and require ≥ 6σ headroom.
-    let sumSq = 0, count = 0;
-    for (let trial = 0; trial < 4; trial++) {
+  it('keeps a wide noise margin in every session', () => {
+    // Decryption fails once a coefficient's noise exceeds q/4. The noise is
+    // dominated by e0·(hsk·sk), and ‖hsk·sk‖ varies by about 3× with the CRS and
+    // the keys, so one session says little: measure several independent ones and
+    // require ≥ 6σ headroom in each. (nR = 512 failed this in roughly one session
+    // in seven and did decrypt wrongly in the worst ones.)
+    const margins: number[] = [];
+    for (let session = 0; session < 6; session++) {
+      const sCrs = session === 0 ? crs : setup(ctx, randomSeed());
+      const sKeys = session === 0 ? keys : names.map(() => keyGen(ctx));
+      const sRegs = session === 0 ? regs : ids.map((id, u) => register(ctx, sCrs, id, sKeys[u].pk));
+      const sMpk = masterPublicKey(ctx, sRegs);
       ids.forEach((id, u) => {
-        const ct = encrypt(ctx, crs, mpk, id, new Uint8Array(0));
-        const pt = decryptStep2(ctx, decryptStep1(ctx, ct, helperKey(ctx, regs, id)), keys[u].sk);
-        for (const v of pt.value) { const c = ctx.ring.centered(v); sumSq += c * c; count++; }
+        const hsk = helperKey(ctx, sRegs, id);
+        let sumSq = 0, count = 0;
+        for (let trial = 0; trial < 4; trial++) {
+          const ct = encrypt(ctx, sCrs, sMpk, id, new Uint8Array(0));
+          const pt = decryptStep2(ctx, decryptStep1(ctx, ct, hsk), sKeys[u].sk);
+          for (const v of pt.value) { const c = ctx.ring.centered(v); sumSq += c * c; count++; }
+        }
+        margins.push(ctx.p.q / 4 / Math.sqrt(sumSq / count));
       });
     }
-    const sigma = Math.sqrt(sumSq / count);
     const hskNorm = Math.max(...ids.map((id) => helperKeyNorm(ctx, helperKey(ctx, regs, id))));
-    console.log(`[rbe] noise σ = ${sigma.toFixed(0)}, margin ${(ctx.p.q / 4 / sigma).toFixed(1)}σ, max |hsk| = ${hskNorm}`);
-    expect(ctx.p.q / 4 / sigma).toBeGreaterThan(6);
+    console.log(`[rbe] noise margin ${Math.min(...margins).toFixed(1)}σ (worst of ${margins.length}), max |hsk| = ${hskNorm}`);
+    expect(Math.min(...margins)).toBeGreaterThan(6);
   });
 });

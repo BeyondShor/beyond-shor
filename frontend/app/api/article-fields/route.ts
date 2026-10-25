@@ -35,14 +35,14 @@ function checkRateLimit(ip: string): boolean {
 
 // ─── Route handler ────────────────────────────────────────────────────────────
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   // Rate limiting — trust X-Forwarded-For only when behind Nginx (see CI/CD docs).
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
   if (!checkRateLimit(ip)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
-  const { searchParams } = new URL(request.url);
+  const { searchParams } = new URL(req.url);
   const documentId = searchParams.get('documentId')?.trim();
   const locale     = searchParams.get('locale') ?? 'de';
 

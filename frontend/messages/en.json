@@ -522,7 +522,6 @@
     "metaCommit": "commit",
     "embedLabel": "// shorsight · read-only",
     "embedTitle": "ShorSight: cryptography inventory and risk management of beyond-shor.eu",
-    "openStandalone": "Open in a new tab ↗",
     "exportTitle": "Export",
     "downloadBtn": "Download cbom.json ↓",
     "downloadNote": "CycloneDX {spec}, signed with ML-DSA-65, verifiable in your browser",
@@ -891,6 +890,7 @@
     "btnAttack": "Apply hsk_alice and sk_alice to Bob's ciphertext",
     "aliceReadsLabel": "// Alice reads (attempt)",
     "emptyOutput": "(nothing readable)",
-    "step6Done": "<b>The identity binding holds.</b> Alice can read her own messages but not Bob's. Her noise is close to 100 % of the tolerance: the coefficients are practically uniform, and rounding produces only randomness."
+    "step6Done": "<b>The identity binding holds.</b> Alice can read her own messages but not Bob's. Her noise is close to 100 % of the tolerance: the coefficients are practically uniform, and rounding produces only randomness.",
+    "param_nR_explain": "Degree of the ring R_q = Z_q[X]/(X^n_R + 1). At 256 the noise stays at least eleven standard deviations below the limit q/4 in every measured session with 26 bits. At 512 the margin depends heavily on the keys and drops to about three standard deviations in unlucky sessions, where individual decryptions fail. 1024 would need a larger modulus."
   }
 }

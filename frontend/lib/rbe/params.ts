@@ -25,12 +25,15 @@ export interface RbeParams {
   nMax: number;   // users per demo session
 }
 
-// Chosen by measurement (see __tests__/rbe.test.ts): with q < 2^26 the decryption
-// noise stays about 10σ below q/4 for nR = 512, d = 8 and CBD_1. nR = 1024 or a
-// module rank n = 2 push the noise to ≈ q/4 and would need a larger modulus.
+// Chosen by measurement (see __tests__/rbe.test.ts). The noise is dominated by
+// e0·(hsk·sk), and ‖hsk·sk‖ varies by about 3× between sessions, so the margin
+// below q/4 has to hold for the unlucky sessions, not the median one. With
+// q < 2^26, d = 8 and CBD_1: nR = 256 keeps every measured session at ≥ 11σ
+// (median ≈ 30σ); nR = 512 ranges from ≈ 3σ to 15σ and occasionally decrypts
+// wrongly. nR = 1024 or a module rank n = 2 would need a larger modulus.
 export const PARAMS: RbeParams = {
   q:    67104769,  // 2^26 − 4095, q − 1 = 2^12 · 16383
-  nR:   512,
+  nR:   256,
   n:    1,
   k:    2,
   logD: 3,

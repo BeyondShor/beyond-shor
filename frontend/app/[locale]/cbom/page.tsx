@@ -115,17 +115,7 @@ export default async function CbomPage({ params }: PageProps) {
 
         {/* ── ShorSight: own UI on desktop, compact rendering below lg ──────── */}
         <section className="hidden lg:block">
-          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <p className="mono-label text-[var(--color-text-muted)]">{t('embedLabel')}</p>
-            <a
-              href={SHORSIGHT_PAGE}
-              target="_blank"
-              rel="noopener"
-              className="font-mono text-xs text-[var(--color-primary)] transition-opacity hover:opacity-80"
-            >
-              {t('openStandalone')}
-            </a>
-          </div>
+          <p className="mono-label text-[var(--color-text-muted)] mb-3">{t('embedLabel')}</p>
           <div className="overflow-hidden rounded-xl border border-[var(--color-glass-border)] bg-[#0a0e27] shadow-[0_0_48px_var(--color-primary-glow)]">
             <ShorSightFrame src={SHORSIGHT_PAGE} title={t('embedTitle')} />
           </div>
