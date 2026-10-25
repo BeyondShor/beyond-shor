@@ -121,13 +121,52 @@ async function signAndSave(documentId: string, locale: string) {
   });
 }
 
+// ─── Go-live date ───────────────────────────────────────────────────────────
+// Strapi 5 resets publishedAt on every publish, so the date shown on the site
+// lives in its own field. It is filled once, on the first publish of each
+// locale, on both the draft and the published row (so later publishes copy it
+// along), and is never cleared afterwards. Editors can still change it by hand.
+async function recordFirstPublication(documentId: string, locale: string) {
+  setImmediate(async () => {
+    try {
+      const articles = () => (strapi.db as any).getConnection('articles');
+      const published = await articles()
+        .where({ document_id: documentId, locale })
+        .whereNotNull('published_at')
+        .first('published_at', 'go_live_at');
+      if (!published || published.go_live_at != null) return;
+
+      await articles()
+        .where({ document_id: documentId, locale })
+        .whereNull('go_live_at')
+        .update({ go_live_at: published.published_at });
+
+      strapi.log.info(`[go-live] Recorded first publication of ${documentId} (${locale})`);
+    } catch (err) {
+      strapi.log.error('[go-live] Recording first publication failed:', err);
+    }
+  });
+}
+
 export default {
+  // The admin form may still hold the empty value it loaded before the first
+  // publish filled the field in the background; don't let a save wipe it.
+  async beforeUpdate(event: any) {
+    const data = event.params?.data;
+    if (data && 'goLiveAt' in data && data.goLiveAt == null) {
+      delete data.goLiveAt;
+    }
+  },
+
   // Fires when article is created with publishedAt set ("Save & Publish" in one step,
   // or when a draft is published — Strapi 5 publishes by inserting a new row)
   async afterCreate(event: any) {
     if (event.result?.publishedAt) {
       const { documentId, locale } = event.result;
-      if (documentId) await signAndSave(documentId, locale ?? 'de');
+      if (documentId) {
+        await signAndSave(documentId, locale ?? 'de');
+        if (event.result.goLiveAt == null) await recordFirstPublication(documentId, locale ?? 'de');
+      }
     }
   },
 

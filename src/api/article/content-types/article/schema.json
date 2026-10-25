@@ -60,6 +60,12 @@
       "pluginOptions": {
         "i18n": { "localized": true }
       }
+    },
+    "goLiveAt": {
+      "type": "datetime",
+      "pluginOptions": {
+        "i18n": { "localized": true }
+      }
     }
   }
 }
