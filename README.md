@@ -84,7 +84,7 @@ beyond-shor.eu/
 │   └── public/             # Statische Assets, cbom.json, cbom.sig, shorsight/ (eingebettete ShorSight-UI)
 ├── src/
 │   └── api/                # Strapi Content Types inkl. Lifecycle Hook (Signierung)
-├── shorsight/              # Rohe CBOM, Governance-Konfiguration, build_inventory.py
+├── shorsight/              # Rohe CBOM, Governance-Konfiguration, scan.sh, build_inventory.py
 ├── scripts/
 │   └── sign-cbom.mjs       # CBOM veröffentlichen und mit ML-DSA-65 signieren
 └── README.md

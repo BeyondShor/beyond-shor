@@ -11,7 +11,7 @@
     "buckets": {
       "acute": 0,
       "quantum": 2,
-      "none": 11
+      "none": 12
     },
     "items": [
       {
@@ -257,6 +257,28 @@
         "vendorDependency": false
       },
       {
+        "component": "SHAKE256",
+        "name": "SHAKE256",
+        "primitive": "hash",
+        "category": "none",
+        "role": "confidentiality",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "not-started",
+        "vendorDependency": false
+      },
+      {
         "component": "SLH-DSA-SHA2-128f",
         "name": "SLH-DSA",
         "primitive": "signature",
@@ -312,7 +334,7 @@
         "dataClassification": "public",
         "acute": 0,
         "quantum": 2,
-        "none": 11,
+        "none": 12,
         "urgent": false,
         "verdicts": [
           "AES-256-GCM [none]",
@@ -325,6 +347,7 @@
           "ML-DSA-65 [none]",
           "ML-KEM-1024 [none]",
           "SHA-256 [none]",
+          "SHAKE256 [none]",
           "SLH-DSA-SHA2-128f [none]",
           "SLH-DSA-SHA2-128s [none]",
           "X25519 [quantum]"

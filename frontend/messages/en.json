@@ -746,7 +746,8 @@
       "sha-256": "SHA-2; Grover only reduces preimage security to 2^128, which remains safe.",
       "slh-dsa-sha2-128f": "NIST FIPS 205 SLH-DSA-SHA2-128f (SPHINCS+): fast signing, larger signatures; NIST level 1.",
       "slh-dsa-sha2-128s": "NIST FIPS 205 SLH-DSA-SHA2-128s (SPHINCS+): small signatures, slow signing; NIST level 1.",
-      "x25519": "Curve25519 key agreement; broken by Shor."
+      "x25519": "Curve25519 key agreement; broken by Shor.",
+      "shake256": "Keccak extendable-output function (SHA-3 family); Grover reduces the security level, which remains sufficient."
     },
     "treatmentNote": {
       "x25519": "Deliberate: X25519 is the classical half of the hybrid handshake and is paired with ML-KEM-1024.",
@@ -778,7 +779,7 @@
     "param_nR_name": "Ring degree n_R",
     "param_nR_demo": "{nR}",
     "param_nR_paper": "256 / 512 / 1024",
-    "param_nR_explain": "Degree of the ring R_q = Z_q[X]/(X^n_R + 1). At 512 the noise stays about ten standard deviations below the limit q/4 with 26 bits; 1024 would need a larger modulus.",
+    "param_nR_explain": "Degree of the ring R_q = Z_q[X]/(X^n_R + 1). At 256 the noise stays at least eleven standard deviations below the limit q/4 in every measured session with 26 bits. At 512 the margin depends heavily on the keys and drops to about three standard deviations in unlucky sessions, where individual decryptions fail. 1024 would need a larger modulus.",
     "param_n_name": "Module rank n",
     "param_n_demo": "{n}",
     "param_n_paper": "4",
@@ -890,7 +891,6 @@
     "btnAttack": "Apply hsk_alice and sk_alice to Bob's ciphertext",
     "aliceReadsLabel": "// Alice reads (attempt)",
     "emptyOutput": "(nothing readable)",
-    "step6Done": "<b>The identity binding holds.</b> Alice can read her own messages but not Bob's. Her noise is close to 100 % of the tolerance: the coefficients are practically uniform, and rounding produces only randomness.",
-    "param_nR_explain": "Degree of the ring R_q = Z_q[X]/(X^n_R + 1). At 256 the noise stays at least eleven standard deviations below the limit q/4 in every measured session with 26 bits. At 512 the margin depends heavily on the keys and drops to about three standard deviations in unlucky sessions, where individual decryptions fail. 1024 would need a larger modulus."
+    "step6Done": "<b>The identity binding holds.</b> Alice can read her own messages but not Bob's. Her noise is close to 100 % of the tolerance: the coefficients are practically uniform, and rounding produces only randomness."
   }
 }

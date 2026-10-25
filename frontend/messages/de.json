@@ -746,7 +746,8 @@
       "sha-256": "SHA-2; Grover senkt die Urbildsicherheit nur auf 2^128 und damit auf ein weiterhin sicheres Niveau.",
       "slh-dsa-sha2-128f": "NIST FIPS 205, SLH-DSA-SHA2-128f (SPHINCS+): schnelles Signieren, größere Signaturen; NIST-Level 1.",
       "slh-dsa-sha2-128s": "NIST FIPS 205, SLH-DSA-SHA2-128s (SPHINCS+): kleine Signaturen, langsames Signieren; NIST-Level 1.",
-      "x25519": "Curve25519-Schlüsseleinigung; durch Shor gebrochen."
+      "x25519": "Curve25519-Schlüsseleinigung; durch Shor gebrochen.",
+      "shake256": "Keccak-basierte Extendable-Output-Function (SHA-3-Familie); Grover senkt das Sicherheitsniveau, es bleibt aber ausreichend."
     },
     "treatmentNote": {
       "x25519": "Bewusste Entscheidung: X25519 ist die klassische Hälfte des Hybrid-Handshakes und wird immer zusammen mit ML-KEM-1024 eingesetzt.",
@@ -778,7 +779,7 @@
     "param_nR_name": "Ringgrad n_R",
     "param_nR_demo": "{nR}",
     "param_nR_paper": "256 / 512 / 1024",
-    "param_nR_explain": "Grad des Rings R_q = Z_q[X]/(X^n_R + 1). Mit 512 bleibt das Rauschen bei 26 Bit rund zehn Standardabweichungen unter der Grenze q/4, für 1024 bräuchte es einen größeren Modulus.",
+    "param_nR_explain": "Grad des Rings R_q = Z_q[X]/(X^n_R + 1). Mit 256 bleibt das Rauschen bei 26 Bit in jeder gemessenen Sitzung mindestens elf Standardabweichungen unter der Grenze q/4. Bei 512 hängt die Reserve stark von den Schlüsseln ab und sinkt in ungünstigen Sitzungen auf etwa drei Standardabweichungen, dann scheitern einzelne Entschlüsselungen. Für 1024 bräuchte es einen größeren Modulus.",
     "param_n_name": "Modulrang n",
     "param_n_demo": "{n}",
     "param_n_paper": "4",
@@ -890,7 +891,6 @@
     "btnAttack": "hsk_alice und sk_alice auf Bobs Chiffretext anwenden",
     "aliceReadsLabel": "// Alice liest (Versuch)",
     "emptyOutput": "(nichts Lesbares)",
-    "step6Done": "<b>Die Identitätsbindung hält.</b> Alice kann ihre eigenen Nachrichten lesen, Bobs aber nicht. Ihr Rauschen liegt bei fast 100 % der Toleranz: Die Koeffizienten sind praktisch gleichverteilt, und beim Runden entsteht nur Zufall.",
-    "param_nR_explain": "Grad des Rings R_q = Z_q[X]/(X^n_R + 1). Mit 256 bleibt das Rauschen bei 26 Bit in jeder gemessenen Sitzung mindestens elf Standardabweichungen unter der Grenze q/4. Bei 512 hängt die Reserve stark von den Schlüsseln ab und sinkt in ungünstigen Sitzungen auf etwa drei Standardabweichungen, dann scheitern einzelne Entschlüsselungen. Für 1024 bräuchte es einen größeren Modulus."
+    "step6Done": "<b>Die Identitätsbindung hält.</b> Alice kann ihre eigenen Nachrichten lesen, Bobs aber nicht. Ihr Rauschen liegt bei fast 100 % der Toleranz: Die Koeffizienten sind praktisch gleichverteilt, und beim Runden entsteht nur Zufall."
   }
 }

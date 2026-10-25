@@ -241,7 +241,8 @@ export default function InventoryTab() {
       </Panel>
 
       {/* ── libraries + sinks ─────────────────────────────────────────────── */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* min-w-0: a grid item is as wide as its longest unbreakable path otherwise */}
+      <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
         <Panel>
           <PanelTitle>{t('libTableTitle')}</PanelTitle>
           <p className="mb-4 text-xs leading-relaxed text-[var(--color-text-muted)]">
@@ -296,8 +297,8 @@ export default function InventoryTab() {
                     {s.library && <Pill>{s.library}</Pill>}
                     {where && (
                       url
-                        ? <a href={url} target="_blank" rel="noopener noreferrer" className="text-[var(--color-text-muted)] underline decoration-dotted underline-offset-2 hover:text-[var(--color-primary)]">{where} ↗</a>
-                        : <span className="text-[var(--color-text-muted)]">{where}</span>
+                        ? <a href={url} target="_blank" rel="noopener noreferrer" className="min-w-0 text-[var(--color-text-muted)] underline decoration-dotted underline-offset-2 [overflow-wrap:anywhere] hover:text-[var(--color-primary)]">{where} ↗</a>
+                        : <span className="min-w-0 text-[var(--color-text-muted)] [overflow-wrap:anywhere]">{where}</span>
                     )}
                     {s.cryptoAsset && <span className="text-[var(--color-text-muted)]">— {t('sinkCryptoAsset')}</span>}
                   </li>

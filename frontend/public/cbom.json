@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:2e5fb0d4-c4e8-4d24-a117-dbd002a59f76",
+  "serialNumber": "urn:uuid:50d883a2-85e5-433f-bf03-9821c75bf3d4",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-07-31T09:40:20.358240+00:00",
+    "timestamp": "2026-10-25T18:13:58.431005+00:00",
     "tools": {
       "components": [
         {
@@ -22,7 +22,7 @@
     "properties": [
       {
         "name": "crypto:sinkCount",
-        "value": "15"
+        "value": "17"
       },
       {
         "name": "crypto:source",
@@ -30,7 +30,7 @@
       },
       {
         "name": "crypto:provenance",
-        "value": "{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"bcdac2fdc05d9e6d08ac4fa0301bd6d3698f59c7\", \"pathPrefix\": \"\"}"
+        "value": "{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"c235ba96212274e878d410ee79cdae2477b7c8e8\", \"pathPrefix\": \"\"}"
       },
       {
         "name": "crypto:sink",
@@ -38,19 +38,15 @@
       },
       {
         "name": "crypto:sink",
-        "value": "{\"symbol\": \"request.headers.get\", \"library\": \"request\", \"source\": \"beyond-shor\", \"location\": \"frontend/app/api/article-fields/route.ts\", \"line\": 40}"
+        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/app/api/thumbnail/youtube/[id]/route.ts\", \"line\": 24}"
       },
       {
         "name": "crypto:sink",
-        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/components/RbePlayground.tsx\", \"line\": 389}"
+        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/components/RbePlayground.tsx\", \"line\": 244}"
       },
       {
         "name": "crypto:sink",
-        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/components/RbePlayground.tsx\", \"line\": 357}"
-      },
-      {
-        "name": "crypto:sink",
-        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/components/RbePlayground.tsx\", \"line\": 333}"
+        "value": "{\"symbol\": \"ws.reduce\", \"library\": \"ws\", \"source\": \"beyond-shor\", \"location\": \"frontend/components/RbePlayground.tsx\", \"line\": 90}"
       },
       {
         "name": "crypto:sink",
@@ -82,11 +78,23 @@
       },
       {
         "name": "crypto:sink",
-        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/migrate-timeline.mjs\", \"line\": 127}"
+        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/update-copy.mjs\", \"line\": 33}"
       },
       {
         "name": "crypto:sink",
-        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/migrate-timeline.mjs\", \"line\": 113}"
+        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/migrate-timeline.mjs\", \"line\": 158}"
+      },
+      {
+        "name": "crypto:sink",
+        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/migrate-timeline.mjs\", \"line\": 146}"
+      },
+      {
+        "name": "crypto:sink",
+        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/migrate-timeline.mjs\", \"line\": 133}"
+      },
+      {
+        "name": "crypto:sink",
+        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/migrate-timeline.mjs\", \"line\": 119}"
       },
       {
         "name": "crypto:sink",
@@ -671,6 +679,18 @@
             "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.keygen"
           },
           {
+            "location": "beyond-shor::scripts/sign-cbom.mjs",
+            "line": 88,
+            "additionalContext": "if (pubKey && !ml_dsa65.verify(sig, msgBytes, pubKey)) {",
+            "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.verify"
+          },
+          {
+            "location": "beyond-shor::scripts/sign-cbom.mjs",
+            "line": 77,
+            "additionalContext": "const sig      = ml_dsa65.sign(msgBytes, privKey);",
+            "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.sign"
+          },
+          {
             "location": "beyond-shor::src/api/article/content-types/article/lifecycles.ts",
             "line": 109,
             "additionalContext": "const sig = ml_dsa65.sign(msg, getPrivateKey());",
@@ -881,6 +901,73 @@
         {
           "name": "crypto:library",
           "value": "Node.js crypto"
+        },
+        {
+          "name": "crypto:source",
+          "value": "beyond-shor"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/shake256",
+      "name": "SHAKE256",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "algorithmFamily": "SHA-3",
+          "parameterSetIdentifier": "256",
+          "cryptoFunctions": [
+            "digest"
+          ]
+        },
+        "oid": "2.16.840.1.101.3.4.2.12"
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "beyond-shor::frontend/lib/rbe/sample.ts",
+            "line": 62,
+            "additionalContext": "const bytes = shake256(seed, { dkLen: words * 4 });",
+            "symbol": "@noble/hashes/sha3.js.shake256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/rbe/scheme.ts",
+            "line": 50,
+            "additionalContext": "const h = shake256(new TextEncoder().encode(`beyond-shor/rbe/id/${name}`), { dkLen: 4 });",
+            "symbol": "@noble/hashes/sha3.js.shake256"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "crypto:quantumStatus",
+          "value": "safe"
+        },
+        {
+          "name": "crypto:classicalStatus",
+          "value": "secure"
+        },
+        {
+          "name": "crypto:family",
+          "value": "hash"
+        },
+        {
+          "name": "crypto:name",
+          "value": "SHAKE256"
+        },
+        {
+          "name": "crypto:confidence",
+          "value": "resolved"
+        },
+        {
+          "name": "crypto:rationale",
+          "value": "Keccak extendable-output function; quantum-resistant at reduced level."
+        },
+        {
+          "name": "crypto:library",
+          "value": "@noble/hashes"
         },
         {
           "name": "crypto:source",
@@ -1135,6 +1222,37 @@
     },
     {
       "type": "library",
+      "bom-ref": "lib/noble-hashes",
+      "name": "@noble/hashes",
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "frontend/lib/rbe/sample.ts"
+          },
+          {
+            "location": "frontend/lib/rbe/scheme.ts"
+          }
+        ]
+      },
+      "version": "2.0.1",
+      "purl": "pkg:npm/@noble/hashes@2.0.1",
+      "properties": [
+        {
+          "name": "crypto:dependencyScope",
+          "value": "direct"
+        },
+        {
+          "name": "crypto:versionPrecision",
+          "value": "exact"
+        },
+        {
+          "name": "crypto:cveStatus",
+          "value": "unaffected"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "lib/noble-post-quantum",
       "name": "@noble/post-quantum",
       "evidence": {
@@ -1153,6 +1271,9 @@
           },
           {
             "location": "scripts/sign-articles.mjs"
+          },
+          {
+            "location": "scripts/sign-cbom.mjs"
           },
           {
             "location": "src/api/article/content-types/article/lifecycles.ts"
@@ -1303,6 +1424,9 @@
       "ref": "crypto/sha-256"
     },
     {
+      "ref": "crypto/shake256"
+    },
+    {
       "ref": "crypto/slh-dsa-sha2-128f"
     },
     {
@@ -1322,6 +1446,12 @@
       "provides": [
         "crypto/ec-p256",
         "crypto/x25519"
+      ]
+    },
+    {
+      "ref": "lib/noble-hashes",
+      "provides": [
+        "crypto/shake256"
       ]
     },
     {
@@ -1354,6 +1484,7 @@
       "dependsOn": [
         "lib/mceliece",
         "lib/noble-curves",
+        "lib/noble-hashes",
         "lib/noble-post-quantum",
         "lib/node-js-crypto",
         "lib/open-quantum-safe-liboqs-js"
