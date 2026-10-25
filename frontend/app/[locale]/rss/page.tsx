@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { getArticlesForFeed } from '@/lib/strapi';
-import type { RichTextBlock } from '@/lib/types';
+import { goLiveDate, type RichTextBlock } from '@/lib/types';
 import RssCopyButton from '@/components/RssCopyButton';
 
 interface PageProps {
@@ -81,7 +81,7 @@ export default async function RssPage({ params }: PageProps) {
                   (b): b is RichTextBlock => b.__component === 'shared.rich-text',
                 );
                 const teaser = firstRichText ? stripMarkdown(firstRichText.body) : null;
-                const pubDate = new Date(article.publishedAt).toLocaleDateString(
+                const pubDate = new Date(goLiveDate(article)).toLocaleDateString(
                   locale === 'de' ? 'de-DE' : 'en-GB',
                   { day: 'numeric', month: 'long', year: 'numeric' },
                 );

@@ -11,6 +11,7 @@ import ArticleCard from '@/components/ArticleCard';
 import TableOfContents from '@/components/TableOfContents';
 import ShareArticle from '@/components/ShareArticle';
 import { extractHeadings } from '@/lib/headings';
+import { goLiveDate } from '@/lib/types';
 
 // ─── Static Params ─────────────────────────────────────────────────────────────
 
@@ -57,7 +58,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: article.title,
       description: article.description ?? undefined,
       type: 'article',
-      publishedTime: article.publishedAt,
+      publishedTime: goLiveDate(article),
+      modifiedTime: article.updatedAt,
       authors: article.author?.name ? [article.author.name] : undefined,
       images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Beyond Shor — Post-Quantum Cryptography' }],
     },
@@ -87,8 +89,9 @@ export default async function ArticlePage({ params }: PageProps) {
   const coverUrl = getStrapiUrl(article.cover?.url);
   const authorAvatarUrl = getStrapiUrl(article.author?.avatar?.url);
 
-  const formattedDate = article.publishedAt
-    ? new Date(article.publishedAt).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-US', {
+  const publishedDate = goLiveDate(article);
+  const formattedDate = publishedDate
+    ? new Date(publishedDate).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -100,7 +103,7 @@ export default async function ArticlePage({ params }: PageProps) {
     '@type': 'Article',
     headline: article.title,
     description: article.description ?? undefined,
-    datePublished: article.publishedAt,
+    datePublished: publishedDate,
     dateModified: article.updatedAt,
     ...(coverUrl ? { image: coverUrl } : {}),
     ...(article.author
@@ -185,7 +188,7 @@ export default async function ArticlePage({ params }: PageProps) {
           )}
           {formattedDate && (
             <time
-              dateTime={article.publishedAt}
+              dateTime={publishedDate}
               className="text-xs text-[var(--color-text-muted)] font-mono"
             >
               {formattedDate}

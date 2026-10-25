@@ -72,7 +72,8 @@ export async function getArticles(
     'populate[0]': 'author',
     'populate[1]': 'author.avatar',
     'populate[2]': 'category',
-    'sort[0]': 'publishedAt:desc',
+    'sort[0]': 'goLiveAt:desc',
+    'sort[1]': 'publishedAt:desc',
     'filters[publishedAt][$notNull]': 'true',
     ...(categorySlug ? { 'filters[category][slug][$eq]': categorySlug } : {}),
     'pagination[page]': String(page),
@@ -160,7 +161,8 @@ export async function getRelatedArticles(
       'filters[category][slug][$eq]': categorySlug,
       'filters[slug][$ne]': currentSlug,
       'filters[publishedAt][$notNull]': 'true',
-      'sort[0]': 'publishedAt:desc',
+      'sort[0]': 'goLiveAt:desc',
+      'sort[1]': 'publishedAt:desc',
       'pagination[pageSize]': String(limit),
       locale,
     });
@@ -177,7 +179,8 @@ export async function getArticlesForFeed(
 ): Promise<StrapiListResponse<Article>> {
   return strapiGet<StrapiListResponse<Article>>('articles', {
     'populate[0]': 'blocks',
-    'sort[0]': 'publishedAt:desc',
+    'sort[0]': 'goLiveAt:desc',
+    'sort[1]': 'publishedAt:desc',
     'filters[publishedAt][$notNull]': 'true',
     'pagination[pageSize]': String(pageSize),
     locale,

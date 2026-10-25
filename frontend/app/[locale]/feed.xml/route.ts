@@ -1,5 +1,5 @@
 import { getArticlesForFeed } from '@/lib/strapi';
-import type { RichTextBlock } from '@/lib/types';
+import { goLiveDate, type RichTextBlock } from '@/lib/types';
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
 
@@ -57,7 +57,7 @@ export async function GET(
       );
       const teaser = firstRichText ? escapeXml(stripMarkdown(firstRichText.body)) : '';
       const link = `${SITE_URL}/${locale}/blog/${article.slug}`;
-      const pubDate = new Date(article.publishedAt).toUTCString();
+      const pubDate = new Date(goLiveDate(article)).toUTCString();
 
       return `    <item>
       <title>${escapeXml(article.title)}</title>

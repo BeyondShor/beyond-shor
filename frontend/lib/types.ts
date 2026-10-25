@@ -88,9 +88,16 @@ export interface Article {
   category: Category | null;
   blocks: ContentBlock[];
   publishedAt: string;
+  /** Go-live date. publishedAt changes on every re-publish, this does not. */
+  goLiveAt?: string | null;
   createdAt: string;
   updatedAt: string;
   pqcSignature?: string | null;
+}
+
+/** The date an article went live, falling back to its last publish for old entries. */
+export function goLiveDate(article: Pick<Article, 'publishedAt' | 'goLiveAt'>): string {
+  return article.goLiveAt ?? article.publishedAt;
 }
 
 // ─── Global / SEO ────────────────────────────────────────────────────────────

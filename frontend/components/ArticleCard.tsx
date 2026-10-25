@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { Link } from '@/i18n/navigation';
-import type { Article } from '@/lib/types';
+import { goLiveDate, type Article } from '@/lib/types';
 import { getStrapiUrl } from '@/lib/strapi';
 
 interface ArticleCardProps {
@@ -9,8 +9,9 @@ interface ArticleCardProps {
 }
 
 export default function ArticleCard({ article, locale }: ArticleCardProps) {
-  const formattedDate = article.publishedAt
-    ? new Date(article.publishedAt).toLocaleDateString(
+  const date = goLiveDate(article);
+  const formattedDate = date
+    ? new Date(date).toLocaleDateString(
         locale === 'de' ? 'de-DE' : 'en-US',
         { year: 'numeric', month: 'long', day: 'numeric' },
       )
@@ -72,7 +73,7 @@ export default function ArticleCard({ article, locale }: ArticleCardProps) {
           {/* Date */}
           {formattedDate && (
             <time
-              dateTime={article.publishedAt}
+              dateTime={date}
               className="text-xs text-[var(--color-text-muted)] font-mono"
             >
               {formattedDate}
