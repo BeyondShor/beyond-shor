@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     template: '%s | Beyond Shor',
   },
   description:
-    'Expert insights on Post-Quantum Cryptography for C-Suite executives and security professionals.',
+    'In-depth articles on post-quantum cryptography: how the algorithms work, what the standards say, and how to plan a migration.',
   keywords: [
     'post-quantum cryptography',
     'PQC',

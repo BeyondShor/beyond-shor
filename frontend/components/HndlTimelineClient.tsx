@@ -10,7 +10,11 @@ type TEvent   = TimelineEvent;
 
 const START_YEAR  = 1993.5;
 const END_YEAR    = 2041.5;
-const PX_PER_YEAR = 76;
+// Two-speed axis: the sparse early decades are compressed, the dense
+// period from 2021 onward gets enough room for its cards.
+const BREAK_YEAR      = 2021.5;
+const PX_PER_YEAR_OLD = 40;
+const PX_PER_YEAR     = 150;
 const PAD_L       = 64;
 const AXIS_Y      = 316;
 const TRACK_H     = 610;
@@ -18,13 +22,19 @@ const DOT_R       = 7;
 const CARD_W      = 148;
 const CARD_H      = 80;
 const STEM_BASE   = 20;
-const STEM_STEP   = 54;
+const STEM_STEP   = 88;   // > CARD_H, so cards on neighbouring levels never overlap
+const MAX_LEVEL   = 3;    // levels per side that fit inside TRACK_H
 const now = new Date();
 const NOW_YEAR = now.getFullYear() + now.getMonth() / 12;
-const TOTAL_W     = Math.ceil((END_YEAR - START_YEAR) * PX_PER_YEAR) + PAD_L + 48;
+const CURRENT_YEAR = now.getFullYear();
+const BREAK_X     = (BREAK_YEAR - START_YEAR) * PX_PER_YEAR_OLD;
+const TOTAL_W     = Math.ceil(BREAK_X + (END_YEAR - BREAK_YEAR) * PX_PER_YEAR) + PAD_L + 48;
 
 function xPos(year: number): number {
-  return Math.round((year - START_YEAR) * PX_PER_YEAR) + PAD_L;
+  const offset = year <= BREAK_YEAR
+    ? (year - START_YEAR) * PX_PER_YEAR_OLD
+    : BREAK_X + (year - BREAK_YEAR) * PX_PER_YEAR;
+  return Math.round(offset) + PAD_L;
 }
 
 // ─── Category config ──────────────────────────────────────────────────────────
@@ -35,6 +45,7 @@ const CAT: Record<Category, { dot: string; glow: string; bg: string; labelDe: st
   HARDWARE:   { dot: '#8b5cf6', glow: 'rgba(139,92,246,0.5)',  bg: 'rgba(139,92,246,0.10)',  labelDe: 'Hardware',    labelEn: 'Hardware'   },
   REGULATION: { dot: '#f59e0b', glow: 'rgba(245,158,11,0.5)',  bg: 'rgba(245,158,11,0.10)',  labelDe: 'Regulatorik', labelEn: 'Regulation' },
   ESTIMATE:   { dot: '#f97316', glow: 'rgba(249,115,22,0.5)',  bg: 'rgba(249,115,22,0.10)',  labelDe: 'Prognose',    labelEn: 'Estimate'   },
+  INDUSTRY:   { dot: '#ec4899', glow: 'rgba(236,72,153,0.5)',  bg: 'rgba(236,72,153,0.10)',  labelDe: 'Industrie',   labelEn: 'Industry'   },
 };
 
 // ─── Lane assignment ──────────────────────────────────────────────────────────
@@ -51,7 +62,7 @@ function assignLanes(events: TEvent[]): Lane[] {
     let placed = false;
 
     outer: for (const side of prefer) {
-      for (let lv = 1; lv <= 6; lv++) {
+      for (let lv = 1; lv <= MAX_LEVEL; lv++) {
         const key = `${side}-${lv}`;
         if (x >= (taken[key] ?? -999) + 10) {
           result.push({ side, level: lv });
@@ -61,7 +72,7 @@ function assignLanes(events: TEvent[]): Lane[] {
         }
       }
     }
-    if (!placed) result.push({ side: 'top', level: 7 });
+    if (!placed) result.push({ side: 'top', level: MAX_LEVEL });
   }
   return result;
 }
@@ -74,13 +85,14 @@ const QDAY_MIN = 2028;
 const QDAY_MAX = 2040;
 
 const QDAY_LABELS: Array<{ year: number; de: string; en: string }> = [
-  { year: 2028, de: 'Frühestmöglich (Gartner)',                          en: 'Earliest possible (Gartner)'                        },
-  { year: 2030, de: 'Wahrscheinlichster Beginn (NIST, WEF)',           en: 'Most likely start (NIST, WEF)'                      },
-  { year: 2031, de: '50 % Wahrscheinlichkeit nach Michele Mosca',       en: '50% probability according to Michele Mosca'         },
-  { year: 2033, de: 'NSA CNSA 2.0 — Vollmigrationsziel der USA',        en: 'NSA CNSA 2.0 — US full migration target'            },
-  { year: 2034, de: '50 % Wahrscheinlichkeit laut Global Risk Institute',en: '50% probability according to Global Risk Institute' },
-  { year: 2035, de: 'Obere Grenze des wahrscheinlichen WEF-Fensters',   en: 'Upper bound of the likely WEF window'               },
-  { year: 2040, de: 'Konservative Obergrenze (BSI, Stand 2024)',         en: 'Conservative upper bound (BSI, as of 2024)'         },
+  { year: 2028, de: 'Pessimistisches Szenario, noch vor den Zieljahren von Google und Cloudflare', en: 'Pessimistic scenario, ahead of Google\'s and Cloudflare\'s target year' },
+  { year: 2029, de: 'Gartner: asymmetrische Kryptografie ab hier unsicher; Zieljahr von Google und Cloudflare', en: 'Gartner: asymmetric cryptography unsafe from here; Google\'s and Cloudflare\'s target year' },
+  { year: 2030, de: 'NIST will RSA und ECC ab hier abkündigen; EU-Frist für Hochrisiko-Systeme',      en: 'NIST plans to deprecate RSA and ECC; EU deadline for high-risk systems' },
+  { year: 2031, de: '50 % Wahrscheinlichkeit nach Michele Mosca (Schätzung von 2015)',           en: '50% probability according to Michele Mosca (2015 estimate)' },
+  { year: 2033, de: 'CNSA 2.0: die meisten US-Systemklassen nur noch quantensicher',             en: 'CNSA 2.0: most US system categories quantum-safe only' },
+  { year: 2034, de: 'Gartner: asymmetrische Kryptografie ab hier vollständig brechbar',          en: 'Gartner: asymmetric cryptography fully breakable from here' },
+  { year: 2036, de: 'GRI-Umfrage 2026: 28 bis 49 % Wahrscheinlichkeit für einen CRQC bis hier', en: 'GRI survey 2026: 28 to 49% probability of a CRQC by here' },
+  { year: 2040, de: 'Konservative Obergrenze des BSI (Stand Ende 2024)',                       en: 'Conservative upper bound from the BSI (as of late 2024)' },
 ];
 
 function getQdayLabel(year: number, locale: string): string {
@@ -90,7 +102,7 @@ function getQdayLabel(year: number, locale: string): string {
 
 // ─── Year axis ticks ──────────────────────────────────────────────────────────
 
-const TICK_YEARS = [1994, 2000, 2005, 2010, 2015, 2020, 2025, 2030, 2035, 2040];
+const TICK_YEARS = [1994, 2000, 2005, 2010, 2015, 2020, 2022, 2024, 2026, 2028, 2030, 2032, 2034, 2036, 2038, 2040];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -98,7 +110,7 @@ export default function HndlTimelineClient({ events, locale }: { events: TEvent[
   const en = locale === 'en';
   const lanes = useMemo(() => assignLanes(events), [events]);
   const [activeCategories, setActiveCategories] = useState<Set<Category>>(
-    new Set<Category>(['HISTORY', 'STANDARD', 'HARDWARE', 'REGULATION', 'ESTIMATE']),
+    new Set<Category>(Object.keys(CAT) as Category[]),
   );
   const [qdayYear, setQdayYear] = useState(2030);
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
@@ -151,8 +163,8 @@ export default function HndlTimelineClient({ events, locale }: { events: TEvent[
           </h2>
           <p className="text-[var(--color-text-muted)] text-sm max-w-2xl leading-relaxed">
             {en
-              ? 'From Shor\'s algorithm to the NIST standards and regulatory deadlines — nobody knows exactly when the cryptographically relevant quantum computer will arrive. What we do know: a full migration takes 7–10 years. Those still waiting today are waiting too long.'
-              : 'Von Shors Algorithmus bis zu den NIST-Standards und regulatorischen Deadlines — wann der kryptografisch relevante Quantencomputer kommt, weiß niemand genau. Was wir wissen: Eine vollständige Migration dauert 7–10 Jahre. Wer heute noch wartet, wartet zu lang.'}
+              ? 'From Shor\'s algorithm to the NIST standards and regulatory deadlines. Nobody knows exactly when a cryptographically relevant quantum computer will exist. What we do know is that large organisations typically need many years for a full migration, so waiting for certainty means starting too late.'
+              : 'Von Shors Algorithmus bis zu den NIST-Standards und regulatorischen Fristen. Wann es einen kryptografisch relevanten Quantencomputer gibt, weiß niemand genau. Sicher ist nur, dass eine vollständige Migration in großen Organisationen viele Jahre dauert. Wer auf Gewissheit wartet, fängt zu spät an.'}
           </p>
         </div>
 
@@ -223,7 +235,7 @@ export default function HndlTimelineClient({ events, locale }: { events: TEvent[
               }}
               aria-hidden="true"
             >
-              Q-Day-Fenster
+              {en ? 'Q-Day window' : 'Q-Day-Fenster'}
             </div>
 
             {/* Q-Day marker line (slider position) */}
@@ -288,6 +300,23 @@ export default function HndlTimelineClient({ events, locale }: { events: TEvent[
               }}
               aria-hidden="true"
             />
+
+            {/* Axis break: the scale changes here */}
+            <div
+              className="absolute font-mono text-[11px] pointer-events-none"
+              style={{
+                left:      xPos(BREAK_YEAR),
+                top:       AXIS_Y - 9,
+                transform: 'translateX(-50%)',
+                color:     'var(--color-text-muted)',
+                background: 'var(--color-bg-surface)',
+                padding:   '0 2px',
+              }}
+              title={en ? 'Scale changes here' : 'Ab hier anderer Maßstab'}
+              aria-hidden="true"
+            >
+              ≈
+            </div>
 
             {/* Year ticks + labels */}
             {TICK_YEARS.map(yr => {
@@ -546,12 +575,12 @@ export default function HndlTimelineClient({ events, locale }: { events: TEvent[
             <span className="text-red-400 text-base leading-none mt-0.5 flex-none">⚠</span>
             <p className="text-sm font-semibold text-red-300 leading-snug">
               {en
-                ? <>No matter when Q-Day arrives — your data is <span className="text-red-200">at risk today</span>.</>
-                : <>Egal wann Q-Day kommt — deine Daten sind <span className="text-red-200">bereits heute</span> in Gefahr.</>}
+                ? <>Whenever Q-Day arrives, data you send <span className="text-red-200">today</span> is already exposed.</>
+                : <>Egal, wann Q-Day kommt: Was du <span className="text-red-200">heute</span> verschickst, ist schon jetzt gefährdet.</>}
               <span className="block mt-1 text-xs font-normal text-red-400/80">
                 {en
-                  ? 'Data intercepted today can be decrypted after Q-Day. Anything with >7 years of confidentiality requirements is affected now.'
-                  : 'Wer heute Daten abfängt, kann sie nach Q-Day entschlüsseln. Alles mit >7 Jahren Schutzbedarf ist jetzt betroffen.'}
+                  ? `Traffic recorded today can be decrypted after Q-Day. If Q-Day came in ${qdayYear}, anything that must stay confidential for more than ${Math.max(qdayYear - CURRENT_YEAR, 0)} years would already be affected.`
+                  : `Wer heute mitschneidet, kann nach Q-Day entschlüsseln. Käme Q-Day ${qdayYear}, wäre alles schon jetzt betroffen, was länger als ${Math.max(qdayYear - CURRENT_YEAR, 0)} Jahre vertraulich bleiben muss.`}
               </span>
             </p>
           </div>

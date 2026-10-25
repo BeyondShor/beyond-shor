@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const t = await getTranslations({ locale, namespace: 'about' });
   return {
     title: t('fallbackTitle'),
-    description: 'About this Post-Quantum Cryptography blog and its authors.',
+    description: t('metaDescription'),
     robots: { index: false, follow: false },
   };
 }

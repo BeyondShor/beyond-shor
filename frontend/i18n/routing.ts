@@ -14,6 +14,7 @@ export const routing = defineRouting({
     '/rss':           '/rss',
     '/verify':        '/verify',
     '/rbe':          '/rbe',
+    '/anderswo':   { de: '/anderswo',   en: '/elsewhere'      },
     '/kontakt':    { de: '/kontakt',    en: '/contact'        },
     '/impressum':  { de: '/impressum',  en: '/imprint'        },
     '/datenschutz': { de: '/datenschutz', en: '/privacy-policy' },

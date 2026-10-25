@@ -109,12 +109,11 @@ const KEM_DISPLAY_NAMES: Record<KemAlgorithm, string> = {
 interface ImplInfoPanelProps {
   toggleLabel: string; packageLabel: string; snippetLabel: string;
   packageName: string; packageUrl: string; snippetHtml: string; prose: string;
-  articleIntro: string; articleSlug: string | null; articleLinkText: string;
-  articleComingSoon: string;
+  articleIntro: string; articleSlug: string; articleLinkText: string;
 }
 
 function ImplInfoPanel({ toggleLabel, packageLabel, snippetLabel, packageName, packageUrl,
-  snippetHtml, prose, articleIntro, articleSlug, articleLinkText, articleComingSoon,
+  snippetHtml, prose, articleIntro, articleSlug, articleLinkText,
 }: ImplInfoPanelProps) {
   const [open, setOpen] = useState(false);
   return (
@@ -139,9 +138,7 @@ function ImplInfoPanel({ toggleLabel, packageLabel, snippetLabel, packageName, p
           </div>
           <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">{prose}</p>
           <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-            {articleSlug
-              ? <>{articleIntro}{' '}<Link href={{ pathname: '/blog/[slug]', params: { slug: articleSlug } }} className="text-[var(--color-primary)] hover:underline">{articleLinkText}</Link>.</>
-              : <span className="text-[var(--color-text-muted)]">{articleComingSoon}</span>}
+            {articleIntro}{' '}<Link href={{ pathname: '/blog/[slug]', params: { slug: articleSlug } }} className="text-[var(--color-primary)] hover:underline">{articleLinkText}</Link>.
           </p>
         </div>
       )}
@@ -477,44 +474,8 @@ function MallorySummaryCard({ kem, attackerMode, quantumMode }: {
 
 // ── RealWorldCard ──────────────────────────────────────────────────────────
 
-const REAL_WORLD_ENTRIES = [
-  {
-    nameKey: 'realWorldChromeName',
-    descKey: 'realWorldChromeDesc',
-    href:    'https://security.googleblog.com/2023/08/towards-quantum-resilient-security-keys.html',
-  },
-  {
-    nameKey: 'realWorldSignalName',
-    descKey: 'realWorldSignalDesc',
-    href:    'https://signal.org/blog/pqxdh/',
-  },
-  {
-    nameKey: 'realWorldAppleName',
-    descKey: 'realWorldAppleDesc',
-    href:    'https://security.apple.com/blog/imessage-pq3/',
-  },
-  {
-    nameKey: 'realWorldNistName',
-    descKey: 'realWorldNistDesc',
-    href:    'https://csrc.nist.gov/pubs/fips/203/final',
-  },
-  {
-    nameKey: 'realWorldMetaName',
-    descKey: 'realWorldMetaDesc',
-    href:    'https://engineering.fb.com/2024/05/22/security/post-quantum-ready-encryption-signal-protocol/',
-  },
-] as const;
-
-function RealWorldCard({ items }: { items?: RealWorldItem[] }) {
+function RealWorldCard({ items }: { items: RealWorldItem[] }) {
   const t = useTranslations('playground');
-  // Use Strapi-sourced items if available; fall back to hardcoded i18n entries
-  const entries: RealWorldItem[] = items && items.length > 0
-    ? items
-    : REAL_WORLD_ENTRIES.map(({ nameKey, descKey, href }) => ({
-        name:        t(nameKey),
-        description: t(descKey),
-        link:        href,
-      }));
   return (
     <div className="glass-panel rounded-xl border border-[var(--color-glass-border)] p-5 flex flex-col gap-4 animate-fade-up">
       <div className="flex flex-col gap-1">
@@ -523,7 +484,7 @@ function RealWorldCard({ items }: { items?: RealWorldItem[] }) {
       </div>
       <table className="w-full border-collapse">
         <tbody>
-          {entries.map(({ name, description, link }) => (
+          {items.map(({ name, description, link }) => (
             <tr key={name} className="border-b border-[var(--color-glass-border)]/40 last:border-0 align-top">
               <td className="py-2 pr-5 shrink-0 w-px whitespace-nowrap">
                 {link ? (
@@ -1509,15 +1470,15 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
               packageUrl="https://github.com/paulmillr/noble-post-quantum"
               snippetHtml={snippetHtmls.mlkem} prose={t('mlkemImplProse')}
               articleIntro={t('implArticleIntro')} articleSlug="ML-KEM"
-              articleLinkText={t('implArticleLink')} articleComingSoon="" />
+              articleLinkText={t('implArticleLink')} />
           )}
           {kem === 'mceliece' && (
             <ImplInfoPanel toggleLabel={t('implToggle')} packageLabel={t('implPackageLabel')}
               snippetLabel={t('implSnippetLabel')} packageName="mceliece"
               packageUrl="https://github.com/cyph/pqcrypto.js/tree/master/packages/mceliece"
               snippetHtml={snippetHtmls.mceliece} prose={t('mcElieceImplProse')}
-              articleIntro={t('implArticleIntro')} articleSlug={null}
-              articleLinkText={t('implArticleLink')} articleComingSoon={t('implArticleComingSoon')} />
+              articleIntro={t('implArticleIntro')} articleSlug="mceliece"
+              articleLinkText={t('implArticleLink')} />
           )}
           {kem === 'frodokem' && (
             <ImplInfoPanel toggleLabel={t('implToggle')} packageLabel={t('implPackageLabel')}
@@ -1525,7 +1486,7 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
               packageUrl="https://github.com/openforge-sh/liboqs-node"
               snippetHtml={snippetHtmls.frodokem} prose={t('frodoKemImplProse')}
               articleIntro={t('implArticleIntro')} articleSlug="frodokem"
-              articleLinkText={t('implArticleLink')} articleComingSoon="" />
+              articleLinkText={t('implArticleLink')} />
           )}
 
           {/* Plaintext input */}
@@ -1957,7 +1918,9 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
             )}
 
             {/* Real-World context */}
-            {phase === 'done' && <RealWorldCard items={realWorldItems} />}
+            {phase === 'done' && realWorldItems && realWorldItems.length > 0 && (
+              <RealWorldCard items={realWorldItems} />
+            )}
 
             {/* Mallory Summary */}
             {(attackerMode || quantumMode) && phase === 'done' && s1 && (

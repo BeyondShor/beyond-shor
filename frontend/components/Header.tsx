@@ -14,6 +14,7 @@ export default function Header() {
   const NAV_LINKS = [
     { href: '/blog'       as const, label: t('blog')       },
     { href: '/about'      as const, label: t('about')      },
+    { href: '/anderswo'   as const, label: t('elsewhere')  },
     { href: '/cbom'       as const, label: t('cbom')       },
     { href: '/verify'     as const, label: t('verify')     },
     { href: '/playground' as const, label: t('playground') },
@@ -56,7 +57,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop navigation */}
-          <nav aria-label="Main navigation" className="hidden sm:block">
+          <nav aria-label="Main navigation" className="hidden md:block">
             <ul className="flex items-center gap-6 list-none m-0 p-0">
               {NAV_LINKS.map(({ href, label }) => {
                 const active = isActive(href);
@@ -85,7 +86,7 @@ export default function Header() {
           </nav>
 
           {/* Mobile: language switcher + hamburger */}
-          <div className="flex items-center gap-3 sm:hidden">
+          <div className="flex items-center gap-3 md:hidden">
             <LanguageSwitcher />
             <button
               className={`flex flex-col justify-center items-center gap-[5px] w-8 h-8 rounded focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]${menuOpen ? ' hamburger-open' : ''}`}

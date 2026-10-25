@@ -1,7 +1,6 @@
 import fs from 'fs';
-import path from 'path';
 
-export type TimelineCategory = 'HISTORY' | 'STANDARD' | 'HARDWARE' | 'REGULATION' | 'ESTIMATE';
+export type TimelineCategory = 'HISTORY' | 'STANDARD' | 'HARDWARE' | 'REGULATION' | 'ESTIMATE' | 'INDUSTRY';
 
 export interface TimelineEvent {
   year: number;   // fractional year for x-position
@@ -12,35 +11,25 @@ export interface TimelineEvent {
   caveat?: string;
 }
 
-// Maps German month names (and shorthands) to a fractional year offset
-const MONTH_FRACTION: Record<string, number> = {
-  'Januar':   1  / 12,
-  'Februar':  2  / 12,
-  'März':     3  / 12,
-  'April':    4  / 12,
-  'Mai':      5  / 12,
-  'Juni':     6  / 12,
-  'Juli':     7  / 12,
-  'August':   8  / 12,
-  'September':9  / 12,
-  'Oktober':  10 / 12,
-  'November': 11 / 12,
-  'Dezember': 11 / 12,
-  'Ende':     11 / 12,
-  '31.12.':   11 / 12,
+// Month qualifiers used in the markdown headings, e.g. "### 2024 (August)".
+// Maps to the month number (1–12); "Ende" / "Late" / "31.12." count as December.
+const MONTH_NUM: Record<string, number> = {
+  'Januar': 1, 'Februar': 2, 'März': 3, 'April': 4, 'Mai': 5, 'Juni': 6,
+  'Juli': 7, 'August': 8, 'September': 9, 'Oktober': 10, 'November': 11, 'Dezember': 12,
+  'January': 1, 'February': 2, 'March': 3, 'May': 5, 'June': 6,
+  'July': 7, 'October': 10, 'December': 12,
+  'Ende': 12, 'Late': 12, '31.12.': 12, '31 Dec': 12,
 };
 
-// Short labels for the card display
-const MONTH_SHORT: Record<string, string> = {
-  'Januar': 'Jan', 'Februar': 'Feb', 'März': 'Mrz', 'April': 'Apr',
-  'Mai': 'Mai', 'Juni': 'Jun', 'Juli': 'Jul', 'August': 'Aug',
-  'September': 'Sep', 'Oktober': 'Okt', 'November': 'Nov',
-  'Dezember': 'Dez', 'Ende': 'Dez', '31.12.': 'Dez',
+// Short labels for the card display — same as the Strapi path in lib/strapi.ts
+const MONTH_SHORT: Record<'de' | 'en', string[]> = {
+  de: ['Jan', 'Feb', 'Mrz', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
 };
 
-const VALID_CATEGORIES = new Set<string>(['HISTORY', 'STANDARD', 'HARDWARE', 'REGULATION', 'ESTIMATE']);
+export const VALID_CATEGORIES = new Set<string>(['HISTORY', 'STANDARD', 'HARDWARE', 'REGULATION', 'ESTIMATE', 'INDUSTRY']);
 
-function parseHeading(raw: string): { baseYear: number; fraction: number; label: string } {
+function parseHeading(raw: string, locale: 'de' | 'en'): { baseYear: number; fraction: number; label: string } {
   const approx = raw.startsWith('~');
   const clean = raw.replace(/^~/, '').trim();
 
@@ -52,14 +41,15 @@ function parseHeading(raw: string): { baseYear: number; fraction: number; label:
   }
 
   const baseYear = parseInt(match[1], 10);
-  const qualifier = match[2]?.trim() ?? '';
-  const fraction = MONTH_FRACTION[qualifier] ?? 0;
+  const month = MONTH_NUM[match[2]?.trim() ?? ''];
+  // Same convention as getTimelineEvents(): January sits on the year tick
+  const fraction = month ? (month - 1) / 12 : 0;
 
   let label: string;
   if (approx) {
     label = `~${baseYear}`;
-  } else if (qualifier && MONTH_SHORT[qualifier]) {
-    label = `${baseYear} (${MONTH_SHORT[qualifier]})`;
+  } else if (month) {
+    label = `${baseYear} (${MONTH_SHORT[locale][month - 1]})`;
   } else {
     label = `${baseYear}`;
   }
@@ -78,9 +68,8 @@ function extractField(block: string, ...candidates: string[]): string | undefine
   return undefined;
 }
 
-export function parseTimeline(filePath?: string): TimelineEvent[] {
-  const target = filePath ?? path.join(process.cwd(), 'data', 'timeline.md');
-  const content = fs.readFileSync(target, 'utf-8');
+export function parseTimeline(filePath: string, locale: 'de' | 'en' = 'de'): TimelineEvent[] {
+  const content = fs.readFileSync(filePath, 'utf-8');
 
   // Split on "---" separators (with surrounding newlines)
   const blocks = content.split(/\n---\n/);
@@ -102,7 +91,7 @@ export function parseTimeline(filePath?: string): TimelineEvent[] {
     if (!title || !categoryRaw || !desc) continue;
     if (!VALID_CATEGORIES.has(categoryRaw)) continue;
 
-    const { baseYear, fraction, label } = parseHeading(headingMatch[1].trim());
+    const { baseYear, fraction, label } = parseHeading(headingMatch[1].trim(), locale);
     const caveat = extractField(block, 'Caveat'); // same in both languages
 
     // Deduplicate: give same-year-same-fraction entries a small offset
@@ -120,5 +109,5 @@ export function parseTimeline(filePath?: string): TimelineEvent[] {
     });
   }
 
-  return events;
+  return events.sort((a, b) => a.year - b.year);
 }

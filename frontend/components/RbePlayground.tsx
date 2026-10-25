@@ -519,15 +519,15 @@ export default function RbePlayground() {
           <p>
             {locale === 'de' ? (
               <>
-                In klassischer PKI muss Alice ein <strong className="text-[var(--color-text-base)]">Zertifikat</strong> von
-                einer Zertifizierungsstelle (CA) signieren lassen. Bob muss dieses Zertifikat prüfen,
-                bevor er Alice schreiben kann — die CA ist ein zentraler <strong className="text-[var(--color-text-base)]">Vertrauensanker</strong> mit weitreichenden Befugnissen.
+                In klassischer PKI lässt Alice sich ein <strong className="text-[var(--color-text-base)]">Zertifikat</strong> von
+                einer Zertifizierungsstelle (CA) signieren. Bob prüft dieses Zertifikat, bevor er Alice
+                schreibt. Die CA ist damit ein zentraler <strong className="text-[var(--color-text-base)]">Vertrauensanker</strong> mit weitreichenden Befugnissen.
               </>
             ) : (
               <>
-                In classical PKI, Alice must have a <strong className="text-[var(--color-text-base)]">certificate</strong> signed
-                by a Certificate Authority (CA). Bob must verify that certificate before he can write to Alice —
-                the CA is a central <strong className="text-[var(--color-text-base)]">trust anchor</strong> with far-reaching powers.
+                In classical PKI, Alice gets a <strong className="text-[var(--color-text-base)]">certificate</strong> signed
+                by a Certificate Authority (CA), and Bob checks that certificate before writing to her.
+                That makes the CA a central <strong className="text-[var(--color-text-base)]">trust anchor</strong> with far-reaching powers.
               </>
             )}
           </p>
@@ -537,8 +537,8 @@ export default function RbePlayground() {
                 <strong className="text-[var(--color-text-base)]">Registration-Based Encryption (RBE)</strong> geht
                 einen anderen Weg: Ein <strong className="text-[var(--color-text-base)]">Key Curator (KC)</strong> übernimmt
                 die Registrierung, kennt aber <em>keinen einzigen Secret Key</em>. Jeder Nutzer generiert sein Schlüsselpaar
-                lokal auf seinem Gerät und übergibt nur den Public Key an den KC. Dieser addiert alle Public Keys zu einem
-                einzigen aggregierten Wert <Mono>mpkAgg</Mono> auf — der Sender braucht nur diesen einen Wert
+                lokal auf seinem Gerät und übergibt nur den Public Key an den KC. Der KC addiert alle Public Keys zu einem
+                einzigen aggregierten Wert <Mono>mpkAgg</Mono>. Zum Verschlüsseln braucht man nur diesen Wert
                 und den <strong className="text-[var(--color-text-base)]">Namen des Empfängers</strong> (seine Identität).
               </>
             ) : (
@@ -547,7 +547,7 @@ export default function RbePlayground() {
                 a different approach: a <strong className="text-[var(--color-text-base)]">Key Curator (KC)</strong> handles
                 registration but <em>knows not a single secret key</em>. Each user generates their key pair
                 locally on their device and submits only the public key to the KC. The KC adds all public keys into
-                a single aggregated value <Mono>mpkAgg</Mono> — the sender needs only this one value
+                a single aggregated value <Mono>mpkAgg</Mono>. To encrypt, you only need this value
                 and the <strong className="text-[var(--color-text-base)]">recipient&apos;s name</strong> (their identity).
               </>
             )}
@@ -556,20 +556,20 @@ export default function RbePlayground() {
             {locale === 'de' ? (
               <>
                 Eine <strong className="text-[var(--color-text-base)]">Identität</strong> ist dabei einfach ein
-                eindeutiger String — hier die Namen{' '}
+                eindeutiger String, hier die Namen{' '}
                 <Mono>&quot;alice&quot;</Mono>, <Mono>&quot;bob&quot;</Mono>, <Mono>&quot;charlie&quot;</Mono>. Ein deterministischer
-                Hash-Algorithmus wandelt diesen String in ein Polynom um, das mathematisch in den Chiffretext
-                eingebacken wird. Dadurch kann Charlie nachweisbar <em>nicht</em> Bobs Nachricht lesen,
-                selbst wenn er seinen eigenen legitimen Schlüssel kennt — das wird in Schritt 6 live demonstriert.
+                Hash-Algorithmus macht aus diesem String ein Polynom, das fest in den Chiffretext eingerechnet wird.
+                Deshalb kann Alice Bobs Nachricht <em>nicht</em> lesen, obwohl sie selbst registriert ist und einen
+                gültigen Schlüssel hat. Das probieren wir in Schritt 6 aus.
               </>
             ) : (
               <>
                 An <strong className="text-[var(--color-text-base)]">identity</strong> is simply a
-                unique string — here the names{' '}
+                unique string, here the names{' '}
                 <Mono>&quot;alice&quot;</Mono>, <Mono>&quot;bob&quot;</Mono>, <Mono>&quot;charlie&quot;</Mono>. A deterministic
-                hash algorithm turns this string into a polynomial that is mathematically baked into the ciphertext.
-                This means Charlie demonstrably <em>cannot</em> read Bob&apos;s message,
-                even though he is a legitimate user with his own valid key — this is demonstrated live in step 6.
+                hash algorithm turns this string into a polynomial that is built into the ciphertext.
+                That is why Alice <em>cannot</em> read Bob&apos;s message, even though she is registered herself
+                and holds a valid key. Step 6 tries exactly that.
               </>
             )}
           </p>
@@ -870,7 +870,7 @@ export default function RbePlayground() {
                     {polyDiffers(s.ctBob.c0_1, s.ctAlice.c0_1)
                       ? t('step4ObsDiffResult')
                       : t('step4ObsCollideResult')}.{' '}
-                    Diese Bindung ist es, die verhindert, dass Charlie Bobs Nachricht lesen kann.
+                    Diese Bindung verhindert später, dass Alice Bobs Nachricht lesen kann.
                   </>
                 ) : (
                   <>
@@ -879,7 +879,7 @@ export default function RbePlayground() {
                     {polyDiffers(s.ctBob.c0_1, s.ctAlice.c0_1)
                       ? t('step4ObsDiffResult')
                       : t('step4ObsCollideResult')}.{' '}
-                    This binding is exactly what prevents Charlie from reading Bob&apos;s message.
+                    This binding is what later stops Alice from reading Bob&apos;s message.
                   </>
                 )}
               </Callout>
@@ -968,16 +968,16 @@ export default function RbePlayground() {
                     Weder der KC (kennt kein <Mono>sk</Mono>)
                     noch ein Angreifer mit nur <Mono>hsk</Mono> kann die Nachricht lesen.
                     Erst die Kombination aus dem server-seitigen <Mono>hsk</Mono> und dem
-                    browser-lokalen <Mono>sk</Mono> kollabiert das Rauschen auf <Mono>r·e ≈ 0</Mono>.
-                    Kein Master-Geheimnis. Kein Key Escrow.
+                    browser-lokalen <Mono>sk</Mono> drückt das Rauschen auf <Mono>r·e ≈ 0</Mono>.
+                    Der KC kann trotz seiner Trapdoor keine Nachricht entschlüsseln, es gibt also kein Key Escrow.
                   </>
                 ) : (
                   <>
                     Neither the KC (it knows no <Mono>sk</Mono>)
                     nor an attacker with only <Mono>hsk</Mono> can read the message.
                     Only the combination of the server-side <Mono>hsk</Mono> and the
-                    browser-local <Mono>sk</Mono> collapses the noise to <Mono>r·e ≈ 0</Mono>.
-                    No master secret. No key escrow.
+                    browser-local <Mono>sk</Mono> brings the noise down to <Mono>r·e ≈ 0</Mono>.
+                    Despite its trapdoor, the KC cannot decrypt any message, so there is no key escrow.
                   </>
                 )}
               </Callout>
@@ -1133,13 +1133,13 @@ export default function RbePlayground() {
                         <>
                           Obwohl Alice eine legitime Empfängerin ist und ihren eigenen Chiffretext
                           korrekt entschlüsseln kann, schützt die Identitätsbindung in <Mono>c0_1</Mono>{' '}
-                          Bobs Nachricht vor ihr. Kein Empfänger kann fremde Nachrichten lesen.
+                          Bobs Nachricht vor ihr. Nachrichten an andere bleiben für sie unlesbar.
                         </>
                       ) : (
                         <>
                           Even though Alice is a legitimate recipient who can correctly decrypt her own ciphertext,
                           the identity binding in <Mono>c0_1</Mono> protects Bob&apos;s message from her.
-                          No recipient can read messages intended for others.
+                          Messages meant for someone else stay unreadable to her.
                         </>
                       )}
                     </Callout>

@@ -510,6 +510,47 @@ export interface ApiAboutAbout extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiAppearanceAppearance extends Struct.CollectionTypeSchema {
+  collectionName: 'appearances';
+  info: {
+    description: 'Public work outside Beyond Shor: videos, guest articles, talks, podcasts. One entry per item, shown in both locales.';
+    displayName: 'Appearance';
+    pluralName: 'appearances';
+    singularName: 'appearance';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    date: Schema.Attribute.Date & Schema.Attribute.Required;
+    kind: Schema.Attribute.Enumeration<
+      ['VIDEO', 'ARTICLE', 'TALK', 'PODCAST', 'INTERVIEW']
+    > &
+      Schema.Attribute.Required;
+    language: Schema.Attribute.Enumeration<['DE', 'EN']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'DE'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::appearance.appearance'
+    > &
+      Schema.Attribute.Private;
+    outlet: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    summaryDe: Schema.Attribute.Text;
+    summaryEn: Schema.Attribute.Text;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    url: Schema.Attribute.String;
+  };
+}
+
 export interface ApiArticleArticle extends Struct.CollectionTypeSchema {
   collectionName: 'articles';
   info: {
@@ -1477,6 +1518,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::about.about': ApiAboutAbout;
+      'api::appearance.appearance': ApiAppearanceAppearance;
       'api::article.article': ApiArticleArticle;
       'api::author.author': ApiAuthorAuthor;
       'api::category.category': ApiCategoryCategory;

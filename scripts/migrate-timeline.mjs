@@ -5,7 +5,11 @@
  * timeline-event collection type. Requires Strapi to be running.
  *
  * Usage:
- *   STRAPI_API_TOKEN=$(grep STRAPI_SIGN_TOKEN .env | cut -d= -f2) node scripts/migrate-timeline.mjs
+ *   STRAPI_API_TOKEN=$(grep STRAPI_SIGN_TOKEN .env | cut -d= -f2) node scripts/migrate-timeline.mjs [--replace] [--dry-run]
+ *
+ *   --replace   delete every existing timeline-event (both locales) before creating
+ *               the entries from markdown — the markdown files are the source of truth
+ *   --dry-run   parse and print what would be written, without touching Strapi
  *
  * Reads:
  *   frontend/data/timeline_de.md  (default locale — DE title/description/caveat + shared fields)
@@ -14,7 +18,7 @@
  * Notes:
  *  - Strapi must be running (default: http://localhost:1337)
  *  - Requires STRAPI_API_TOKEN with full-access permissions
- *  - Will create duplicates if re-run — delete all entries first
+ *  - Without --replace, re-running creates duplicates
  */
 
 import fs from 'fs';
@@ -26,8 +30,10 @@ const ROOT      = path.resolve(__dirname, '..');
 
 const STRAPI_URL = process.env.STRAPI_URL       ?? 'http://localhost:1337';
 const API_TOKEN  = process.env.STRAPI_API_TOKEN;
+const REPLACE    = process.argv.includes('--replace');
+const DRY_RUN    = process.argv.includes('--dry-run');
 
-if (!API_TOKEN) {
+if (!API_TOKEN && !DRY_RUN) {
   console.error('Error: STRAPI_API_TOKEN environment variable is required.');
   process.exit(1);
 }
@@ -55,7 +61,7 @@ const MONTH_ENUM_EN = {
   'December':  'DECEMBER', 'Late':      'DECEMBER',  '31 Dec':  'DECEMBER',
 };
 
-const VALID_CATEGORIES = new Set(['HISTORY', 'STANDARD', 'HARDWARE', 'REGULATION', 'ESTIMATE']);
+const VALID_CATEGORIES = new Set(['HISTORY', 'STANDARD', 'HARDWARE', 'REGULATION', 'ESTIMATE', 'INDUSTRY']);
 
 // ─── Markdown parser ──────────────────────────────────────────────────────────
 
@@ -136,6 +142,31 @@ async function addLocalisation(documentId, locale, localizedFields) {
   return res.json();
 }
 
+async function listDocumentIds(locale) {
+  const res = await fetch(`${STRAPI_URL}/api/timeline-events?locale=${locale}&pagination[pageSize]=200&fields[0]=title`, { headers: HEADERS });
+  if (!res.ok) throw new Error(`GET /api/timeline-events?locale=${locale} failed ${res.status}: ${await res.text()}`);
+  const { data } = await res.json();
+  return data.map((e) => e.documentId);
+}
+
+async function deleteAllEntries() {
+  // Collect documents from both locales — earlier runs left EN-only documents without a DE entry
+  const ids = new Set([...(await listDocumentIds('de')), ...(await listDocumentIds('en'))]);
+  for (const documentId of ids) {
+    // Strapi 5 deletes one locale per request — remove the localisation first, then the default locale
+    for (const locale of ['en', 'de']) {
+      const del = await fetch(`${STRAPI_URL}/api/timeline-events/${documentId}?locale=${locale}`, {
+        method: 'DELETE',
+        headers: HEADERS,
+      });
+      if (!del.ok && del.status !== 404) {
+        throw new Error(`DELETE /${documentId}?locale=${locale} failed ${del.status}: ${await del.text()}`);
+      }
+    }
+  }
+  return ids.size;
+}
+
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -151,7 +182,22 @@ async function main() {
   console.log(`  Found ${enEvents.length} entries`);
 
   if (deEvents.length !== enEvents.length) {
-    console.warn(`Warning: DE (${deEvents.length}) and EN (${enEvents.length}) counts differ.`);
+    console.error(`Error: DE (${deEvents.length}) and EN (${enEvents.length}) counts differ — entries are paired by position.`);
+    process.exit(1);
+  }
+
+  if (DRY_RUN) {
+    deEvents.forEach((de, i) => {
+      const month = de.month ? ` (${de.month})` : '';
+      console.log(`  ${de.isApproximate ? '~' : ''}${de.year}${month} [${de.category}] ${de.title}  |  ${enEvents[i].title}`);
+    });
+    console.log('\nDry run — nothing written.');
+    return;
+  }
+
+  if (REPLACE) {
+    const removed = await deleteAllEntries();
+    console.log(`Deleted ${removed} existing entries.`);
   }
 
   console.log('\nMigrating to Strapi…');
@@ -185,8 +231,8 @@ async function main() {
   }
 
   console.log(`\nDone. ${ok} migrated, ${failed} failed.`);
-  if (failed === 0) {
-    console.log('\nReminder: if you re-run this script, delete all existing entries first to avoid duplicates.');
+  if (failed === 0 && !REPLACE) {
+    console.log('\nReminder: re-run with --replace to avoid duplicates.');
   }
 }
 

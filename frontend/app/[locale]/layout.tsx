@@ -10,7 +10,7 @@ const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'Beyond Shor',
-  description: 'Expert insights on Post-Quantum Cryptography',
+  description: 'In-depth articles on post-quantum cryptography',
   url: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
 };
 

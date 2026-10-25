@@ -19,6 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { href: '/',             changeFrequency: 'monthly', priority: 1.0 },
     { href: '/blog',         changeFrequency: 'weekly',  priority: 0.9 },
     { href: '/about',        changeFrequency: 'monthly', priority: 0.6 },
+    { href: '/anderswo',     changeFrequency: 'weekly',  priority: 0.7 },
     { href: '/kontakt',      changeFrequency: 'monthly', priority: 0.6 },
     { href: '/impressum',    changeFrequency: 'monthly', priority: 0.6 },
     { href: '/datenschutz',  changeFrequency: 'monthly', priority: 0.6 },

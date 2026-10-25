@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const t = await getTranslations({ locale, namespace: 'datenschutz' });
   return {
     title: { absolute: `${t('fallbackTitle')} — Beyond Shor` },
-    description: 'Datenschutzerklärung gemäß DSGVO.',
+    description: t('metaDescription'),
     robots: { index: false, follow: false },
   };
 }

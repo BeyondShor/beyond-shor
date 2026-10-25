@@ -361,33 +361,6 @@
   }
 }
 
-/* ── Marquee Ticker ──────────────────────────────────────────────────────── */
-@keyframes marquee {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-.ticker-track {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-  animation: marquee 40s linear infinite;
-}
-
-.ticker-track:hover,
-.ticker-track:focus-within {
-  animation-play-state: paused;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ticker-track {
-    animation: none;
-    flex-wrap: wrap;
-    width: 100%;
-    justify-content: center;
-  }
-}
-
 /* ─── Prose Overrides for react-markdown rich text ────────────────────────── */
 .prose-pqc {
   --tw-prose-body:     #c8d6e2;   /* softer than text-base for long-form reading (~9:1 on bg-surface) */

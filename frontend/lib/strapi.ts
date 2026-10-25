@@ -228,7 +228,11 @@ export async function getTimelineEvents(locale = 'de'): Promise<TimelineEvent[]>
     // Apply same-year/same-month deduplication offset so dots don't overlap
     const yearKeyCount: Record<string, number> = {};
 
-    return res.data.map((e) => {
+    // Strapi sorts the month enum alphabetically (APRIL < FEBRUARY), so order by month number here
+    const sorted = [...res.data].sort((a, b) =>
+      a.year - b.year || (a.month ? MONTH_NUM[a.month] : 0) - (b.month ? MONTH_NUM[b.month] : 0));
+
+    return sorted.map((e) => {
       const monthNum  = e.month ? MONTH_NUM[e.month] : null;
       const fraction  = monthNum ? (monthNum - 1) / 12 : 0;
       const baseDecimal = e.year + fraction;
@@ -316,6 +320,36 @@ export async function getDatenschutz(locale = 'de'): Promise<About | null> {
   } catch (err) {
     console.error('[strapi] getDatenschutz:', err);
     return null;
+  }
+}
+
+// ─── Appearances (public work outside the blog) ─────────────────────────────
+
+export type AppearanceKind = 'VIDEO' | 'ARTICLE' | 'TALK' | 'PODCAST' | 'INTERVIEW';
+
+export interface Appearance {
+  id:         number;
+  documentId: string;
+  title:      string;
+  kind:       AppearanceKind;
+  outlet:     string;
+  date:       string;          // ISO date, e.g. "2026-11-12"
+  url?:       string | null;   // empty for announced items that are not out yet
+  language:   'DE' | 'EN';
+  summaryDe?: string | null;
+  summaryEn?: string | null;
+}
+
+export async function getAppearances(): Promise<Appearance[]> {
+  try {
+    const res = await strapiGet<StrapiListResponse<Appearance>>('appearances', {
+      'sort[0]': 'date:desc',
+      'pagination[pageSize]': '100',
+    });
+    return res.data;
+  } catch (err) {
+    console.error('[strapi] getAppearances:', err);
+    return [];
   }
 }
 

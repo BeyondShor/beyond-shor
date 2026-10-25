@@ -106,57 +106,6 @@ export default async function HomePage({ params }: PageProps) {
         </div>
       </section>
 
-      {/* ── Ticker Strip ─────────────────────────────────────────────────── */}
-      <section
-        className="border-b border-[var(--color-glass-border)] glass-panel overflow-hidden relative"
-        aria-label="Key facts"
-      >
-        {/* Gradient fades left/right */}
-        <div
-          className="pointer-events-none absolute inset-y-0 left-0 w-28 z-10"
-          style={{ background: 'linear-gradient(to right, var(--color-bg-surface), transparent)' }}
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute inset-y-0 right-0 w-28 z-10"
-          style={{ background: 'linear-gradient(to left, var(--color-bg-surface), transparent)' }}
-          aria-hidden="true"
-        />
-
-        {/* Ticker track: 6 items + 6 duplicates → seamless loop via translateX(-50%) */}
-        <div className="ticker-track gap-4 py-6 px-2">
-          {(() => {
-            const items = [
-              { label: t('ticker0Label'), value: t('ticker0Value'), href: '#' },
-              { label: t('ticker1Label'), value: t('ticker1Value'), href: '#' },
-              { label: t('ticker2Label'), value: t('ticker2Value'), href: '#' },
-              { label: t('ticker3Label'), value: t('ticker3Value'), href: '#' },
-              { label: t('ticker4Label'), value: t('ticker4Value'), href: '#' },
-              { label: t('ticker5Label'), value: t('ticker5Value'), href: '#' },
-            ];
-            return [...items, ...items].map((item, i) => (
-              <a
-                key={i}
-                href={item.href}
-                aria-hidden={i >= 6 ? true : undefined}
-                tabIndex={i >= 6 ? -1 : undefined}
-                className="flex flex-col flex-none w-[260px] glass-panel rounded-lg px-4 py-5
-                           hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]
-                           transition-colors focus-visible:ring-2
-                           focus-visible:ring-[var(--color-primary)] focus-visible:outline-none"
-              >
-                <p className="min-h-9 text-xs text-[var(--color-text-muted)] font-mono uppercase tracking-wider">
-                  {item.label}
-                </p>
-                <p className="mt-1 text-xl font-bold font-mono text-[var(--color-primary)] leading-tight">
-                  {item.value}
-                </p>
-              </a>
-            ));
-          })()}
-        </div>
-      </section>
-
       {/* ── HNDL Timeline ────────────────────────────────────────────────── */}
       <HndlTimeline locale={locale} />
 

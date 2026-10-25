@@ -51,7 +51,7 @@
     },
     "category": {
       "type": "enumeration",
-      "enum": ["HISTORY", "STANDARD", "HARDWARE", "REGULATION", "ESTIMATE"],
+      "enum": ["HISTORY", "STANDARD", "HARDWARE", "REGULATION", "ESTIMATE", "INDUSTRY"],
       "required": true,
       "pluginOptions": {
         "i18n": { "localized": false }

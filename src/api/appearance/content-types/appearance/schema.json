@@ -1,0 +1,47 @@
+{
+  "kind": "collectionType",
+  "collectionName": "appearances",
+  "info": {
+    "singularName": "appearance",
+    "pluralName": "appearances",
+    "displayName": "Appearance",
+    "description": "Public work outside Beyond Shor: videos, guest articles, talks, podcasts. One entry per item, shown in both locales."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "kind": {
+      "type": "enumeration",
+      "enum": ["VIDEO", "ARTICLE", "TALK", "PODCAST", "INTERVIEW"],
+      "required": true
+    },
+    "outlet": {
+      "type": "string",
+      "required": true
+    },
+    "date": {
+      "type": "date",
+      "required": true
+    },
+    "url": {
+      "type": "string"
+    },
+    "language": {
+      "type": "enumeration",
+      "enum": ["DE", "EN"],
+      "default": "DE",
+      "required": true
+    },
+    "summaryDe": {
+      "type": "text"
+    },
+    "summaryEn": {
+      "type": "text"
+    }
+  }
+}

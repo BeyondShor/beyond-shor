@@ -15,7 +15,7 @@ export default async function HndlTimeline({ locale }: Props) {
   if (events.length === 0) {
     const file = locale === 'en' ? 'timeline_en.md' : 'timeline_de.md';
     const filePath = path.join(process.cwd(), 'data', file);
-    events = parseTimeline(filePath);
+    events = parseTimeline(filePath, locale === 'en' ? 'en' : 'de');
   }
 
   return <HndlTimelineClient events={events} locale={locale} />;
