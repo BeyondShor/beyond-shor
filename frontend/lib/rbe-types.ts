@@ -1,84 +1,63 @@
-// Shared types between the Web Worker, the React component, and the API routes.
+// Shared types between the RBE Web Worker, the React component and the KC API routes.
 // No React, no Next.js, no browser/Node-specific imports allowed here.
+
+import type { WireMat } from './rbe/wire';
+
+export type { WireMat };
+
+export type UserName = 'alice' | 'bob' | 'charlie';
+export const USER_NAMES: readonly UserName[] = ['alice', 'bob', 'charlie'];
+
+export interface WireCiphertext {
+  ct0: WireMat;   // 1 × (l+1)m
+  ct1: WireMat;   // 1 × k
+}
 
 // ── Worker messages (component → worker) ──────────────────────────────────────
 
 export type WorkerInMessage =
-  | { id: string; type: 'keygen';    a0: number[] }
-  | { id: string; type: 'encrypt';   a0: number[]; a1: number[]; mpkAgg: number[]; msg: string; targetId: string }
-  | { id: string; type: 'dec_step1'; c0_0: number[]; c0_1: number[]; hsk0: number[]; hsk1: number[]; c1: number[] }
-  | { id: string; type: 'dec_step2'; c0_0: number[]; temp: number[]; sk: number[] };
+  | { id: string; type: 'init'; seed: string }
+  | { id: string; type: 'keygen' }
+  | { id: string; type: 'encrypt'; mpk: WireMat; target: number; message: string }
+  | { id: string; type: 'dec_step1'; ct: WireCiphertext; hsk: WireMat }
+  | { id: string; type: 'dec_step2'; ctReg: WireMat; sk: WireMat }
+  | { id: string; type: 'verify_mpk'; users: { id: number; pk: WireMat }[]; mpk: WireMat };
 
 // ── Worker messages (worker → component) ──────────────────────────────────────
 
-export interface KeyGenResult {
-  id:   string;
-  type: 'keygen_done';
-  pk:   number[];
-  sk:   number[];
-  ms:   number;
-}
-export interface EncryptResult {
-  id:   string;
-  type: 'encrypt_done';
-  c0_0: number[];
-  c0_1: number[];
-  c1:   number[];
-  ms:   number;
-}
-export interface DecStep1Result {
-  id:   string;
-  type: 'dec_step1_done';
-  temp: number[];
-  ms:   number;
-}
-export interface DecStep2Result {
-  id:   string;
-  type: 'dec_step2_done';
-  result: number[];
-  msg:    string;
-  ms:     number;
-}
-export interface WorkerError {
-  id:   string;
-  type: 'error';
-  msg:  string;
-}
+export type WorkerOutMessage = { id: string; ms: number } & (
+  | { type: 'init_done'; preview: number[] }
+  | { type: 'keygen_done'; pk: WireMat; sk: WireMat }
+  | { type: 'encrypt_done'; ct: WireCiphertext }
+  | { type: 'dec_step1_done'; ctReg: WireMat }
+  | { type: 'dec_step2_done'; message: string; noise: number; value: number[] }
+  | { type: 'verify_mpk_done'; match: boolean }
+  | { type: 'error'; msg: string }
+);
 
-export type WorkerOutMessage =
-  | KeyGenResult
-  | EncryptResult
-  | DecStep1Result
-  | DecStep2Result
-  | WorkerError;
+// ── KC API ────────────────────────────────────────────────────────────────────
 
-// ── API types ─────────────────────────────────────────────────────────────────
-
-export interface ApiSetupResponse {
-  sessionId:  string;
-  a0:         number[];   // public CRS for KeyGen / Step-2 decryption
-  a1:         number[];   // complement for identity-specific encryption
-  N_max:      number;
-  params: {
-    N: number;
-    Q: number;
-    B: number;
-  };
+export interface ApiSessionResponse {
+  sessionId: string;
+  seed:      string;   // hex — the CRS is A = SHAKE-256(seed), anyone can expand it
 }
 
 export interface ApiRegisterRequest {
   sessionId: string;
-  userId:    string;
-  pk:        number[];
+  name:      UserName;
+  pk:        WireMat;
 }
+
 export interface ApiRegisterResponse {
-  mpkAgg:     number[];
-  registered: string[];
+  identity:   number;
+  mpk:        WireMat;
+  registered: { name: UserName; identity: number }[];
 }
 
 export interface ApiHskResponse {
-  hsk0: number[];
-  hsk1: number[];
+  identity: number;
+  hsk:      WireMat;   // 'i16' — short by construction
+  norm:     number;    // largest |coefficient| of hsk
 }
 
 export interface ApiErrorResponse {

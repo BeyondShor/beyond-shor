@@ -1,58 +1,54 @@
-// Server-only: in-memory KC session store.
-// Works correctly on a SINGLE Node.js process (PM2 fork mode).
-// Do NOT use with cluster mode or multi-instance deployments.
+// Server-only: in-memory key curator sessions.
+// Works on a SINGLE Node.js process (PM2 fork mode); not for cluster deployments.
+//
+// Everything stored here is public: the CRS seed, registered public keys, the
+// master public key and the precomputed blocks for helper keys. The key curator
+// holds no secret — any party can recompute all of it.
 import 'server-only';
 
-import { N_MAX } from './params';
-
-export interface RbeUser {
-  pk: number[];
-}
+import type { UserName } from '@/lib/rbe-types';
+import { type Crs, type Registration, type RbeContext, createContext, setup, masterPublicKey } from './scheme';
+import type { Mat } from './matrix';
 
 export interface KcSession {
-  sessionId:  string;
-  a0:         number[];   // public CRS polynomial
-  a1:         number[];   // complement: a0·r + a1 = 1
-  r:          number[];   // KC trapdoor (private)
-  users:      Map<string, RbeUser>;
-  mpkAgg:     number[];   // Σ pk_i
-  createdAt:  number;     // Date.now()
-  expiresAt:  number;     // Date.now() + TTL_MS
+  sessionId: string;
+  seed:      Uint8Array;
+  crs:       Crs;
+  users:     Map<UserName, Registration>;
+  mpk:       Mat;
+  createdAt: number;
+  expiresAt: number;
 }
 
-// ── Store & TTL ───────────────────────────────────────────────────────────────
-
-const TTL_MS    = 30 * 60 * 1000; // 30 minutes
-const MAX_SESSIONS = 200;
+const TTL_MS       = 30 * 60 * 1000;  // 30 minutes
+const MAX_SESSIONS = 50;              // ~1 MB each (CRS + precomputed blocks)
 
 const store = new Map<string, KcSession>();
 
+export const kcContext: RbeContext = createContext();
+
 function reap(): void {
   const now = Date.now();
-  for (const [id, s] of store) {
-    if (s.expiresAt < now) store.delete(id);
-  }
+  for (const [id, s] of store) if (s.expiresAt < now) store.delete(id);
 }
 
-// Reap expired sessions every 5 minutes
-let _reaperStarted = false;
+let reaperStarted = false;
 function startReaper(): void {
-  if (_reaperStarted) return;
-  _reaperStarted = true;
-  setInterval(reap, 5 * 60 * 1000);
+  if (reaperStarted) return;
+  reaperStarted = true;
+  setInterval(reap, 5 * 60 * 1000).unref?.();
 }
 
-// ── Rate limiter (per-IP, max 10 sessions / hour) ─────────────────────────────
+// ── Rate limiter (per IP, max 10 sessions per hour) ───────────────────────────
 
 interface RateEntry { count: number; resetAt: number }
 const rateLimiter = new Map<string, RateEntry>();
 
 export function checkRateLimit(ip: string): boolean {
-  const now  = Date.now();
-  const hour = 60 * 60 * 1000;
+  const now = Date.now();
   const entry = rateLimiter.get(ip);
   if (!entry || entry.resetAt < now) {
-    rateLimiter.set(ip, { count: 1, resetAt: now + hour });
+    rateLimiter.set(ip, { count: 1, resetAt: now + 60 * 60 * 1000 });
     return true;
   }
   if (entry.count >= 10) return false;
@@ -62,7 +58,7 @@ export function checkRateLimit(ip: string): boolean {
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-export function createSession(session: Omit<KcSession, 'createdAt' | 'expiresAt'>): KcSession {
+export function createSession(sessionId: string, seed: Uint8Array): KcSession {
   startReaper();
   reap();
   if (store.size >= MAX_SESSIONS) {
@@ -70,9 +66,17 @@ export function createSession(session: Omit<KcSession, 'createdAt' | 'expiresAt'
     if (oldest) store.delete(oldest.sessionId);
   }
   const now = Date.now();
-  const full: KcSession = { ...session, createdAt: now, expiresAt: now + TTL_MS };
-  store.set(session.sessionId, full);
-  return full;
+  const session: KcSession = {
+    sessionId,
+    seed,
+    crs: setup(kcContext, seed),
+    users: new Map(),
+    mpk: masterPublicKey(kcContext, []),
+    createdAt: now,
+    expiresAt: now + TTL_MS,
+  };
+  store.set(sessionId, session);
+  return session;
 }
 
 export function getSession(sessionId: string): KcSession | null {
@@ -80,8 +84,4 @@ export function getSession(sessionId: string): KcSession | null {
   if (!s) return null;
   if (s.expiresAt < Date.now()) { store.delete(sessionId); return null; }
   return s;
-}
-
-export function sessionCount(): number {
-  return store.size;
 }

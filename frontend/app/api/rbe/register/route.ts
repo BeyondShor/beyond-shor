@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { N, Q, N_MAX }               from '@/lib/rbe/params';
-import { rbeRegister }               from '@/lib/rbe/core';
-import { getSession }                from '@/lib/rbe/session-store';
-import type { ApiRegisterRequest, ApiRegisterResponse, ApiErrorResponse } from '@/lib/rbe-types';
+import { identityOf, register, masterPublicKey } from '@/lib/rbe/scheme';
+import { decodeMat, encodeMat } from '@/lib/rbe/wire';
+import { getSession, kcContext } from '@/lib/rbe/session-store';
+import { USER_NAMES } from '@/lib/rbe-types';
+import type { ApiRegisterRequest, ApiRegisterResponse, ApiErrorResponse, UserName } from '@/lib/rbe-types';
 
+// Reg: mpk ← mpk + A_{δi} · G⁻¹(pk_i). Deterministic, public inputs only.
 export async function POST(
   req: NextRequest,
 ): Promise<NextResponse<ApiRegisterResponse | ApiErrorResponse>> {
@@ -14,32 +16,39 @@ export async function POST(
     return NextResponse.json({ error: 'invalid_json' }, { status: 400 });
   }
 
-  const { sessionId, userId, pk } = body;
-
-  if (!sessionId || !userId || !Array.isArray(pk)) {
+  const { sessionId, name, pk } = body ?? {};
+  if (!sessionId || !USER_NAMES.includes(name)) {
     return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
   }
 
   const session = getSession(sessionId);
   if (!session) return NextResponse.json({ error: 'session_not_found' }, { status: 404 });
-
-  if (session.users.has(userId)) {
+  if (session.users.has(name)) {
     return NextResponse.json({ error: 'user_already_registered' }, { status: 409 });
   }
-  if (session.users.size >= N_MAX) {
+  if (session.users.size >= kcContext.p.nMax) {
     return NextResponse.json({ error: 'n_max_reached' }, { status: 403 });
   }
 
-  // Validate pk length
-  if (pk.length !== N || pk.some(v => typeof v !== 'number' || v < 0 || v >= Q)) {
+  const ctx = kcContext;
+  let pkMat;
+  try {
+    pkMat = decodeMat(ctx.ring, pk, ctx.p.n, ctx.p.k);
+  } catch {
     return NextResponse.json({ error: 'invalid_pk' }, { status: 422 });
   }
 
-  session.users.set(userId, { pk });
-  session.mpkAgg = rbeRegister(session.mpkAgg, pk);
+  const identity = identityOf(name, ctx.p);
+  if ([...session.users.values()].some((r) => r.id === identity)) {
+    return NextResponse.json({ error: 'identity_taken' }, { status: 409 });
+  }
+
+  session.users.set(name, register(ctx, session.crs, identity, pkMat));
+  session.mpk = masterPublicKey(ctx, [...session.users.values()]);
 
   return NextResponse.json({
-    mpkAgg:     session.mpkAgg,
-    registered: [...session.users.keys()],
+    identity,
+    mpk: encodeMat(ctx.ring, session.mpk),
+    registered: [...session.users.entries()].map(([n, r]) => ({ name: n as UserName, identity: r.id })),
   });
 }

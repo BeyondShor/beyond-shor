@@ -1,37 +1,22 @@
-import { NextResponse }         from 'next/server';
-import { headers }              from 'next/headers';
-import { randomUUID }           from 'crypto';
-import { Q, N, B, N_MAX }      from '@/lib/rbe/params';
-import { rbeSetup }             from '@/lib/rbe/core';
-import { polyZero }             from '@/lib/rbe/sample';
+import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
+import { randomUUID } from 'crypto';
+import { randomSeed } from '@/lib/rbe/sample';
+import { toHex } from '@/lib/rbe/wire';
 import { createSession, checkRateLimit } from '@/lib/rbe/session-store';
-import type { ApiSetupResponse, ApiErrorResponse } from '@/lib/rbe-types';
+import type { ApiSessionResponse, ApiErrorResponse } from '@/lib/rbe-types';
 
-export async function POST(): Promise<NextResponse<ApiSetupResponse | ApiErrorResponse>> {
+// Setup: the key curator publishes a fresh seed; the CRS A is its SHAKE-256 expansion.
+export async function POST(): Promise<NextResponse<ApiSessionResponse | ApiErrorResponse>> {
   const hdrs = await headers();
-  const ip   = hdrs.get('x-forwarded-for')?.split(',')[0].trim() ?? '0.0.0.0';
-
+  const ip = hdrs.get('x-forwarded-for')?.split(',')[0].trim() ?? '0.0.0.0';
   if (!checkRateLimit(ip)) {
     return NextResponse.json({ error: 'rate_limit' }, { status: 429 });
   }
 
-  const { a0, a1, r } = rbeSetup();
   const sessionId = randomUUID();
+  const seed = randomSeed();
+  createSession(sessionId, seed);
 
-  createSession({
-    sessionId,
-    a0,
-    a1,
-    r,
-    users:   new Map(),
-    mpkAgg:  polyZero(),
-  });
-
-  return NextResponse.json({
-    sessionId,
-    a0,
-    a1,
-    N_max: N_MAX,
-    params: { N, Q, B },
-  });
+  return NextResponse.json({ sessionId, seed: toHex(seed) });
 }

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { getPathname } from '@/i18n/navigation';
 import { getAppearances, type Appearance } from '@/lib/strapi';
+import { youTubeId } from '@/lib/youtube';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -128,44 +129,74 @@ function AppearanceCard({ item, locale, upcoming = false, t }: {
   const summary = (locale === 'en' ? item.summaryEn || item.summaryDe : item.summaryDe || item.summaryEn) ?? null;
   const showLanguage = item.language.toLowerCase() !== locale;
   const date = formatDate(item.date, locale);
+  const videoId = youTubeId(item.url);
 
   return (
-    <article className="glass-panel card-glass-hover rounded-lg p-5">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2 font-mono text-xs text-[var(--color-text-muted)]">
-        <span className="mono-label text-[var(--color-primary)]">{t(`kind_${item.kind}`)}</span>
-        <span>{item.outlet}</span>
-        <span aria-hidden="true">·</span>
-        {upcoming
-          ? <span className="text-[var(--color-primary)]">{t('upcomingBadge', { date })}</span>
-          : <time dateTime={item.date}>{date}</time>}
-        {showLanguage && (
-          <span className="rounded border border-[var(--color-glass-border)] px-1.5 py-0.5">
-            {t(`language_${item.language}`)}
-          </span>
-        )}
-      </div>
-
-      <h3 className="text-lg font-semibold text-[var(--color-text-base)] leading-snug" lang={item.language.toLowerCase()}>
-        {item.url
-          ? <a href={item.url} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary)] transition-colors">{item.title}</a>
-          : item.title}
-      </h3>
-
-      {summary && (
-        <p className="mt-2 text-sm text-[var(--color-text-muted)] leading-relaxed">{summary}</p>
-      )}
-
-      {item.url && (
+    <article className="glass-panel card-glass-hover rounded-lg p-5 sm:flex sm:gap-5">
+      {videoId && item.url && (
+        // Duplicate of the title link for pointer users; hidden from keyboard and screen readers
         <a
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1 font-mono text-xs text-[var(--color-primary)] hover:underline"
+          tabIndex={-1}
+          aria-hidden="true"
+          className="group relative mb-4 block aspect-video shrink-0 overflow-hidden rounded-md border border-[var(--color-glass-border)] bg-[var(--color-bg-base)] sm:mb-0 sm:w-56 sm:self-start"
         >
-          {t(`link_${item.kind}`)} <span aria-hidden="true">↗</span>
-          <span className="sr-only">{t('newTab')}</span>
+          {/* eslint-disable-next-line @next/next/no-img-element -- served by our own route, already sized */}
+          <img
+            src={`/api/thumbnail/youtube/${videoId}`}
+            alt=""
+            width={480}
+            height={360}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <span className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/10">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/70 text-white ring-1 ring-white/30">
+              <svg viewBox="0 0 24 24" className="ml-0.5 h-5 w-5" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+            </span>
+          </span>
         </a>
       )}
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2 font-mono text-xs text-[var(--color-text-muted)]">
+          <span className="mono-label text-[var(--color-primary)]">{t(`kind_${item.kind}`)}</span>
+          <span>{item.outlet}</span>
+          <span aria-hidden="true">·</span>
+          {upcoming
+            ? <span className="text-[var(--color-primary)]">{t('upcomingBadge', { date })}</span>
+            : <time dateTime={item.date}>{date}</time>}
+          {showLanguage && (
+            <span className="rounded border border-[var(--color-glass-border)] px-1.5 py-0.5">
+              {t(`language_${item.language}`)}
+            </span>
+          )}
+        </div>
+
+        <h3 className="text-lg font-semibold text-[var(--color-text-base)] leading-snug" lang={item.language.toLowerCase()}>
+          {item.url
+            ? <a href={item.url} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-primary)] transition-colors">{item.title}</a>
+            : item.title}
+        </h3>
+
+        {summary && (
+          <p className="mt-2 text-sm text-[var(--color-text-muted)] leading-relaxed">{summary}</p>
+        )}
+
+        {item.url && (
+          <a
+            href={item.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-1 font-mono text-xs text-[var(--color-primary)] hover:underline"
+          >
+            {t(`link_${item.kind}`)} <span aria-hidden="true">↗</span>
+            <span className="sr-only">{t('newTab')}</span>
+          </a>
+        )}
+      </div>
     </article>
   );
 }

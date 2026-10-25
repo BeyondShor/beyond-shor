@@ -1,31 +1,58 @@
-// RBE Demo — system parameters
-// q = 12289 is the standard NewHope/Kyber-derivable NTT-prime (14-bit):
-//   q - 1 = 12288 = 2^12 * 3, so 2N = 512 divides q-1 for negacyclic NTT.
-// These parameters are NOT cryptographically secure. Educational use only.
+// Parameters for the RBE demo — the base construction of
+// Zhang, Ding, Malavolta, Döttling: "Fast and Compact Lattice-Based
+// Registration-Based Encryption", ePrint 2026/628, Section 3.
+//
+// Notation follows the paper:
+//   R_q = Z_q[X]/(X^nR + 1)   ring
+//   n                          rows of the CRS blocks A_k ∈ R_q^{n×m}
+//   m = n·L                    width of the gadget matrix G = I_n ⊗ (1, d, …, d^{L−1})
+//   k                          length of sk = (−s, 1) ∈ R^k
+//   l                          identity length in bits (identities are 0 … 2^l − 1)
+//
+// The modulus is a 26-bit NTT-friendly prime so that every product of two
+// residues stays below 2^53 and plain JavaScript numbers remain exact.
+// That is far smaller than the 59-bit modulus in the paper (Section 5.2), which
+// is why these parameters carry no security claim — see SECURITY_NOTE in the UI.
 
-export const Q     = 12289;  // Ring modulus
-export const N     = 1024;   // Polynomial degree; ring R_q = Z_q[X]/(X^N + 1)
-export const B     = 3;      // Small-polynomial coefficient bound, coeff ∈ [-B, B]
-export const N_MAX = 3;      // Maximum users per demo session (Alice, Bob, Charlie)
-export const ENCODE = (Q + 1) >> 1; // ≈ q/2 = 6145; used to encode a '1' bit
-
-// ── Primitive root and NTT twiddle factor ────────────────────────────────────
-
-function modPow(base: number, exp: number, mod: number): number {
-  let result = 1;
-  base = ((base % mod) + mod) % mod;
-  while (exp > 0) {
-    if (exp & 1) result = result * base % mod;
-    base = base * base % mod;
-    exp >>>= 1;
-  }
-  return result;
+export interface RbeParams {
+  q:    number;   // prime modulus, q ≡ 1 (mod 2·nR)
+  nR:   number;   // ring degree (power of two)
+  n:    number;   // module rank of the CRS blocks
+  k:    number;   // secret-key length
+  logD: number;   // gadget base d = 2^logD (balanced digits, d ≥ 4)
+  ell:  number;   // identity bits l
+  eta:  number;   // centred binomial parameter for secrets and errors
+  nMax: number;   // users per demo session
 }
 
-// g = 11 is a well-known primitive root mod 12289 (used in NewHope).
-// Verified: 11^((q-1)/2) ≡ -1 and 11^((q-1)/3) ≢ 1 mod q.
-const G = 11;
+// Chosen by measurement (see __tests__/rbe.test.ts): with q < 2^26 the decryption
+// noise stays about 10σ below q/4 for nR = 512, d = 8 and CBD_1. nR = 1024 or a
+// module rank n = 2 push the noise to ≈ q/4 and would need a larger modulus.
+export const PARAMS: RbeParams = {
+  q:    67104769,  // 2^26 − 4095, q − 1 = 2^12 · 16383
+  nR:   512,
+  n:    1,
+  k:    2,
+  logD: 3,
+  ell:  6,
+  eta:  1,
+  nMax: 3,
+};
 
-// PSI is a primitive 2N-th (512th) root of unity mod q.
-// PSI^(2N) ≡ 1 and PSI^N ≡ -1 (mod q) — required for negacyclic NTT.
-export const PSI: number = modPow(G, (Q - 1) / (2 * N), Q); // = 11^6 mod 12289 for N=1024
+export interface Derived {
+  d:     number;  // gadget base
+  L:     number;  // digits per coefficient
+  m:     number;  // n · L
+  width: number;  // (l + 1) · m — columns of the CRS A = [A_0 | … | A_l]
+  half:  number;  // ⌊q/2⌋, used to encode a message bit
+}
+
+export function derive(p: RbeParams): Derived {
+  const d = 2 ** p.logD;
+  // Balanced digits lie in (−d/2, d/2]; each step shrinks |x| to at most (|x| + d/2)/d.
+  // Count the steps the worst case |x| = ⌊q/2⌋ needs to reach zero.
+  let L = 0;
+  for (let b = Math.floor(p.q / 2); b > 0; b = Math.floor((b + d / 2) / d)) L++;
+  const m = p.n * L;
+  return { d, L, m, width: (p.ell + 1) * m, half: Math.floor(p.q / 2) };
+}

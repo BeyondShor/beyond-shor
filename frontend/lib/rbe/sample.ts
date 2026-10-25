@@ -1,40 +1,72 @@
-// Random polynomial generation for the RBE demo.
-// Uses globalThis.crypto (available in Node ≥ 20 and all modern browsers).
+// Randomness for the RBE demo.
+//   - secrets and errors: centred binomial distribution from the system CSPRNG
+//   - the CRS: expanded from a public seed with SHAKE-256, so anyone can
+//     recompute it and check that the key curator holds no hidden structure
 
-import { Q, N, B } from './params';
+import { shake256 } from '@noble/hashes/sha3.js';
+import type { Ring } from './ring';
 
-function randUint32(): number {
-  const buf = new Uint32Array(1);
-  globalThis.crypto.getRandomValues(buf);
-  return buf[0];
-}
-
-// Uniform polynomial: coefficients ∈ [0, Q)
-// Rejection sampling to avoid modulo bias (Q is not a power of two).
-export function sampleUniform(): number[] {
-  const poly = new Array<number>(N);
-  const mask = 0x3fff; // 14-bit mask — Q < 2^14
-  for (let i = 0; i < N; ) {
-    const v = randUint32() & mask;
-    if (v < Q) poly[i++] = v;
+function randomBytes(len: number): Uint8Array {
+  const out = new Uint8Array(len);
+  // getRandomValues is limited to 65536 bytes per call
+  for (let off = 0; off < len; off += 65536) {
+    globalThis.crypto.getRandomValues(out.subarray(off, Math.min(len, off + 65536)));
   }
-  return poly;
+  return out;
 }
 
-// Small polynomial: coefficients ∈ [-B, B] stored as [0, Q) residues.
-export function sampleSmall(): number[] {
-  const poly = new Array<number>(N);
-  const range = 2 * B + 1; // 7 values: -3 … +3
-  for (let i = 0; i < N; i++) {
-    // rejection-sample to avoid bias
-    let v: number;
-    do { v = randUint32() % (256 - (256 % range)); } while (v >= 256 - (256 % range));
-    const coeff = (v % range) - B; // in [-B, B]
-    poly[i] = ((coeff % Q) + Q) % Q;
+export function randomSeed(): Uint8Array {
+  return randomBytes(32);
+}
+
+// Centred binomial distribution CBD_η: Σ η bits − Σ η bits, so values lie in [−η, η]
+export function sampleCbd(ring: Ring, eta: number): Uint32Array {
+  const bytes = randomBytes(Math.ceil((ring.nR * 2 * eta) / 8));
+  const out = new Uint32Array(ring.nR);
+  let bit = 0;
+  const next = () => { const b = (bytes[bit >> 3] >> (bit & 7)) & 1; bit++; return b; };
+  for (let i = 0; i < ring.nR; i++) {
+    let v = 0;
+    for (let j = 0; j < eta; j++) v += next();
+    for (let j = 0; j < eta; j++) v -= next();
+    out[i] = ring.fromSigned(v);
   }
-  return poly;
+  return out;
 }
 
-export function polyZero(): number[] {
-  return new Array<number>(N).fill(0);
+// Uniform polynomial from a byte stream by rejection sampling on 26-bit chunks
+function uniformFromStream(ring: Ring, stream: () => number): Uint32Array {
+  const bits = Math.ceil(Math.log2(ring.q));
+  const mask = 2 ** bits - 1;
+  const out = new Uint32Array(ring.nR);
+  for (let i = 0; i < ring.nR; ) {
+    const v = stream() & mask;
+    if (v < ring.q) out[i++] = v;
+  }
+  return out;
+}
+
+export function sampleUniform(ring: Ring): Uint32Array {
+  // ~0.01 % rejections for q = 2^26 − 4095; 2× headroom is plenty
+  const words = new Uint32Array(randomBytes(ring.nR * 8).buffer);
+  let i = 0;
+  return uniformFromStream(ring, () => {
+    if (i >= words.length) { const more = new Uint32Array(randomBytes(4).buffer); return more[0]; }
+    return words[i++];
+  });
+}
+
+// Deterministically expand `count` uniform polynomials from a public seed
+export function expandUniform(ring: Ring, seed: Uint8Array, count: number): Uint32Array[] {
+  const words = ring.nR * count * 2;  // 2× headroom for rejections
+  const bytes = shake256(seed, { dkLen: words * 4 });
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let i = 0;
+  const stream = () => {
+    if (i >= words) throw new Error('XOF stream exhausted');
+    return view.getUint32(4 * i++, true);
+  };
+  const out: Uint32Array[] = [];
+  for (let c = 0; c < count; c++) out.push(uniformFromStream(ring, stream));
+  return out;
 }

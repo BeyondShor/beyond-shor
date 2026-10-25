@@ -1,49 +1,77 @@
 /// <reference lib="webworker" />
-// RBE Web Worker — runs all client-side cryptographic operations off the main thread.
-// Receives WorkerInMessage, posts WorkerOutMessage after each operation.
+// RBE Web Worker — everything a user does runs here, off the main thread:
+// expanding the CRS from the public seed, key generation, encryption, both
+// decryption steps, and re-computing the key curator's mpk to audit it.
 
 import type { WorkerInMessage, WorkerOutMessage } from '@/lib/rbe-types';
-import { rbeKeyGen, rbeEncrypt, rbeDecryptStep1, rbeDecryptStep2 } from '@/lib/rbe/core';
+import {
+  type Crs, createContext, setup, keyGen, encrypt, decryptStep1, decryptStep2, register, masterPublicKey,
+} from '@/lib/rbe/scheme';
+import { encodeMat, decodeMat, fromHex } from '@/lib/rbe/wire';
 
-function post(msg: WorkerOutMessage): void {
-  (self as unknown as Worker).postMessage(msg);
+const ctx = createContext();
+const { ring, p, dv } = ctx;
+let crs: Crs | null = null;
+
+type OutBody = WorkerOutMessage extends infer T ? T extends unknown ? Omit<T, 'id' | 'ms'> : never : never;
+
+function post(id: string, t0: number, body: OutBody): void {
+  (self as unknown as Worker).postMessage({ id, ms: performance.now() - t0, ...body } as WorkerOutMessage);
+}
+
+function requireCrs(): Crs {
+  if (!crs) throw new Error('CRS not initialised');
+  return crs;
 }
 
 (self as unknown as Worker).onmessage = (ev: MessageEvent<WorkerInMessage>) => {
-  const m   = ev.data;
-  const t0  = performance.now();
-
+  const m = ev.data;
+  const t0 = performance.now();
   try {
     switch (m.type) {
-
+      case 'init': {
+        crs = setup(ctx, fromHex(m.seed));
+        post(m.id, t0, { type: 'init_done', preview: Array.from(crs.A.e[0].subarray(0, 6)) });
+        break;
+      }
       case 'keygen': {
-        const { pk, sk } = rbeKeyGen(m.a0);
-        post({ id: m.id, type: 'keygen_done', pk, sk, ms: performance.now() - t0 });
+        const { pk, sk } = keyGen(ctx);
+        post(m.id, t0, { type: 'keygen_done', pk: encodeMat(ring, pk), sk: encodeMat(ring, sk) });
         break;
       }
-
       case 'encrypt': {
-        const { c0_0, c0_1, c1 } = rbeEncrypt(m.a0, m.a1, m.mpkAgg, m.msg, m.targetId);
-        post({ id: m.id, type: 'encrypt_done', c0_0, c0_1, c1, ms: performance.now() - t0 });
+        const mpk = decodeMat(ring, m.mpk, p.n, p.k);
+        const ct = encrypt(ctx, requireCrs(), mpk, m.target, new TextEncoder().encode(m.message));
+        post(m.id, t0, { type: 'encrypt_done', ct: { ct0: encodeMat(ring, ct.ct0), ct1: encodeMat(ring, ct.ct1) } });
         break;
       }
-
       case 'dec_step1': {
-        const temp = rbeDecryptStep1(m.c0_0, m.c0_1, m.hsk0, m.hsk1, m.c1);
-        post({ id: m.id, type: 'dec_step1_done', temp, ms: performance.now() - t0 });
+        const ct = { ct0: decodeMat(ring, m.ct.ct0, 1, dv.width), ct1: decodeMat(ring, m.ct.ct1, 1, p.k) };
+        const ctReg = decryptStep1(ctx, ct, decodeMat(ring, m.hsk, dv.width, p.k));
+        post(m.id, t0, { type: 'dec_step1_done', ctReg: encodeMat(ring, ctReg) });
         break;
       }
-
       case 'dec_step2': {
-        const { result, msg: decoded } = rbeDecryptStep2(m.c0_0, m.temp, m.sk);
-        post({ id: m.id, type: 'dec_step2_done', result, msg: decoded, ms: performance.now() - t0 });
+        const pt = decryptStep2(ctx, decodeMat(ring, m.ctReg, 1, p.k), decodeMat(ring, m.sk, p.k, 1));
+        post(m.id, t0, {
+          type: 'dec_step2_done',
+          message: new TextDecoder('utf-8', { fatal: false }).decode(pt.message),
+          noise: pt.noise,
+          value: Array.from(pt.value.subarray(0, 16), (v) => ring.centered(v)),
+        });
         break;
       }
-
-      default:
-        post({ id: (m as WorkerInMessage).id, type: 'error', msg: 'Unknown message type' });
+      case 'verify_mpk': {
+        const c = requireCrs();
+        const regs = m.users.map((u) => register(ctx, c, u.id, decodeMat(ring, u.pk, p.n, p.k)));
+        const ours = masterPublicKey(ctx, regs);
+        const theirs = decodeMat(ring, m.mpk, p.n, p.k);
+        const match = ours.e.every((poly, i) => poly.every((v, k) => v === theirs.e[i][k]));
+        post(m.id, t0, { type: 'verify_mpk_done', match });
+        break;
+      }
     }
   } catch (err) {
-    post({ id: m.id, type: 'error', msg: err instanceof Error ? err.message : String(err) });
+    post(m.id, t0, { type: 'error', msg: err instanceof Error ? err.message : String(err) });
   }
 };
