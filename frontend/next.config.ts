@@ -14,6 +14,17 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
+    const csp = (frameAncestors: string) => [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://analytics.beyond-shor.eu",
+      "worker-src 'self' blob:",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "font-src 'self'",
+      "connect-src 'self' https://analytics.beyond-shor.eu",
+      `frame-ancestors ${frameAncestors}`,
+    ].join('; ');
+
     return [
       {
         source: '/:path*',
@@ -22,19 +33,16 @@ const nextConfig: NextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy',        value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy',     value: 'geolocation=(), microphone=(), camera=()' },
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://analytics.beyond-shor.eu",
-              "worker-src 'self' blob:",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob:",
-              "font-src 'self'",
-              "connect-src 'self' https://analytics.beyond-shor.eu",
-              "frame-ancestors 'none'",
-            ].join('; '),
-          },
+          { key: 'Content-Security-Policy', value: csp("'none'") },
+        ],
+      },
+      {
+        // ShorSight's own UI, embedded on /cbom — framable by this site only.
+        // Later entries override earlier ones for the same header key.
+        source: '/shorsight/:path*',
+        headers: [
+          { key: 'X-Frame-Options',        value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: csp("'self'") },
         ],
       },
     ];

@@ -5,9 +5,15 @@
  * frontend/public/cbom.json against the CycloneDX 1.7 structure ShorSight emits,
  * and check that the ML-DSA-65 signature next to it covers those exact bytes.
  *
+ * The risk analysis is read from the ShorSight page /cbom embeds on desktop
+ * (frontend/public/shorsight/inventory.html), which carries the governance
+ * result as a JSON island next to its copy of the CBOM. The small-screen
+ * rendering reads frontend/data/governance.json; both must agree.
+ *
  * To regenerate:
  *   shorsight scan . -o shorsight/cbom.raw.json
  *   node scripts/sign-cbom.mjs shorsight/cbom.raw.json
+ *   python shorsight/build_inventory.py
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -19,6 +25,7 @@ import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
 const __dirname   = dirname(fileURLToPath(import.meta.url));
 const CBOM_PATH   = join(__dirname, '../public/cbom.json');
 const SIG_PATH    = join(__dirname, '../public/cbom.sig');
+const PAGE_PATH   = join(__dirname, '../public/shorsight/inventory.html');
 const GOV_PATH    = join(__dirname, '../data/governance.json');
 
 interface Property { name: string; value: string }
@@ -73,9 +80,17 @@ interface Governance {
 let rawText: string;
 let cbom: Cbom;
 let gov: Governance;
+let page: string;
 let cryptoAssets: Component[];
 let libraries: Component[];
 let bomRefs: Set<string>;
+
+/** The JSON payload of one `<script type="application/json">` island. */
+function island(html: string, id: string): unknown {
+  const m = html.match(new RegExp(`<script id="${id}" type="application/json">([\\s\\S]*?)</script>`));
+  if (!m) throw new Error(`no '${id}' island in inventory.html`);
+  return JSON.parse(m[1].replace(/<\\\//g, '</'));
+}
 
 function firstProp(c: Component, name: string): string | undefined {
   return c.properties?.find(p => p.name === name)?.value;
@@ -84,7 +99,8 @@ function firstProp(c: Component, name: string): string | undefined {
 beforeAll(() => {
   rawText = readFileSync(CBOM_PATH, 'utf8');
   cbom = JSON.parse(rawText) as Cbom;
-  gov  = JSON.parse(readFileSync(GOV_PATH, 'utf8')) as Governance;
+  page = readFileSync(PAGE_PATH, 'utf8');
+  gov  = island(page, 'governance-data') as Governance;
   cryptoAssets = cbom.components.filter(c => c.type === 'cryptographic-asset');
   libraries    = cbom.components.filter(c => c.type === 'library');
   bomRefs      = new Set(cbom.components.map(c => c['bom-ref']));
@@ -268,6 +284,25 @@ describe('ML-DSA-65 signature', () => {
     const pubKey = Buffer.from(process.env.ML_DSA_PUBLIC_KEY, 'hex');
     const msg    = new TextEncoder().encode(rawText);
     expect(ml_dsa65.verify(sig, msg, pubKey)).toBe(true);
+  });
+});
+
+// ── Embedded ShorSight page ───────────────────────────────────────────────────
+
+describe('Embedded ShorSight page', () => {
+  it('shows exactly the signed CBOM', () => {
+    // a rescan without rebuilding the page would show stale data next to a
+    // valid signature for different bytes
+    expect(island(page, 'cbom-data')).toEqual(cbom);
+  });
+
+  it('shares its risk analysis with the small-screen rendering', () => {
+    const compact = JSON.parse(readFileSync(GOV_PATH, 'utf8')) as Governance;
+    expect(compact.risk).toEqual(gov.risk);
+  });
+
+  it('is reduced to the inventory and risk tabs', () => {
+    expect(page).toContain("const TABS = [['inventory','Inventory'],['risk','Risk&nbsp;Management']];");
   });
 });
 

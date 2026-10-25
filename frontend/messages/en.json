@@ -513,20 +513,23 @@
   },
   "cbom": {
     "pageTitle": "Cryptographic Inventory",
-    "metaDescription": "Cryptography inventory of beyond-shor.eu — {count} assets across {libs} libraries, scanned with ShorSight, documented as a CycloneDX CBOM and extended with a BSI 200-3 risk analysis.",
-    "intro": "This is the complete ShorSight scan result for beyond-shor.eu: {count} cryptographic assets across {libs} libraries, each with the file and line where it was found. Becoming crypto-agile starts with knowing what you use and where.",
-    "evidenceNote": "Every asset carries an evidence grade: literal when an exact crypto API call appears in the code, resolved when it was inferred from imports and usage, and name-only when only the identifier matched. Clicking a row shows the evidence, with a link to the line in the repository.",
+    "metaDescription": "Cryptography inventory of beyond-shor.eu: {count} assets across {libs} libraries, scanned with ShorSight, published as a signed CycloneDX CBOM with a risk analysis following BSI Standard 200-3.",
+    "intro": "What cryptography does beyond-shor.eu use, and where? The answer comes from ShorSight, a cryptography inventory tool. It analyses source code semantically rather than by pattern matching, backs every finding with a file and line, and assesses it twice: against classical attacks and against quantum computers. In this website it found {count} cryptographic assets across {libs} libraries.",
+    "embedNote": "Below is ShorSight’s own interface, reduced to the inventory and risk management views.",
     "scopeNote": "What is inventoried is what does cryptographic work in this repository. The hosting provider’s TLS layer, Node’s internal hashes for package integrity and build tooling are deliberately out of scope.",
     "metaScanner": "scanner",
     "metaScanned": "scanned",
     "metaCommit": "commit",
-    "tabInventory": "Inventory",
-    "tabRisk": "Risk Management",
+    "embedLabel": "// shorsight · read-only",
+    "embedTitle": "ShorSight: cryptography inventory and risk management of beyond-shor.eu",
+    "openStandalone": "Open in a new tab ↗",
     "exportTitle": "Export",
     "downloadBtn": "Download cbom.json ↓",
-    "downloadNote": "CycloneDX {spec} — signed with ML-DSA-65, verifiable in your browser",
+    "downloadNote": "CycloneDX {spec}, signed with ML-DSA-65, verifiable in your browser",
     "rawJsonToggle": "// show CBOM JSON",
     "sigVerifyLink": "Verify →",
+    "tabInventory": "Inventory",
+    "tabRisk": "Risk Management",
     "cardAssets": "assets",
     "cardQuantumSafe": "quantum-safe",
     "cardQuantumUnsafe": "quantum-unsafe",
@@ -749,7 +752,9 @@
     "treatmentNote": {
       "x25519": "Deliberate: X25519 is the classical half of the hybrid handshake and is paired with ML-KEM-1024.",
       "ec-p256": "ECDSA P-256 is kept as the classical reference point in the signature benchmark."
-    }
+    },
+    "compactNote": "On small screens this page shows a compact rendering of the same result; ShorSight’s own interface appears at desktop width.",
+    "detailNote": "Clicking an entry shows the evidence, with a link to the exact line in the repository. Risk management follows BSI Standard 200-3 and uses Mosca’s inequality to measure urgency."
   },
   "rbe": {
     "pageTitle": "Registration-Based Encryption — Interactive Demo",

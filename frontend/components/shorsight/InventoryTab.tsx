@@ -185,13 +185,18 @@ export default function InventoryTab() {
                   ['family',     t('colFamily')],
                   ['confidence', t('colEvidence')],
                 ] as [SortKey, string][]).map(([key, label]) => (
-                  <SortableTh key={key} sortKey={key} sort={sort} onSort={setSort}>
-                    {label}
-                    {key === 'confidence' && (
+                  <SortableTh
+                    key={key}
+                    sortKey={key}
+                    sort={sort}
+                    onSort={setSort}
+                    extra={key === 'confidence' && (
                       <InfoTip label={t('colEvidence')}>
                         {t.rich('evidenceInfo', { b: c => <b>{c}</b>, br: () => <br /> })}
                       </InfoTip>
                     )}
+                  >
+                    {label}
                   </SortableTh>
                 ))}
                 <th className="px-4 py-2.5 font-mono text-[10px] uppercase tracking-wider text-[var(--color-text-muted)]">
@@ -315,11 +320,13 @@ function sourceKind(label: string): string {
 
 /* ─── table header ────────────────────────────────────────────────────────── */
 
-function SortableTh({ sortKey, sort, onSort, align, children }: {
+function SortableTh({ sortKey, sort, onSort, align, extra, children }: {
   sortKey: SortKey;
   sort: { key: SortKey; dir: 1 | -1 };
   onSort: (s: { key: SortKey; dir: 1 | -1 }) => void;
   align?: 'right';
+  /** rendered next to the sort button, not inside it — a button may not contain a button */
+  extra?: ReactNode;
   children: ReactNode;
 }) {
   const active = sort.key === sortKey;
@@ -339,6 +346,7 @@ function SortableTh({ sortKey, sort, onSort, align, children }: {
         {children}
         <span aria-hidden="true" className={active ? '' : 'opacity-0'}>{sort.dir === 1 ? '↑' : '↓'}</span>
       </button>
+      {extra}
     </th>
   );
 }

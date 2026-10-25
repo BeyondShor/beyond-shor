@@ -43,7 +43,7 @@ Unterstützte Signaturverfahren (inkl. 20× Benchmark):
 - **SLH-DSA** — jeweils ein kompakter (kleine Signaturen, langsames Signing) und ein performanter Parametersatz (schnelles Signing, größere Signaturen)
 
 ### 📋 Signiertes Kryptografie-Inventar (ShorSight)
-Das vollständige Scan-Ergebnis von **ShorSight** als Cryptography Bill of Materials nach [CycloneDX v1.7](https://cyclonedx.org). ShorSight durchsucht die Codebase nach kryptografischen Assets, belegt jedes mit Datei und Zeile, vergibt einen Evidenzgrad (literal / abgeleitet / nur Name) und bewertet Quantum- wie klassischen Status. Ergänzt wird das um eine Risikoanalyse nach **BSI-Standard 200-3** mit **Mosca** als Dringlichkeitsmaß — inklusive Impact-Bewertung, zweier Risikomatrizen und der dokumentierten Risikobehandlung je Objekt. Die CBOM wird mit ML-DSA-65 signiert und ist unter [beyond-shor.eu/cbom](https://beyond-shor.eu/cbom) abrufbar; die Signatur lässt sich direkt im Browser prüfen.
+Das vollständige Scan-Ergebnis von **ShorSight** als Cryptography Bill of Materials nach [CycloneDX v1.7](https://cyclonedx.org). ShorSight durchsucht die Codebase nach kryptografischen Assets, belegt jedes mit Datei und Zeile, vergibt einen Evidenzgrad (literal / abgeleitet / nur Name) und bewertet Quantum- wie klassischen Status. Ergänzt wird das um eine Risikoanalyse nach **BSI-Standard 200-3** mit **Mosca** als Dringlichkeitsmaß — inklusive Impact-Bewertung, zweier Risikomatrizen und der dokumentierten Risikobehandlung je Objekt. Auf [beyond-shor.eu/cbom](https://beyond-shor.eu/cbom) ist dafür auf Desktop-Breite die Originaloberfläche von ShorSight eingebunden, reduziert auf Inventar und Risikomanagement; auf kleineren Bildschirmen zeigt eine kompakte React-Darstellung dieselben Daten. Die CBOM selbst wird mit ML-DSA-65 signiert; die Signatur lässt sich direkt im Browser prüfen.
 
 ### 📅 Interaktive Q-Day Timeline
 Eine chronologische, interaktive Timeline von 1994 bis ~2040 — von Shors Algorithmus über die NIST-Standardisierung bis zu regulatorischen Deadlines und Q-Day-Schätzungen. Ereignisse sind nach Kategorien (Geschichte, Standard, Hardware, Regulierung, Prognose) farblich kodiert und per Klick aufklappbar.
@@ -78,13 +78,13 @@ Keine Cookies, keine Werbung, kein Google Analytics, kein reCAPTCHA. Analytics �
 beyond-shor.eu/
 ├── frontend/               # Next.js-Anwendung
 │   ├── app/                # App Router — Seiten und Layouts
-│   ├── components/         # UI-Komponenten (Playground, ShorSight-Report, Signatur-Badge)
+│   ├── components/         # UI-Komponenten (Playground, ShorSight-Einbettung und -Report, Signatur-Badge)
 │   ├── lib/                # Utilities, API-Clients, Autolinker, ShorSight-Modell
-│   ├── data/               # governance.json — Ergebnis der Risikoanalyse
-│   └── public/             # Statische Assets, cbom.json, cbom.sig
+│   ├── data/               # governance.json (Risikoanalyse), Timeline-Quellen
+│   └── public/             # Statische Assets, cbom.json, cbom.sig, shorsight/ (eingebettete ShorSight-UI)
 ├── src/
 │   └── api/                # Strapi Content Types inkl. Lifecycle Hook (Signierung)
-├── shorsight/              # Scan-Input: rohe CBOM + Governance-Konfiguration
+├── shorsight/              # Rohe CBOM, Governance-Konfiguration, build_inventory.py
 ├── scripts/
 │   └── sign-cbom.mjs       # CBOM veröffentlichen und mit ML-DSA-65 signieren
 └── README.md

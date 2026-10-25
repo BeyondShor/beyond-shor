@@ -5,9 +5,8 @@
  * The CBOM itself is produced by ShorSight, not here:
  *
  *   shorsight scan . -o shorsight/cbom.raw.json
- *   shorsight govern shorsight/cbom.raw.json \
- *     --config shorsight/governance.beyond-shor.json -o frontend/data/governance.json
  *   node scripts/sign-cbom.mjs shorsight/cbom.raw.json
+ *   python shorsight/build_inventory.py   # the ShorSight page /cbom embeds
  *
  * Passing a source file re-publishes it to frontend/public/cbom.json first
  * (normalised to JSON.stringify(…, null, 2) + a trailing newline, which is what

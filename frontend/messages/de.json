@@ -513,20 +513,23 @@
   },
   "cbom": {
     "pageTitle": "Kryptografisches Inventar",
-    "metaDescription": "Kryptografie-Inventar von beyond-shor.eu — {count} Assets aus {libs} Bibliotheken, gescannt mit ShorSight, dokumentiert als CycloneDX-CBOM und um eine BSI-200-3-Risikoanalyse ergänzt.",
-    "intro": "Hier steht das vollständige Scan-Ergebnis von ShorSight für beyond-shor.eu: {count} kryptografische Assets aus {libs} Bibliotheken, jedes mit Datei und Zeile, an der es gefunden wurde. Wer kryptoagil werden will, muss zuerst wissen, was er einsetzt und wo.",
-    "evidenceNote": "Jedes Asset hat einen Evidenzgrad: literal, wenn ein exakter Krypto-API-Aufruf im Code steht, abgeleitet, wenn es aus Imports und Verwendung erschlossen wurde, und nur Name, wenn lediglich der Bezeichner passte. Ein Klick auf eine Zeile zeigt die Belege mit einem Link auf die Stelle im Repository.",
+    "metaDescription": "Kryptografie-Inventar von beyond-shor.eu: {count} Assets aus {libs} Bibliotheken, gescannt mit ShorSight, als signierte CycloneDX-CBOM mit Risikoanalyse nach BSI-Standard 200-3.",
+    "intro": "Welche Kryptografie steckt in beyond-shor.eu, und an welcher Stelle? Die Antwort liefert ShorSight, ein Werkzeug zur Kryptografie-Inventarisierung. Es analysiert Quellcode semantisch statt per Mustersuche, belegt jeden Fund mit Datei und Zeile und bewertet ihn zweifach: klassisch und mit Blick auf Quantencomputer. In dieser Website hat es {count} kryptografische Assets aus {libs} Bibliotheken gefunden.",
+    "embedNote": "Unten ist die Oberfläche von ShorSight selbst eingebunden, reduziert auf Inventar und Risikomanagement und daher auf Englisch.",
     "scopeNote": "Erfasst wird, was in diesem Repository kryptografische Arbeit leistet. Der TLS-Layer des Hosters, Node-interne Hashes zur Paketintegrität und Build-Werkzeuge sind bewusst nicht Teil des Inventars.",
     "metaScanner": "Scanner",
     "metaScanned": "gescannt",
     "metaCommit": "Commit",
-    "tabInventory": "Inventar",
-    "tabRisk": "Risikomanagement",
+    "embedLabel": "// shorsight · schreibgeschützt",
+    "embedTitle": "ShorSight: Kryptografie-Inventar und Risikomanagement von beyond-shor.eu",
+    "openStandalone": "In eigenem Tab öffnen ↗",
     "exportTitle": "Export",
     "downloadBtn": "cbom.json herunterladen ↓",
-    "downloadNote": "CycloneDX {spec} — signiert mit ML-DSA-65, im Browser prüfbar",
+    "downloadNote": "CycloneDX {spec}, signiert mit ML-DSA-65, im Browser prüfbar",
     "rawJsonToggle": "// CBOM-JSON anzeigen",
     "sigVerifyLink": "Prüfen →",
+    "tabInventory": "Inventar",
+    "tabRisk": "Risikomanagement",
     "cardAssets": "Assets",
     "cardQuantumSafe": "quantensicher",
     "cardQuantumUnsafe": "quantenunsicher",
@@ -749,7 +752,9 @@
     "treatmentNote": {
       "x25519": "Bewusste Entscheidung: X25519 ist die klassische Hälfte des Hybrid-Handshakes und wird immer zusammen mit ML-KEM-1024 eingesetzt.",
       "ec-p256": "ECDSA P-256 bleibt als klassischer Vergleichspunkt im Signatur-Benchmark erhalten."
-    }
+    },
+    "compactNote": "Auf kleinen Bildschirmen steht hier eine kompakte Darstellung desselben Ergebnisses, die Oberfläche von ShorSight selbst erscheint ab Desktop-Breite.",
+    "detailNote": "Ein Klick auf einen Eintrag zeigt die Belege mit Link auf die Fundstelle im Repository. Das Risikomanagement folgt dem BSI-Standard 200-3 und nutzt die Mosca-Ungleichung als Maß für die Dringlichkeit."
   },
   "rbe": {
     "pageTitle": "Registration-Based Encryption — Interaktive Demo",

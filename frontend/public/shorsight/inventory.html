@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crypto Inventory — beyond-shor.eu</title>
+<link rel="icon" href="data:image/x-icon;base64,AAABAAEAICAAAAEAIADlAwAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAgAAAAIAgGAAAAc3p69AAAAAlwSFlzAAALEwAACxMBAJqcGAAAA5dJREFUeJy9l/tLFFEUx+enndndmTsaNKP5CCPIGdf3gyJFRTFTS7OnZmFmSZBSUj9o4bO0ooclpCkWPkrazHJrDQzsQRgYJbVWv1v/g/12Yu51V3d31JlldeD8Nveezz3ne849l6IWPhQqb+BFuZUXpN+8IP/jRRn8asqegvSLF6UWPjw6kFr6BWyMikWi/FfrZigyFdg9lcCm7Qc+KEo3DBKkPwGCJQY7V2j0OGfzyoEe+waG8VlsTPsA8MEWnyBwJHhRvqJ5YbAFaOtnl3OnmYvP+JgaqYUiedEeek/niplq2n0CQII8S+kSXJAFDC8Xw+80tvC0r8Kcp/QsMFdc8nJubOrBYL6lQAbNAGzhKTDYHcRpQxcRYJfNZ8e6ALj0g2CwzZB8n70KbH45Aemwrj0Al5gL9Mg0cdj4AId73QBQZCrQjz+ScN+2Ah8SS9KxHgBoSwrQfRPEee84oIikRT2sNQAKjQNjxwh2okQASWnuglQBQFu3A7ejEOsFxee4oqUZAFkycI6Z3jdAD74nzkemsQY8F7kA7j4DtrQWmG67q0KcRo9+AWNzD3ApBasDoM0JQA9Mute43QFs5iHVRU4Aw5I7wfD6B9D9k8A8GHdv13YHGC/cAj4kenkAdtcx1RbLZagDmMtqF086+A7Mh2sARSS7V09KPpjqOzEY1tGNJ6oQFP45p0wdIP3AigC0dcpNnGrGZR1xlbFJiYRqCsLjcfjcARzAZZWumAKtVcBll5BI2B1emqBcIpTTwdjQ7S3CpBVEqKMMTXWdZE1Ln4Y+EKq/DFeNQmIu2e/FV7z/ygCijHPL9Iz7tREZhj8RbSXnrQ7AO1vx0Ae/tWLmvo0AZJfquIwS/HcZOVs7m1asHYD3vI6rfbuOlWbn3GOppiitG7B7FwcSU+PCQNL9SjMAu6+KiLBvQkMViOpmrqj3Hsmae1cdyVBYHNCP3pIJurzOA0Dww1BaVLX8mk0WfCm5SjoszmMoFfwwlp+7pv5/dCYwN4fJf7YZ4HYWqYzlotSi72Ey5Q3xdApM1W04EmzucWBLzoOx9SEYbN/JyZ9PA5d9VGVPqYk8zQRpTrOYdpcDvTQNY0TZy5mxrR9QbLZ3dBSffGwAeZwKlhj8VtORCrbgJK5nFBYPbP4JMF28A8z1IWDujeJ+b668jHuI6npBmgsUtkW7vZCVSPCi1MwL0k9FHHqqQ5MJ8ryScyXsrpNTFPUf2Vox8YYxS9oAAAAASUVORK5CYII=">
+<style>
+  :root{
+    /* aligned with beyond-shor.eu: deep navy, cyan accent, amber warnings */
+    --bg:#0a0e27; --panel:#121733; --panel2:#1b2147; --line:#2a3160;
+    --fg:#e8ecf8; --muted:#8b93c0; --accent:#38bdf8;
+    --safe:#34d399; --unsafe:#f87171; --unknown:#6b7394;
+    --weak:#fbbf24; --broken:#f87171; --secure:#34d399;
+  }
+  *{box-sizing:border-box}
+  /* always reserve space for the vertical scrollbar so switching tabs (short vs long) doesn't shift the centered layout */
+  html{scrollbar-gutter:stable}
+  body{margin:0;color:var(--fg);min-height:100vh;
+       background:var(--bg) radial-gradient(1100px 460px at 78% -160px, rgba(56,189,248,.08), transparent 70%) fixed;
+       font:14px/1.55 'Inter','Inter var',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+       -webkit-font-smoothing:antialiased}
+  a{color:var(--accent)}
+  header{padding:14px 24px;border-bottom:1px solid var(--line);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--fg)}
+  .brand .logo{width:26px;height:26px;border-radius:6px;display:block}
+  .brand .wordmark{font-size:19px;font-weight:700;letter-spacing:-.02em}
+  .brand .wordmark .q{color:var(--accent)}
+  .brand .byline{color:var(--muted);font-size:11px;border-left:1px solid var(--line);padding-left:10px;text-decoration:none}
+  .brand .byline:hover{color:var(--accent)}
+  .grow{flex:1}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input,select,button{background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px 10px;font:inherit}
+  button{cursor:pointer}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  button:hover{filter:brightness(1.1)}
+  main{padding:24px;max-width:1200px;margin:0 auto}
+  .hide{display:none!important}
+  .muted{color:var(--muted)}
+
+  #loader{padding:52px 16px}
+  .hero{max-width:680px;margin:0 auto;text-align:center;display:flex;flex-direction:column;align-items:center}
+  .hero .hero-logo{width:56px;height:56px;border-radius:15px;box-shadow:0 8px 30px rgba(56,189,248,.28);margin-bottom:16px}
+  .hero h1{font-size:31px;font-weight:800;letter-spacing:-.025em;margin:0}
+  .hero h1 .q{color:var(--accent)}
+  .hero .tagline{color:var(--muted);font-size:15px;margin:9px 0 0;max-width:460px}
+  .hero-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;margin:24px 0 4px}
+  .hero-actions input{min-width:230px}
+  .hero .hero-hint{font-size:13px;max-width:540px;margin:14px 0 0;line-height:1.6}
+  .hero-points{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:16px 0 2px}
+  .hero-points span{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-size:12px;color:var(--muted)}
+  #loader .drop{border:2px dashed var(--line);border-radius:12px;padding:26px;max-width:520px;margin:22px auto 0;
+                transition:.15s;color:var(--muted);font-size:13px}
+  #loader .drop.over{border-color:var(--accent);background:var(--panel);color:var(--fg)}
+  body:not(.has-data) #topControls{display:none}   /* empty state: keep the header to just the brand */
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+  .card{position:relative;overflow:hidden;padding:16px;border:1px solid var(--line);border-radius:14px;
+        background:linear-gradient(180deg,var(--panel),#0d1230);
+        transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease}
+  .card:hover{transform:translateY(-2px);border-color:rgba(56,189,248,.4);box-shadow:0 10px 26px -14px rgba(0,0,0,.8)}
+  .card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--accent);opacity:.45}
+  .card.safe::before{background:var(--safe);opacity:.9} .card.unsafe::before{background:var(--unsafe);opacity:.9}
+  .card.unknown::before{background:var(--unknown);opacity:.7}
+  .card .n{font-size:30px;font-weight:800;line-height:1.05;letter-spacing:-.02em}
+  .card .l{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-top:5px}
+  .card.safe .n{color:var(--safe)} .card.unsafe .n{color:var(--unsafe)} .card.unknown .n{color:var(--unknown)}
+
+  .row2{display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:20px}
+  @media(max-width:760px){.row2{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;
+         box-shadow:0 1px 0 rgba(255,255,255,.02), 0 14px 30px -22px rgba(0,0,0,.7)}
+  .panel h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+            margin:0 0 14px;display:flex;align-items:center;gap:8px}
+  .panel h2::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--accent);opacity:.85;flex:none}
+  .donut{display:flex;align-items:center;gap:16px}
+  .legend{display:flex;flex-direction:column;gap:6px;font-size:13px}
+  .legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px;vertical-align:middle}
+  .barrow{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px}
+  .barrow .lab{width:84px;color:var(--muted)} .barrow .track{flex:1;background:var(--panel2);border-radius:5px;height:10px;overflow:hidden}
+  .barrow .fill{height:100%}
+
+  .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+  .chip{padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;font-size:13px}
+  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  table{width:100%;border-collapse:collapse}
+  /* Values come from the scanned system, not from us: an X.509 subject
+     ("1.2.840.113549.1.9.1=info@e-szigno.hu,CN=Microsec e-Szigno Root CA 2009,O=…") is one
+     unbreakable token for the line-breaker — no spaces, and browsers do not break at '=' or
+     ','. Without an explicit rule such a cell sets the column's minimum width, the table
+     grows past the page and the whole layout is pushed sideways. `anywhere` breaks *only*
+     when a line would otherwise overflow, so normal text still wraps at word boundaries. */
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;
+        overflow-wrap:anywhere}
+  /* `anywhere` (unlike `break-word`) also feeds the *min-content* size, which is what makes it
+     safe — but it lets the auto table layout squeeze a column down to a single character. The
+     first column is always the label (asset, object, requirement) and the one that reads worst
+     when shredded into 2-3 characters per line, so give it a floor. Columns that are meant to
+     be narrow override this inline (the CAMM id column). */
+  th:first-child,td:first-child{min-width:12ch}
+  /* last resort for content that genuinely cannot wrap (wide matrices): scroll the panel,
+     never the page */
+  .panel{overflow-x:auto}
+  tbody tr:last-child td{border-bottom:none}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;user-select:none}
+  #algoTable th{cursor:pointer} #algoTable th:hover{color:var(--fg)}
+  #algoTable tbody tr,#libTable tbody tr{cursor:pointer;transition:background .1s}
+  #algoTable tbody tr:hover,#libTable tbody tr:hover{background:var(--panel2)}
+  #algoTable tbody tr:hover td:first-child,#libTable tbody tr:hover td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+  .badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;letter-spacing:.01em}
+  .badge a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+  a.cwe{color:var(--accent);text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
+  .b-safe{background:rgba(46,160,67,.18);color:var(--safe)}
+  .b-unsafe{background:rgba(229,83,75,.18);color:var(--unsafe)}
+  .b-unknown{background:rgba(110,118,129,.22);color:#aab3bd}
+  .b-weak{background:rgba(210,153,34,.18);color:var(--weak)}
+  .b-broken{background:rgba(229,83,75,.18);color:var(--broken)}
+  .b-secure{background:rgba(46,160,67,.18);color:var(--secure)}
+  .sev-critical{background:rgba(229,83,75,.30);color:#ff8b84}
+  .sev-high{background:rgba(229,83,75,.18);color:var(--unsafe)}
+  .sev-medium{background:rgba(210,153,34,.18);color:var(--weak)}
+  .sev-low{background:rgba(110,118,129,.22);color:#aab3bd}
+  .pill{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+        overflow-wrap:anywhere;max-width:100%}
+  /* BSI-200-3 risk matrices */
+  .mxrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;margin-bottom:20px}
+  .mxrow .panel{margin:0}
+  .rmx{display:grid;grid-template-columns:112px repeat(4,1fr);gap:6px;margin:14px 0 6px}
+  .rmx .hd{color:var(--muted);font-size:10.5px;text-align:center;align-self:end;padding-bottom:3px;line-height:1.25}
+  .rmx .hd b{color:var(--fg);font-weight:600;display:block;font-size:11px}
+  .rmx .corner{color:var(--muted);font-size:10px;text-align:right;align-self:end;padding-bottom:3px;line-height:1.3}
+  .rmx .yl{color:var(--muted);font-size:10.5px;text-align:right;align-self:center;padding-right:8px;line-height:1.25}
+  .rmx .yl b{color:var(--fg);font-weight:600;display:block;font-size:11px}
+  .rmx .cell{border:1px solid var(--line);border-radius:8px;min-height:52px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px}
+  .rmx .cell.has{cursor:pointer}
+  .rmx .cell.has:hover{filter:brightness(1.3);border-color:var(--fg)}
+  .rmx .cell .zero{color:var(--muted);font-weight:400;font-size:14px;opacity:.5}
+  .cell-r1{background-color:rgba(46,160,67,.15);color:var(--safe)}
+  .cell-r2{background-color:rgba(210,153,34,.15);color:var(--weak)}
+  .cell-r3{background-color:rgba(229,83,75,.16);color:#ff8b84}
+  .cell-r4{background-color:rgba(229,83,75,.32);color:#ff8b84}
+  .cell-prov{background-image:repeating-linear-gradient(45deg,transparent,transparent 5px,rgba(255,255,255,.10) 5px,rgba(255,255,255,.10) 10px)}
+  .rmlegend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:8px;align-items:center}
+  .rmlegend span{display:inline-flex;align-items:center;gap:5px}
+  .rmlegend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .rmlegend i.hatch{background-image:repeating-linear-gradient(45deg,transparent,transparent 3px,rgba(255,255,255,.35) 3px,rgba(255,255,255,.35) 6px);border:1px solid var(--line)}
+  .needs-input{background:rgba(210,153,34,.18);color:var(--weak)}
+  /* per-asset impact assessment cards */
+  .asset-card{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:12px 0;background:linear-gradient(180deg,var(--panel),#0d1230)}
+  .ac-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px}
+  .ac-head .ac-name{font-size:15px}
+  .fieldrow{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin:8px 0}
+  .field{display:flex;flex-direction:column;gap:4px;min-width:120px}
+  .field .flab{font-size:11px;color:var(--muted);display:flex;align-items:center;white-space:nowrap}
+  .field.narrow{min-width:0}
+  .field.narrow select{width:66px;text-align:center}
+  .field.num input{width:100px}
+  .grp-title{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:14px 0 2px;border-top:1px solid var(--line);padding-top:12px}
+  .ro-val{padding:7px 0;font-weight:600}
+  /* clickable circled-i: opens a small closable info panel (replaces native title tooltips) */
+  .info{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:5px;
+        border:1px solid currentColor;border-radius:50%;font:700 10px/1 Georgia,'Times New Roman',serif;
+        font-style:italic;color:var(--muted);cursor:pointer;vertical-align:middle;user-select:none;transition:.15s}
+  .info:hover{color:var(--accent);border-color:var(--accent);background:rgba(78,161,255,.14)}
+  .info:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+  th .info{color:var(--muted)}
+  #infopop{position:absolute;z-index:80;max-width:340px;background:var(--panel2);border:1px solid var(--line);
+           border-radius:10px;padding:14px 30px 14px 16px;box-shadow:0 10px 32px rgba(0,0,0,.5);
+           font-size:13px;line-height:1.55;color:var(--fg)}
+  #infopop.hide{display:none}
+  #infopop a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+  #infopop .x{position:absolute;top:6px;right:9px;background:none;border:none;color:var(--muted);
+              font-size:18px;line-height:1;cursor:pointer;padding:0}
+  #infopop .x:hover{color:var(--fg)}
+
+  #detail{position:fixed;top:0;right:0;width:420px;max-width:92vw;height:100%;background:var(--panel);border-left:1px solid var(--line);
+          padding:20px;overflow:auto;transform:translateX(100%);transition:.2s;box-shadow:-12px 0 32px rgba(0,0,0,.4)}
+  #detail.open{transform:none}
+  #detail h2{margin:0 0 4px;font-size:20px;overflow-wrap:anywhere}
+  #detail .close{position:absolute;top:14px;right:16px;background:none;border:none;color:var(--muted);font-size:22px}
+  #detail section{margin-top:18px}
+  #detail section h3{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 8px}
+  #detail .kv{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px solid var(--line)}
+  /* flex items default to min-width:auto and refuse to shrink below their content, so a long
+     certificate subject would widen the drawer instead of wrapping inside it */
+  #detail .kv>*{min-width:0;overflow-wrap:anywhere}
+  #detail .kv>*:last-child{text-align:right}
+  /* used in the drawer *and* in "Where it lives" / the governance panels, so the rule is not
+     scoped: every one of them shows scanned values (paths, subjects, imported labels) */
+  .occ{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;padding:6px 8px;background:var(--panel2);border-radius:6px;margin:6px 0;overflow-wrap:anywhere}
+  a.srclink{color:var(--accent,#4ea1ff);text-decoration:none}
+  a.srclink:hover{text-decoration:underline}
+  #detail .occ a.snip{display:inline-block;margin-top:2px;color:inherit;border-left:2px solid var(--accent,#4ea1ff);padding-left:6px}
+  #detail .occ a.snip:hover{color:var(--accent,#4ea1ff)}
+  .err{color:var(--unsafe);margin-top:12px}
+  /* scan progress — a fixed strip so it is visible from the hero AND the dashboard */
+  #scanprog{position:fixed;left:0;right:0;top:0;z-index:60;background:var(--panel);
+    border-bottom:1px solid var(--line);padding:9px 24px;
+    box-shadow:0 6px 22px rgba(0,0,0,.35);font-size:12.5px}
+  #scanprog.hide{display:none}
+  #scanprog .row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+  #scanprog .what{color:var(--fg);font-weight:600}
+  #scanprog .stage{color:var(--muted)}
+  #scanprog .count{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
+  #scanprog .track{height:6px;border-radius:999px;background:var(--panel2);overflow:hidden}
+  #scanprog .fill{height:100%;width:0;border-radius:999px;background:var(--accent);
+    transition:width .18s linear}
+  /* nothing to measure yet (cloning, exporting an image): sweep instead of lying */
+  #scanprog.indet .fill{width:35%;animation:sweep 1.1s ease-in-out infinite}
+  @keyframes sweep{0%{margin-left:-35%}100%{margin-left:100%}}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--muted);border-top-color:var(--accent);border-radius:50%;animation:s .7s linear infinite;vertical-align:middle}
+  @keyframes s{to{transform:rotate(360deg)}}
+  footer{color:var(--muted);text-align:center;padding:24px;font-size:12px}
+  #boot{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
+        align-items:center;justify-content:center;z-index:60;gap:14px}
+  #boot .spin{width:34px;height:34px;border-width:3px}
+  /* active-network-scan authorization gate (the "lock") */
+  #netmodal{position:fixed;inset:0;background:rgba(4,7,20,.72);display:flex;align-items:center;
+            justify-content:center;z-index:70;padding:16px}
+  #netmodal.hide{display:none}
+  .netcard{background:linear-gradient(180deg,var(--panel),#0d1230);border:1px solid var(--line);
+           border-radius:14px;padding:22px 24px;max-width:460px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .netcard h3{margin:0 0 6px;font-size:16px;display:flex;align-items:center;gap:8px}
+  .netcard .warn{color:#fbbf24;font-size:13px;line-height:1.5;margin:0 0 14px}
+  .netcard input[type=text]{width:100%;box-sizing:border-box;margin:2px 0 12px}
+  .netcard .ackrow{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--fg);
+                   background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:11px 12px}
+  .netcard .ackrow input{margin-top:2px}
+  .netcard .neterr{color:#f87171;font-size:12px;min-height:16px;margin:9px 0 2px}
+  .netcard .netstatus{color:var(--accent);font-size:12.5px;margin:2px 0 4px;display:flex;align-items:center;gap:8px}
+  .netcard .netstatus.hide{display:none}
+  .netcard .row{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}
+  .netcard button.primary:disabled{opacity:.45;cursor:not-allowed}
+  .netcard .hint{color:var(--muted);font-size:11.5px;margin:0 0 12px}
+  body.report #topControls{display:none}     /* a report is read-only: no load/scan/export */
+  .sinkrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 8px;border-bottom:1px solid var(--line)}
+  .sinkrow .call{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:18px;flex-wrap:wrap}
+  .tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);
+               padding:10px 14px;cursor:pointer;font:inherit;font-weight:600;border-radius:8px 8px 0 0;transition:.1s}
+  .tabs button:hover{color:var(--fg);background:rgba(255,255,255,.03)}
+  .tabs button.active{color:var(--fg);border-bottom-color:var(--accent)}
+  .level{font-size:40px;font-weight:800}
+  .bar2{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px}
+  .bar2 .lab{width:96px;color:var(--muted)}
+  .bar2 .track{flex:1;background:var(--panel2);border-radius:5px;height:10px;overflow:hidden}
+  .bar2 .fill{height:100%}
+  .gv-acute{color:var(--unsafe)} .gv-quantum{color:var(--weak)} .gv-none{color:var(--safe)}
+  .wave{border-left:3px solid var(--accent);padding-left:14px;margin:0 0 18px}
+  .wave h3{margin:6px 0}
+  select,textarea{background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit}
+  .formrow{display:flex;gap:10px;align-items:center;margin:8px 0;flex-wrap:wrap}
+  h3{font-size:14px;margin:18px 0 8px}
+  /* no ugly number spinners */
+  input[type=number]{-moz-appearance:textfield;width:90px}
+  input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  label{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+  /* maturity status select, tinted like the report badges */
+  select.mstat{font-weight:600}
+  select.mstat-met{background:rgba(52,211,153,.16);color:var(--safe);border-color:rgba(52,211,153,.45)}
+  select.mstat-partial{background:rgba(251,191,36,.16);color:var(--weak);border-color:rgba(251,191,36,.45)}
+  select.mstat-no{background:rgba(107,115,148,.20);color:#aab3bd}
+  /* how-to */
+  .howto h2{font-size:18px;text-transform:none;letter-spacing:0;color:var(--fg);margin:22px 0 6px}
+  .howto h3{font-size:14px} .howto p,.howto li{color:var(--fg)} .howto code{font-family:ui-monospace,monospace;background:var(--panel2);padding:1px 5px;border-radius:4px;font-size:12px}
+  .howto .step{border-left:3px solid var(--accent);padding-left:14px;margin:14px 0}
+</style>
+<style>
+  @font-face{font-family:'Inter';src:url(/shorsight/fonts/inter-latin-wght-normal.woff2) format('woff2');
+             font-weight:100 900;font-display:swap}
+  @font-face{font-family:'JetBrains Mono';src:url(/shorsight/fonts/jetbrains-mono-latin-wght-normal.woff2) format('woff2');
+             font-weight:100 800;font-display:swap}
+  .pill,.occ,.sinkrow .call{font-family:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace}
+  /* framed: the iframe grows with the content, so the page has nothing to scroll and
+     min-height:100vh would pin the frame at its tallest height forever */
+  html.embedded{overflow:hidden;scrollbar-gutter:auto}
+  html.embedded body{min-height:0;background-attachment:scroll}
+  /* the drawer is moved along with the parent's scroll; only the slide may animate */
+  html.embedded #detail{transition:transform .2s}
+  /* on a phone the frame runs edge to edge; the site's 16px gutter replaces ShorSight's 24px */
+  @media(max-width:639px){html.embedded header{padding:12px 16px} html.embedded main{padding:16px}}
+</style>
+<script>
+(function(){
+  var frame=null; try{frame=window.frameElement}catch(e){}
+  if(!frame) return;
+  document.documentElement.classList.add('embedded');
+  var host=window.parent, queued=false;
+
+  function fit(){ frame.style.height=document.body.scrollHeight+'px'; }
+
+  // position:fixed is relative to the iframe, which is as tall as the whole report —
+  // pin the detail drawer to the slice of the frame that is actually on screen,
+  // below the site's sticky header
+  function pin(){
+    queued=false;
+    var d=document.getElementById('detail'); if(!d) return;
+    var r=frame.getBoundingClientRect(), hdr=host.document.querySelector('header');
+    var inset=hdr?hdr.getBoundingClientRect().bottom:0;
+    var top=Math.max(0,inset-r.top), bottom=Math.min(r.height,host.innerHeight-r.top);
+    d.style.top=top+'px'; d.style.height=Math.max(0,bottom-top)+'px';
+  }
+  function queue(){ if(!queued){ queued=true; requestAnimationFrame(pin); } }
+
+  document.addEventListener('DOMContentLoaded',function(){
+    new ResizeObserver(function(){ fit(); queue(); }).observe(document.body);
+    host.addEventListener('scroll',queue,{passive:true});
+    host.addEventListener('resize',queue);
+    fit(); pin();
+  });
+})();
+</script>
+</head>
+<body>
+<div id="boot"><div class="spin"></div><div class="muted">Loading ShorSight…</div></div>
+<header>
+  <div class="brand" title="ShorSight — by Beyond Shor">
+    <img class="logo" src="data:image/x-icon;base64,AAABAAEAICAAAAEAIADlAwAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAgAAAAIAgGAAAAc3p69AAAAAlwSFlzAAALEwAACxMBAJqcGAAAA5dJREFUeJy9l/tLFFEUx+enndndmTsaNKP5CCPIGdf3gyJFRTFTS7OnZmFmSZBSUj9o4bO0ooclpCkWPkrazHJrDQzsQRgYJbVWv1v/g/12Yu51V3d31JlldeD8Nveezz3ne849l6IWPhQqb+BFuZUXpN+8IP/jRRn8asqegvSLF6UWPjw6kFr6BWyMikWi/FfrZigyFdg9lcCm7Qc+KEo3DBKkPwGCJQY7V2j0OGfzyoEe+waG8VlsTPsA8MEWnyBwJHhRvqJ5YbAFaOtnl3OnmYvP+JgaqYUiedEeek/niplq2n0CQII8S+kSXJAFDC8Xw+80tvC0r8Kcp/QsMFdc8nJubOrBYL6lQAbNAGzhKTDYHcRpQxcRYJfNZ8e6ALj0g2CwzZB8n70KbH45Aemwrj0Al5gL9Mg0cdj4AId73QBQZCrQjz+ScN+2Ah8SS9KxHgBoSwrQfRPEee84oIikRT2sNQAKjQNjxwh2okQASWnuglQBQFu3A7ejEOsFxee4oqUZAFkycI6Z3jdAD74nzkemsQY8F7kA7j4DtrQWmG67q0KcRo9+AWNzD3ApBasDoM0JQA9Mute43QFs5iHVRU4Aw5I7wfD6B9D9k8A8GHdv13YHGC/cAj4kenkAdtcx1RbLZagDmMtqF086+A7Mh2sARSS7V09KPpjqOzEY1tGNJ6oQFP45p0wdIP3AigC0dcpNnGrGZR1xlbFJiYRqCsLjcfjcARzAZZWumAKtVcBll5BI2B1emqBcIpTTwdjQ7S3CpBVEqKMMTXWdZE1Ln4Y+EKq/DFeNQmIu2e/FV7z/ygCijHPL9Iz7tREZhj8RbSXnrQ7AO1vx0Ae/tWLmvo0AZJfquIwS/HcZOVs7m1asHYD3vI6rfbuOlWbn3GOppiitG7B7FwcSU+PCQNL9SjMAu6+KiLBvQkMViOpmrqj3Hsmae1cdyVBYHNCP3pIJurzOA0Dww1BaVLX8mk0WfCm5SjoszmMoFfwwlp+7pv5/dCYwN4fJf7YZ4HYWqYzlotSi72Ey5Q3xdApM1W04EmzucWBLzoOx9SEYbN/JyZ9PA5d9VGVPqYk8zQRpTrOYdpcDvTQNY0TZy5mxrR9QbLZ3dBSffGwAeZwKlhj8VtORCrbgJK5nFBYPbP4JMF28A8z1IWDujeJ+b668jHuI6npBmgsUtkW7vZCVSPCi1MwL0k9FHHqqQ5MJ8ryScyXsrpNTFPUf2Vox8YYxS9oAAAAASUVORK5CYII=" alt="">
+    <span class="wordmark">Shor<span class="q">Sight</span></span>
+    <a class="byline" href="https://beyond-shor.eu" target="_blank" rel="noopener">by Beyond&nbsp;Shor</a>
+  </div>
+  <div class="grow"></div>
+  <div class="controls" id="topControls">
+    <input type="file" id="fileInput" accept=".json,.pcap,.pcapng,.cap" class="hide">
+    <button onclick="document.getElementById('fileInput').click()" title="load a CBOM .json, or (when served) a .pcap capture">Load file…</button>
+    <input id="scanTarget" placeholder="path or GitHub URL" size="26" class="scanui hide">
+    <button class="primary scanui hide" id="scanBtn">Scan</button>
+    <button class="scanui hide" id="netBtn" title="actively scan live SSH/TLS endpoints (host:port, CIDR, host)">🌐 Network scan…</button>
+    <button id="workbookBtn" class="hide">⬇ Workbook (xlsx)</button>
+    <button id="exportBtn" class="hide">⬇ Export CBOM</button>
+    <button id="clearBtn" class="hide">✕ Clear</button>
+  </div>
+</header>
+
+<div id="scanprog" class="hide">
+  <div class="row"><span class="spin"></span>
+    <span class="what" id="spWhat">Scanning</span>
+    <span class="stage" id="spStage"></span>
+    <span class="count" id="spCount"></span></div>
+  <div class="track"><div class="fill" id="spFill"></div></div>
+</div>
+
+<main>
+  <div id="loader">
+    <div class="hero">
+      <img class="hero-logo" alt="">
+      <h1>Shor<span class="q">Sight</span></h1>
+      <p class="tagline">Cryptography inventory &amp; post-quantum readiness — <em>see beyond Shor</em>.</p>
+      <div class="hero-actions">
+        <span class="scanui hide" style="display:inline-flex;gap:8px;align-items:center">
+          <input id="heroScan" placeholder="scan a repo, path, GitHub URL or docker://image:tag">
+          <button class="primary" id="heroScanBtn">Scan</button>
+        </span>
+        <button class="scanui hide" id="heroNetBtn" title="actively scan live SSH/TLS endpoints (host:port, CIDR, host)">📡 Network scan…</button>
+        <button class="primary" id="heroLoad">Load a CBOM…</button>
+      </div>
+      <p class="muted hero-hint"><b>Scan</b> source code (9 languages), X.509 certificates,
+      TLS/SSH configs and keystores, a <b>🐳 container image</b> (<code>docker://name:tag</code> —
+      its installed crypto libraries, baked-in certificates and shipped configuration) — or run a
+      <b>📡 network scan</b> of live SSH/TLS endpoints (a host, <code>host:port</code> or a whole
+      subnet). No need to load anything first. You can also <b>load</b> an existing CBOM, or a
+      <code>.pcap</code> capture when running <code>shorsight serve</code>.</p>
+      <div class="hero-points">
+        <span>🔍 9 languages + certs · configs · keystores · pcaps</span>
+        <span>🐳 container images (installed packages)</span>
+        <span>📡 live SSH/TLS endpoint scan</span>
+        <span>🛡️ quantum &amp; classical risk</span>
+        <span>📋 BSI&nbsp;TR-02102 compliance</span>
+      </div>
+      <div class="drop" id="drop">…or drag &amp; drop a CBOM <b>.json</b> / <b>.pcap</b> here</div>
+      <div id="loaderr" class="err"></div>
+    </div>
+  </div>
+
+  <div id="dash" class="hide">
+    <div class="tabs" id="tabs"></div>
+    <div id="view-inventory" class="view">
+    <div class="cards" id="cards"></div>
+    <div class="row2">
+      <div class="panel"><h2>Quantum readiness</h2><div class="donut"><div id="donut"></div><div class="legend" id="qlegend"></div></div></div>
+      <div class="panel"><h2>Classical strength</h2><div id="classbars"></div>
+        <h2 style="margin-top:18px">Where it lives</h2><div class="muted" id="meta"></div></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:20px">
+      <div class="toolbar">
+        <strong>Algorithms &amp; protocols</strong>
+        <span class="grow"></span>
+        <input id="search" placeholder="filter…" size="18">
+        <span id="sfilters"></span>
+        <span id="qfilters"></span>
+        <span id="cfilters"></span>
+      </div>
+      <table id="algoTable"><thead><tr>
+        <th data-k="name">Asset</th><th data-k="kind">Type</th><th data-k="quantum">Quantum</th>
+        <th data-k="classical">Classical</th><th data-k="family">Family</th>
+        <th data-k="confidence">Evidence <span class="info" role="button" tabindex="0" aria-label="more information" data-info="How the asset was identified.&lt;br&gt;&lt;b&gt;literal&lt;/b&gt;: an exact crypto API or constant found in the code. This is the strongest evidence.&lt;br&gt;&lt;b&gt;resolved&lt;/b&gt;: inferred from imports or usage.&lt;br&gt;&lt;b&gt;name-only&lt;/b&gt;: matched by name only. This is the weakest.">i</span></th><th>Source</th><th data-k="count">Uses</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="row2" style="grid-template-columns:1fr 1fr">
+      <div class="panel">
+        <h2>Libraries &amp; vulnerabilities</h2>
+        <p class="muted" style="margin-top:0;font-size:12px">Version marker: <b>📌</b> = exact version
+          resolved from a lockfile (CVEs are matched precisely); <b>~</b> = a manifest range only, so the
+          installed version isn't pinned and CVE matching is left as <i>unknown</i>; no marker = no version
+          found (e.g. a stdlib module). A <b>transitive</b> chip means the dependency is pulled in indirectly.</p>
+        <table id="libTable"><thead><tr><th>Library</th><th>Version</th><th>CVEs</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="panel">
+        <h2>Network sinks</h2>
+        <div id="sinks"></div>
+      </div>
+    </div>
+    </div><!-- /view-inventory -->
+    <div id="view-compliance" class="view hide"></div>
+    <div id="view-risk" class="view hide"></div>
+    <div id="view-maturity" class="view hide"></div>
+    <div id="view-governance" class="view hide"></div>
+    <div id="view-howto" class="view hide"></div>
+  </div>
+</main>
+
+<aside id="detail"><button class="close" onclick="closeDetail()">×</button><div id="detailBody"></div></aside>
+<div id="infopop" class="hide"><button class="x" aria-label="close">×</button><div class="ibody"></div></div>
+<div id="netmodal" class="hide"><div class="netcard">
+  <h3>🌐 Active network scan</h3>
+  <p class="warn">This connects to and actively enumerates live SSH/TLS services. Only scan
+    systems you own or are explicitly authorized to test — unauthorized scanning may be illegal.</p>
+  <input type="text" id="netTarget" placeholder="host:port, CIDR (10.0.0.0/24), or a host/IP">
+  <p class="hint">A single <code>host:port</code> is probed directly; a host or CIDR is fanned
+    out via nmap to discover open SSH/TLS ports first. IPsec and S/MIME are out of scope.</p>
+  <label class="ackrow"><input type="checkbox" id="netAck">
+    <span>I am authorized to scan these targets.</span></label>
+  <div class="neterr" id="netErr"></div>
+  <div class="netstatus hide" id="netStatus"></div>
+  <div class="row"><button id="netCancel">Cancel</button>
+    <button class="primary" id="netGo" disabled>Scan</button></div>
+</div></div>
+<footer>ShorSight</footer>
+
+<script id="cbom-data" type="application/json">{"bomFormat":"CycloneDX","specVersion":"1.7","serialNumber":"urn:uuid:2e5fb0d4-c4e8-4d24-a117-dbd002a59f76","version":1,"metadata":{"timestamp":"2026-07-31T09:40:20.358240+00:00","tools":{"components":[{"type":"application","name":"shorsight","version":"0.2.0"}]},"component":{"type":"application","bom-ref":"target/beyond-shor","name":"beyond-shor"},"properties":[{"name":"crypto:sinkCount","value":"15"},{"name":"crypto:source","value":"beyond-shor (local)"},{"name":"crypto:provenance","value":"{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"bcdac2fdc05d9e6d08ac4fa0301bd6d3698f59c7\", \"pathPrefix\": \"\"}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/app/api/article-fields/route.ts\", \"line\": 68}"},{"name":"crypto:sink","value":"{\"symbol\": \"request.headers.get\", \"library\": \"request\", \"source\": \"beyond-shor\", \"location\": \"frontend/app/api/article-fields/route.ts\", \"line\": 40}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/components/RbePlayground.tsx\", \"line\": 389}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/components/RbePlayground.tsx\", \"line\": 357}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/components/RbePlayground.tsx\", \"line\": 333}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/components/SignatureVerifier.tsx\", \"line\": 227}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/components/SignatureVerifier.tsx\", \"line\": 212}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/components/SignatureVerifier.tsx\", \"line\": 131}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/components/SignatureVerifier.tsx\", \"line\": 43}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/lib/strapi.ts\", \"line\": 30}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/sign-articles.mjs\", \"line\": 134}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/sign-articles.mjs\", \"line\": 64}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/migrate-timeline.mjs\", \"line\": 127}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/migrate-timeline.mjs\", \"line\": 113}"},{"name":"crypto:sink","value":"{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"src/api/article/content-types/article/lifecycles.ts\", \"line\": 91}"}]},"components":[{"type":"cryptographic-asset","bom-ref":"crypto/aes-256-gcm","name":"AES-256-GCM","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"ae","algorithmFamily":"AES","parameterSetIdentifier":"256","mode":"gcm","nistQuantumSecurityLevel":1,"cryptoFunctions":["keyderive"]},"oid":"2.16.840.1.101.3.4.1.46"},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":56,"additionalContext":"{ name: 'AES-GCM', length: 256 },","symbol":"WebCrypto:AES-GCM"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":53,"additionalContext":"return crypto.subtle.deriveKey(","symbol":"crypto.subtle.deriveKey"}]},"properties":[{"name":"crypto:quantumStatus","value":"safe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"symmetric-block"},{"name":"crypto:name","value":"AES"},{"name":"crypto:confidence","value":"literal"},{"name":"crypto:rationale","value":"Authenticated encryption; 256-bit key keeps >=128-bit security under Grover."},{"name":"crypto:library","value":"Node.js crypto"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"cryptographic-asset","bom-ref":"crypto/aes-gcm","name":"AES-GCM","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"ae","algorithmFamily":"AES","mode":"gcm","cryptoFunctions":["decrypt","encrypt"]}},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":257,"additionalContext":"await crypto.subtle.decrypt({ name: 'AES-GCM', iv: asBuf(bytes) }, combinedKeyServer, asBuf(ciphertext));","symbol":"WebCrypto:AES-GCM"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":255,"additionalContext":"await crypto.subtle.decrypt({ name: 'AES-GCM', iv: asBuf(iv) }, combinedKeyServer, asBuf(bytes));","symbol":"WebCrypto:AES-GCM"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":242,"additionalContext":"await crypto.subtle.decrypt({ name: 'AES-GCM', iv: asBuf(iv) }, wrongKeyObj, asBuf(ciphertext));","symbol":"WebCrypto:AES-GCM"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":192,"additionalContext":"const decryptedBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: asBuf(iv) }, combinedKeyServerObj, asBuf(ciphertext));","symbol":"WebCrypto:AES-GCM"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":184,"additionalContext":"const ciphertextBuf  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: asBuf(iv) }, combinedKeyObj, asBuf(plaintextBytes));","symbol":"WebCrypto:AES-GCM"}]},"properties":[{"name":"crypto:quantumStatus","value":"safe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"symmetric-block"},{"name":"crypto:name","value":"AES"},{"name":"crypto:confidence","value":"literal"},{"name":"crypto:rationale","value":"AES-GCM authenticated encryption; key size not statically determinable (128/192/256)."},{"name":"crypto:library","value":"Node.js crypto"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"cryptographic-asset","bom-ref":"crypto/classic-mceliece","name":"Classic-McEliece","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"kem","cryptoFunctions":["decrypt","encrypt"]}},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":222,"additionalContext":"wrongKemSecret = await mceliece.decrypt(bytes, kemServerPriv);","symbol":"mceliece.mceliece.decrypt"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":116,"additionalContext":"kemSecretServer = await mceliece.decrypt(cyphertext, privateKey);","symbol":"mceliece.mceliece.decrypt"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":110,"additionalContext":"const { cyphertext, secret } = await mceliece.encrypt(kemServerPub);","symbol":"mceliece.mceliece.encrypt"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":104,"additionalContext":"const { publicKey, privateKey } = await mceliece.keyPair();","symbol":"mceliece.mceliece.keyPair"}]},"properties":[{"name":"crypto:quantumStatus","value":"safe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"pqc"},{"name":"crypto:name","value":"Classic McEliece"},{"name":"crypto:confidence","value":"resolved"},{"name":"crypto:rationale","value":"Code-based post-quantum KEM; conservative, large public keys."},{"name":"crypto:library","value":"mceliece"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"cryptographic-asset","bom-ref":"crypto/ec-p256","name":"EC-P256","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-agree","parameterSetIdentifier":"256","ellipticCurve":"nist/P-256","cryptoFunctions":["sign","verify"]}},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/workers/signature-worker.ts","line":93,"additionalContext":"signature = p256.sign(messageHash, secretKey); // signs H(msg), not msg","symbol":"@noble/curves/nist.js.p256.sign"},{"location":"beyond-shor::frontend/workers/signature-worker.ts","line":65,"additionalContext":"publicKey = p256.getPublicKey(secretKey, true); // compressed 33 B","symbol":"@noble/curves/nist.js.p256.getPublicKey"},{"location":"beyond-shor::frontend/workers/signature-worker.ts","line":64,"additionalContext":"secretKey = p256.utils.randomSecretKey();","symbol":"@noble/curves/nist.js.p256.utils.randomSecretKey"},{"location":"beyond-shor::frontend/workers/signature-worker.ts","line":49,"additionalContext":"return p256.verify(sig, msgHash, pub);","symbol":"@noble/curves/nist.js.p256.verify"}]},"properties":[{"name":"crypto:quantumStatus","value":"unsafe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"asymmetric"},{"name":"crypto:name","value":"EC"},{"name":"crypto:confidence","value":"resolved"},{"name":"crypto:rationale","value":"NIST P-256 elliptic curve (use not inferred from a bare curve constant); broken by Shor's algorithm."},{"name":"crypto:library","value":"@noble/curves"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"cryptographic-asset","bom-ref":"crypto/frodokem-1344-aes","name":"FrodoKEM-1344-AES","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"kem","parameterSetIdentifier":"1344-AES","nistQuantumSecurityLevel":5,"cryptoFunctions":["unknown"]}},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":225,"additionalContext":"const f = await createFrodoKEM1344AES();","symbol":"@oqs/liboqs-js.createFrodoKEM1344AES"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":124,"additionalContext":"const bobFrodo   = await createFrodoKEM1344AES();","symbol":"@oqs/liboqs-js.createFrodoKEM1344AES"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":123,"additionalContext":"const aliceFrodo = await createFrodoKEM1344AES();","symbol":"@oqs/liboqs-js.createFrodoKEM1344AES"}]},"properties":[{"name":"crypto:quantumStatus","value":"safe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"pqc"},{"name":"crypto:name","value":"FrodoKEM"},{"name":"crypto:confidence","value":"resolved"},{"name":"crypto:rationale","value":"Conservative lattice-based (LWE) post-quantum KEM, 1344-bit parameter set with AES as the internal PRF; NIST level 5."},{"name":"crypto:library","value":"Open Quantum Safe (liboqs-js)"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"cryptographic-asset","bom-ref":"crypto/hkdf","name":"HKDF","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"kdf","algorithmFamily":"HKDF","cryptoFunctions":["keyderive"]}},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":54,"additionalContext":"{ name: 'HKDF', hash: 'SHA-256', salt: asBuf(salt), info: new TextEncoder().encode('hybrid-pqc-playground-v1') },","symbol":"WebCrypto:HKDF"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":53,"additionalContext":"return crypto.subtle.deriveKey(","symbol":"crypto.subtle.deriveKey"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":52,"additionalContext":"const ikmKey = await crypto.subtle.importKey('raw', asBuf(ikm), 'HKDF', false, ['deriveKey']);","symbol":"crypto.subtle.importKey"}]},"properties":[{"name":"crypto:quantumStatus","value":"safe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"kdf"},{"name":"crypto:name","value":"HKDF"},{"name":"crypto:confidence","value":"literal"},{"name":"crypto:rationale","value":"HMAC-based key derivation (RFC 5869); sound for deriving keys from high-entropy input."},{"name":"crypto:library","value":"Node.js crypto"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"cryptographic-asset","bom-ref":"crypto/hmac","name":"HMAC","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"mac","algorithmFamily":"HMAC","cryptoFunctions":["tag"]}},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/lib/spam.ts","line":30,"additionalContext":"return crypto","symbol":"node:crypto.createHmac"}]},"properties":[{"name":"crypto:quantumStatus","value":"safe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"mac"},{"name":"crypto:name","value":"HMAC"},{"name":"crypto:confidence","value":"resolved"},{"name":"crypto:rationale","value":"Security depends on the underlying hash; safe with SHA-2/SHA-3."},{"name":"crypto:library","value":"Node.js crypto"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"cryptographic-asset","bom-ref":"crypto/ml-dsa-65","name":"ML-DSA-65","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"signature","algorithmFamily":"ML-DSA","parameterSetIdentifier":"65","nistQuantumSecurityLevel":3,"cryptoFunctions":["keygen","sign","verify"]},"oid":"2.16.840.1.101.3.4.3.18"},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/workers/signature-worker.ts","line":95,"additionalContext":"signature = ml_dsa65.sign(msgBytes, secretKey);","symbol":"@noble/post-quantum/ml-dsa.js.ml_dsa65.sign"},{"location":"beyond-shor::frontend/workers/signature-worker.ts","line":67,"additionalContext":"const kp = ml_dsa65.keygen();","symbol":"@noble/post-quantum/ml-dsa.js.ml_dsa65.keygen"},{"location":"beyond-shor::frontend/workers/signature-worker.ts","line":51,"additionalContext":"if (dsa === 'mldsa65') return ml_dsa65.verify(sig, msg, pub);","symbol":"@noble/post-quantum/ml-dsa.js.ml_dsa65.verify"},{"location":"beyond-shor::frontend/components/SignatureVerifier.tsx","line":255,"additionalContext":"const valid     = ml_dsa65.verify(sigBytes, msgBytes, publicKey);","symbol":"@noble/post-quantum/ml-dsa.js.ml_dsa65.verify"},{"location":"beyond-shor::frontend/components/SignatureVerifier.tsx","line":182,"additionalContext":"const valid     = ml_dsa65.verify(sigBytes, rawBytes, publicKey);","symbol":"@noble/post-quantum/ml-dsa.js.ml_dsa65.verify"},{"location":"beyond-shor::scripts/sign-articles.mjs","line":172,"additionalContext":"const sig = ml_dsa65.sign(msg, privateKey);","symbol":"@noble/post-quantum/ml-dsa.js.ml_dsa65.sign"},{"location":"beyond-shor::scripts/generate-pqc-keys.mjs","line":5,"additionalContext":"const { secretKey, publicKey } = ml_dsa65.keygen(seed);","symbol":"@noble/post-quantum/ml-dsa.js.ml_dsa65.keygen"},{"location":"beyond-shor::src/api/article/content-types/article/lifecycles.ts","line":109,"additionalContext":"const sig = ml_dsa65.sign(msg, getPrivateKey());","symbol":"@noble/post-quantum/ml-dsa.js.ml_dsa65.sign"}]},"properties":[{"name":"crypto:quantumStatus","value":"safe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"pqc"},{"name":"crypto:name","value":"ML-DSA"},{"name":"crypto:confidence","value":"resolved"},{"name":"crypto:rationale","value":"NIST FIPS 204 post-quantum signature (CRYSTALS-Dilithium)."},{"name":"crypto:library","value":"@noble/post-quantum"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"cryptographic-asset","bom-ref":"crypto/ml-kem-1024","name":"ML-KEM-1024","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"kem","algorithmFamily":"ML-KEM","parameterSetIdentifier":"1024","nistQuantumSecurityLevel":5,"cryptoFunctions":["decapsulate","encapsulate","keygen"]},"oid":"2.16.840.1.101.3.4.4.3"},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":219,"additionalContext":"wrongKemSecret = ml_kem1024.decapsulate(bytes, kemServerPriv);","symbol":"@noble/post-quantum/ml-kem.js.ml_kem1024.decapsulate"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":97,"additionalContext":"kemSecretServer = ml_kem1024.decapsulate(cipherText, secretKey);","symbol":"@noble/post-quantum/ml-kem.js.ml_kem1024.decapsulate"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":91,"additionalContext":"const { cipherText, sharedSecret } = ml_kem1024.encapsulate(kemServerPub);","symbol":"@noble/post-quantum/ml-kem.js.ml_kem1024.encapsulate"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":85,"additionalContext":"const { publicKey, secretKey } = ml_kem1024.keygen();","symbol":"@noble/post-quantum/ml-kem.js.ml_kem1024.keygen"}]},"properties":[{"name":"crypto:quantumStatus","value":"safe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"pqc"},{"name":"crypto:name","value":"ML-KEM"},{"name":"crypto:confidence","value":"resolved"},{"name":"crypto:rationale","value":"NIST FIPS 203 post-quantum KEM (CRYSTALS-Kyber), security level 5."},{"name":"crypto:library","value":"@noble/post-quantum"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"cryptographic-asset","bom-ref":"crypto/sha-256","name":"SHA-256","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"hash","algorithmFamily":"SHA-2","parameterSetIdentifier":"256","cryptoFunctions":["digest","keyderive","tag"]},"oid":"2.16.840.1.101.3.4.2.1"},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/workers/signature-worker.ts","line":34,"additionalContext":"const buf = await crypto.subtle.digest('SHA-256', msg.slice());","symbol":"crypto.subtle.digest"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":53,"additionalContext":"return crypto.subtle.deriveKey(","symbol":"crypto.subtle.deriveKey"},{"location":"beyond-shor::frontend/components/SignatureVerifier.tsx","line":46,"additionalContext":"const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);","symbol":"crypto.subtle.digest"},{"location":"beyond-shor::frontend/lib/spam.ts","line":30,"additionalContext":"return crypto","symbol":"node:crypto.createHmac"},{"location":"beyond-shor::scripts/sign-articles.mjs","line":67,"additionalContext":"return createHash('sha256').update(Buffer.from(buffer)).digest('hex');","symbol":"node:crypto.createHash"},{"location":"beyond-shor::src/api/article/content-types/article/lifecycles.ts","line":16,"additionalContext":"return createHash('sha256').update(content).digest('hex');","symbol":"node:crypto.createHash"}]},"properties":[{"name":"crypto:quantumStatus","value":"safe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"hash"},{"name":"crypto:name","value":"SHA-256"},{"name":"crypto:confidence","value":"literal"},{"name":"crypto:rationale","value":"SHA-2; Grover only reduces preimage security to 2^128, still safe."},{"name":"crypto:library","value":"Node.js crypto"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"cryptographic-asset","bom-ref":"crypto/slh-dsa-sha2-128f","name":"SLH-DSA-SHA2-128f","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"signature","parameterSetIdentifier":"SHA2-128f","nistQuantumSecurityLevel":1,"cryptoFunctions":["unknown"]},"oid":"2.16.840.1.101.3.4.3.21"},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/workers/signature-worker.ts","line":29,"additionalContext":"return variant === 'slhdsa128s' ? mod.slh_dsa_sha2_128s : mod.slh_dsa_sha2_128f;","symbol":"@noble/post-quantum/slh-dsa.js.slh_dsa_sha2_128f"}]},"properties":[{"name":"crypto:quantumStatus","value":"safe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"pqc"},{"name":"crypto:name","value":"SLH-DSA"},{"name":"crypto:confidence","value":"resolved"},{"name":"crypto:rationale","value":"NIST FIPS 205 SLH-DSA-SHA2-128f (SPHINCS+): fast signing, larger signatures; NIST level 1."},{"name":"crypto:library","value":"@noble/post-quantum"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"cryptographic-asset","bom-ref":"crypto/slh-dsa-sha2-128s","name":"SLH-DSA-SHA2-128s","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"signature","parameterSetIdentifier":"SHA2-128s","nistQuantumSecurityLevel":1,"cryptoFunctions":["unknown"]},"oid":"2.16.840.1.101.3.4.3.20"},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/workers/signature-worker.ts","line":29,"additionalContext":"return variant === 'slhdsa128s' ? mod.slh_dsa_sha2_128s : mod.slh_dsa_sha2_128f;","symbol":"@noble/post-quantum/slh-dsa.js.slh_dsa_sha2_128s"}]},"properties":[{"name":"crypto:quantumStatus","value":"safe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"pqc"},{"name":"crypto:name","value":"SLH-DSA"},{"name":"crypto:confidence","value":"resolved"},{"name":"crypto:rationale","value":"NIST FIPS 205 SLH-DSA-SHA2-128s (SPHINCS+): small signatures, slow signing; NIST level 1."},{"name":"crypto:library","value":"@noble/post-quantum"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"cryptographic-asset","bom-ref":"crypto/x25519","name":"X25519","cryptoProperties":{"assetType":"algorithm","algorithmProperties":{"primitive":"key-agree","algorithmFamily":"ECDH","parameterSetIdentifier":"256","ellipticCurve":"other/Curve25519","cryptoFunctions":["unknown"]},"oid":"1.3.101.110"},"evidence":{"occurrences":[{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":155,"additionalContext":"const x25519SecretServer = x25519.getSharedSecret(serverX25519Priv, clientX25519Pub);","symbol":"@noble/curves/ed25519.js.x25519.getSharedSecret"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":154,"additionalContext":"const x25519Secret       = x25519.getSharedSecret(clientX25519Priv, serverX25519Pub);","symbol":"@noble/curves/ed25519.js.x25519.getSharedSecret"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":72,"additionalContext":"const serverX25519Pub  = x25519.getPublicKey(serverX25519Priv);","symbol":"@noble/curves/ed25519.js.x25519.getPublicKey"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":71,"additionalContext":"const serverX25519Priv = x25519.utils.randomSecretKey();","symbol":"@noble/curves/ed25519.js.x25519.utils.randomSecretKey"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":70,"additionalContext":"const clientX25519Pub  = x25519.getPublicKey(clientX25519Priv);","symbol":"@noble/curves/ed25519.js.x25519.getPublicKey"},{"location":"beyond-shor::frontend/workers/playground-worker.ts","line":69,"additionalContext":"const clientX25519Priv = x25519.utils.randomSecretKey();","symbol":"@noble/curves/ed25519.js.x25519.utils.randomSecretKey"}]},"properties":[{"name":"crypto:quantumStatus","value":"unsafe"},{"name":"crypto:classicalStatus","value":"secure"},{"name":"crypto:family","value":"asymmetric"},{"name":"crypto:name","value":"X25519"},{"name":"crypto:confidence","value":"resolved"},{"name":"crypto:rationale","value":"Curve25519 key agreement; broken by Shor."},{"name":"crypto:library","value":"@noble/curves"},{"name":"crypto:source","value":"beyond-shor"}]},{"type":"library","bom-ref":"lib/noble-curves","name":"@noble/curves","evidence":{"occurrences":[{"location":"frontend/workers/playground-worker.ts"},{"location":"frontend/workers/signature-worker.ts"}]},"version":"2.0.1","purl":"pkg:npm/@noble/curves@2.0.1","properties":[{"name":"crypto:dependencyScope","value":"direct"},{"name":"crypto:versionPrecision","value":"exact"},{"name":"crypto:cveStatus","value":"unaffected"}]},{"type":"library","bom-ref":"lib/noble-post-quantum","name":"@noble/post-quantum","evidence":{"occurrences":[{"location":"frontend/components/SignatureVerifier.tsx"},{"location":"frontend/workers/playground-worker.ts"},{"location":"frontend/workers/signature-worker.ts"},{"location":"scripts/generate-pqc-keys.mjs"},{"location":"scripts/sign-articles.mjs"},{"location":"src/api/article/content-types/article/lifecycles.ts"}]},"version":"0.5.4","purl":"pkg:npm/@noble/post-quantum@0.5.4","properties":[{"name":"crypto:dependencyScope","value":"direct"},{"name":"crypto:versionPrecision","value":"exact"},{"name":"crypto:cveStatus","value":"unaffected"}]},{"type":"library","bom-ref":"lib/node-js-crypto","name":"Node.js crypto","evidence":{"occurrences":[{"location":"frontend/app/api/rbe/session/route.ts"},{"location":"frontend/lib/spam.ts"},{"location":"scripts/generate-pqc-keys.mjs"},{"location":"scripts/sign-articles.mjs"},{"location":"src/api/article/content-types/article/lifecycles.ts"}]},"properties":[{"name":"crypto:dependencyScope","value":"direct"},{"name":"crypto:versionPrecision","value":"unpinned"},{"name":"crypto:cveStatus","value":"unknown"}]},{"type":"library","bom-ref":"lib/open-quantum-safe-liboqs-js","name":"Open Quantum Safe (liboqs-js)","evidence":{"occurrences":[{"location":"frontend/workers/playground-worker.ts"}]},"version":"0.15.1","purl":"pkg:npm/@oqs/liboqs-js@0.15.1","properties":[{"name":"crypto:dependencyScope","value":"direct"},{"name":"crypto:versionPrecision","value":"unpinned"},{"name":"crypto:cveStatus","value":"unknown"}]},{"type":"library","bom-ref":"lib/mceliece","name":"mceliece","evidence":{"occurrences":[{"location":"frontend/workers/playground-worker.ts"}]},"version":"5.0.4","purl":"pkg:npm/mceliece@5.0.4","properties":[{"name":"crypto:dependencyScope","value":"direct"},{"name":"crypto:versionPrecision","value":"unpinned"},{"name":"crypto:cveStatus","value":"unknown"}]}],"dependencies":[{"ref":"crypto/aes-256-gcm"},{"ref":"crypto/aes-gcm"},{"ref":"crypto/classic-mceliece"},{"ref":"crypto/ec-p256"},{"ref":"crypto/frodokem-1344-aes"},{"ref":"crypto/hkdf"},{"ref":"crypto/hmac"},{"ref":"crypto/ml-dsa-65"},{"ref":"crypto/ml-kem-1024"},{"ref":"crypto/sha-256"},{"ref":"crypto/slh-dsa-sha2-128f"},{"ref":"crypto/slh-dsa-sha2-128s"},{"ref":"crypto/x25519"},{"ref":"lib/mceliece","provides":["crypto/classic-mceliece"]},{"ref":"lib/noble-curves","provides":["crypto/ec-p256","crypto/x25519"]},{"ref":"lib/noble-post-quantum","provides":["crypto/ml-dsa-65","crypto/ml-kem-1024","crypto/slh-dsa-sha2-128f","crypto/slh-dsa-sha2-128s"]},{"ref":"lib/node-js-crypto","provides":["crypto/aes-256-gcm","crypto/aes-gcm","crypto/hkdf","crypto/hmac","crypto/sha-256"]},{"ref":"lib/open-quantum-safe-liboqs-js","provides":["crypto/frodokem-1344-aes"]},{"ref":"target/beyond-shor","dependsOn":["lib/mceliece","lib/noble-curves","lib/noble-post-quantum","lib/node-js-crypto","lib/open-quantum-safe-liboqs-js"]}]}</script>
+<script id="governance-data" type="application/json">{"compliance":{"policy":"Custom policy","checked":13,"compliant":true,"violations":[],"recommendations":[],"timeline":[],"waived":[]},"risk":{"params":{"crqcYear":2035,"crqcYearSignatures":2030,"migrationYears":1,"yearsUntilCrqc":9,"yearsUntilCrqcSignatures":4,"defaultShelfLifeYears":5},"buckets":{"acute":0,"quantum":2,"none":11},"items":[{"component":"EC-P256","name":"EC","primitive":"key-agree","category":"quantum","role":"confidentiality","quantum":"unsafe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":2,"summary":"Secure today, but a future quantum computer (Shor's algorithm) can break it.","mosca":"Protects data ~5y; migration ~1y vs ~9y until 2035. 5+1=6 ≤ 9 → there is time; plan the migration.","deadlineYear":2035,"startByYear":2034,"migrationStatus":"not applicable","vendorDependency":false},{"component":"X25519","name":"X25519","primitive":"key-agree","category":"quantum","role":"confidentiality","quantum":"unsafe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":2,"summary":"Secure today, but a future quantum computer (Shor's algorithm) can break it.","mosca":"Protects data ~5y; migration ~1y vs ~9y until 2035. 5+1=6 ≤ 9 → there is time; plan the migration.","deadlineYear":2035,"startByYear":2034,"migrationStatus":"hybrid","vendorDependency":false},{"component":"AES-256-GCM","name":"AES","primitive":"ae","category":"none","role":"confidentiality","quantum":"safe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":3,"summary":"Quantum-safe and secure today — no action needed.","mosca":"","deadlineYear":null,"startByYear":null,"migrationStatus":"not-started","vendorDependency":false},{"component":"AES-GCM","name":"AES","primitive":"ae","category":"none","role":"confidentiality","quantum":"safe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":3,"summary":"Quantum-safe and secure today — no action needed.","mosca":"","deadlineYear":null,"startByYear":null,"migrationStatus":"not-started","vendorDependency":false},{"component":"Classic-McEliece","name":"Classic McEliece","primitive":"kem","category":"none","role":"confidentiality","quantum":"safe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":3,"summary":"Quantum-safe and secure today — no action needed.","mosca":"","deadlineYear":null,"startByYear":null,"migrationStatus":"pqc-only","vendorDependency":false},{"component":"FrodoKEM-1344-AES","name":"FrodoKEM","primitive":"kem","category":"none","role":"confidentiality","quantum":"safe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":3,"summary":"Quantum-safe and secure today — no action needed.","mosca":"","deadlineYear":null,"startByYear":null,"migrationStatus":"pqc-only","vendorDependency":false},{"component":"HKDF","name":"HKDF","primitive":"kdf","category":"none","role":"confidentiality","quantum":"safe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":3,"summary":"Quantum-safe and secure today — no action needed.","mosca":"","deadlineYear":null,"startByYear":null,"migrationStatus":"not-started","vendorDependency":false},{"component":"HMAC","name":"HMAC","primitive":"mac","category":"none","role":"confidentiality","quantum":"safe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":3,"summary":"Quantum-safe and secure today — no action needed.","mosca":"","deadlineYear":null,"startByYear":null,"migrationStatus":"not-started","vendorDependency":false},{"component":"ML-DSA-65","name":"ML-DSA","primitive":"signature","category":"none","role":"signature","quantum":"safe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":3,"summary":"Quantum-safe and secure today — no action needed.","mosca":"","deadlineYear":null,"startByYear":null,"migrationStatus":"pqc-only","vendorDependency":false},{"component":"ML-KEM-1024","name":"ML-KEM","primitive":"kem","category":"none","role":"confidentiality","quantum":"safe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":3,"summary":"Quantum-safe and secure today — no action needed.","mosca":"","deadlineYear":null,"startByYear":null,"migrationStatus":"pqc-only","vendorDependency":false},{"component":"SHA-256","name":"SHA-256","primitive":"hash","category":"none","role":"confidentiality","quantum":"safe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":3,"summary":"Quantum-safe and secure today — no action needed.","mosca":"","deadlineYear":null,"startByYear":null,"migrationStatus":"not-started","vendorDependency":false},{"component":"SLH-DSA-SHA2-128f","name":"SLH-DSA","primitive":"signature","category":"none","role":"signature","quantum":"safe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":3,"summary":"Quantum-safe and secure today — no action needed.","mosca":"","deadlineYear":null,"startByYear":null,"migrationStatus":"pqc-only","vendorDependency":false},{"component":"SLH-DSA-SHA2-128s","name":"SLH-DSA","primitive":"signature","category":"none","role":"signature","quantum":"safe","classical":"secure","sources":["beyond-shor"],"cves":[],"cwes":[],"urgent":false,"priority":3,"summary":"Quantum-safe and secure today — no action needed.","mosca":"","deadlineYear":null,"startByYear":null,"migrationStatus":"pqc-only","vendorDependency":false}],"assets":[{"asset":"beyond-shor","kind":"local","shelfLifeYears":5,"criticality":"medium","owner":"Beyond Shor","riskOwner":"Marvin Sprey","dataClassification":"public","acute":0,"quantum":2,"none":11,"urgent":false,"verdicts":["AES-256-GCM [none]","AES-GCM [none]","Classic-McEliece [none]","EC-P256 [quantum]","FrodoKEM-1344-AES [none]","HKDF [none]","HMAC [none]","ML-DSA-65 [none]","ML-KEM-1024 [none]","SHA-256 [none]","SLH-DSA-SHA2-128f [none]","SLH-DSA-SHA2-128s [none]","X25519 [quantum]"],"deadlineYear":2035,"securityObjectives":{"confidentiality":1,"integrity":4,"authenticity":4,"nonRepudiation":3},"economicDamage":2,"migrationYears":1,"impactState":"confirmed"}],"unknowns":[],"riskMatrix":{"axes":{"impact":["negligible","limited","substantial","existential"],"urgencyAcute":["low","medium","high","critical"],"urgencyQuantum":["watch","mid-term","urgent","overdue"],"category":["low","medium","high","very high"]},"acute":{"cells":[{"urgency":1,"impact":4,"category":"high","categoryRank":3,"count":0,"tuples":[]},{"urgency":2,"impact":4,"category":"high","categoryRank":3,"count":0,"tuples":[]},{"urgency":3,"impact":4,"category":"very high","categoryRank":4,"count":0,"tuples":[]},{"urgency":4,"impact":4,"category":"very high","categoryRank":4,"count":0,"tuples":[]},{"urgency":1,"impact":3,"category":"medium","categoryRank":2,"count":0,"tuples":[]},{"urgency":2,"impact":3,"category":"medium","categoryRank":2,"count":0,"tuples":[]},{"urgency":3,"impact":3,"category":"high","categoryRank":3,"count":0,"tuples":[]},{"urgency":4,"impact":3,"category":"very high","categoryRank":4,"count":0,"tuples":[]},{"urgency":1,"impact":2,"category":"low","categoryRank":1,"count":0,"tuples":[]},{"urgency":2,"impact":2,"category":"medium","categoryRank":2,"count":0,"tuples":[]},{"urgency":3,"impact":2,"category":"medium","categoryRank":2,"count":0,"tuples":[]},{"urgency":4,"impact":2,"category":"high","categoryRank":3,"count":0,"tuples":[]},{"urgency":1,"impact":1,"category":"low","categoryRank":1,"count":0,"tuples":[]},{"urgency":2,"impact":1,"category":"low","categoryRank":1,"count":0,"tuples":[]},{"urgency":3,"impact":1,"category":"low","categoryRank":1,"count":0,"tuples":[]},{"urgency":4,"impact":1,"category":"medium","categoryRank":2,"count":0,"tuples":[]}]},"quantum":{"cells":[{"urgency":1,"impact":4,"category":"high","categoryRank":3,"count":0,"tuples":[]},{"urgency":2,"impact":4,"category":"high","categoryRank":3,"count":0,"tuples":[]},{"urgency":3,"impact":4,"category":"very high","categoryRank":4,"count":0,"tuples":[]},{"urgency":4,"impact":4,"category":"very high","categoryRank":4,"count":0,"tuples":[]},{"urgency":1,"impact":3,"category":"medium","categoryRank":2,"count":0,"tuples":[]},{"urgency":2,"impact":3,"category":"medium","categoryRank":2,"count":0,"tuples":[]},{"urgency":3,"impact":3,"category":"high","categoryRank":3,"count":0,"tuples":[]},{"urgency":4,"impact":3,"category":"very high","categoryRank":4,"count":0,"tuples":[]},{"urgency":1,"impact":2,"category":"low","categoryRank":1,"count":0,"tuples":[]},{"urgency":2,"impact":2,"category":"medium","categoryRank":2,"count":2,"tuples":[{"component":"EC-P256","asset":"beyond-shor","role":"confidentiality","primitive":"key-agree","urgency":2,"impactLevel":2,"impactState":"confirmed","category":"medium","categoryRank":2,"allowedTreatments":["avoid","reduce","transfer","accept"],"treatment":"accept","treatmentNote":"ECDSA P-256 is kept as the classical reference point in the signature benchmark.","decidedBy":"Marvin Sprey","migrationStatus":"not applicable","vendorDependency":false,"quantum":"unsafe","classical":"secure"},{"component":"X25519","asset":"beyond-shor","role":"confidentiality","primitive":"key-agree","urgency":2,"impactLevel":2,"impactState":"confirmed","category":"medium","categoryRank":2,"allowedTreatments":["avoid","reduce","transfer","accept"],"treatment":"accept","treatmentNote":"Deliberate: X25519 is the classical half of the hybrid handshake and is paired with ML-KEM-1024.","decidedBy":"Marvin Sprey","migrationStatus":"hybrid","vendorDependency":false,"quantum":"unsafe","classical":"secure"}]},{"urgency":3,"impact":2,"category":"medium","categoryRank":2,"count":0,"tuples":[]},{"urgency":4,"impact":2,"category":"high","categoryRank":3,"count":0,"tuples":[]},{"urgency":1,"impact":1,"category":"low","categoryRank":1,"count":0,"tuples":[]},{"urgency":2,"impact":1,"category":"low","categoryRank":1,"count":0,"tuples":[]},{"urgency":3,"impact":1,"category":"low","categoryRank":1,"count":0,"tuples":[]},{"urgency":4,"impact":1,"category":"medium","categoryRank":2,"count":0,"tuples":[]}]}}},"camm":{"level":0,"levelName":"Initial","nextLevel":1,"categories":{"K":{"met":2,"total":5},"P":{"met":0,"total":10},"S":{"met":0,"total":10}},"requirements":[{"id":"1.0","level":1,"category":"K","name":"System Knowledge","description":"Detailed knowledge of the affected system and its environment is required.","problem":"Understanding the systems and their domain context is essential to measure crypto-agility.","acceptance":"An in-depth understanding of the structure and operation of the systems being evaluated is available.","example":"Source code or hardware specs are needed; pure black boxes cannot be assessed.","status":"partial","auto":true,"note":"auto-evidenced from inventory/policy"},{"id":"1.1","level":1,"category":"P","name":"Updateability","description":"Maintainers can modify the system and provide updates to new software versions.","problem":"Fixes for identified vulnerabilities must be deployable.","acceptance":"Performing updates with modifications is possible.","example":"Mobile apps update easily; unsupported legacy devices cannot.","status":"no","auto":false,"note":""},{"id":"1.2","level":1,"category":"S","name":"Extensibility","description":"The system can be extended with new cryptographic algorithms and parameters.","problem":"New secure alternatives must be addable when attacks emerge.","acceptance":"Further cryptographic methods, variants and protocols can be added.","example":"IoT devices at memory/performance limits cannot accommodate additional algorithms.","status":"no","auto":false,"note":""},{"id":"1.3","level":1,"category":"P","name":"Reversibility","description":"The system can be rolled back to a previous state.","problem":"Problematic updates need rollback capability to restore functionality.","acceptance":"Rollbacks to previous versions are possible.","example":"A buggy update necessitates reverting to the prior version.","status":"no","auto":false,"note":""},{"id":"1.4","level":1,"category":"K","name":"Cryptography Inventory","description":"The cryptographic functions used are documented and their current security level is known.","problem":"An overview of implementations is needed to assess vulnerability exposure.","acceptance":"A listing of the cryptographic methods used, their parameters and intended use is available.","example":"An inventory (CBOM) tracking methods, key lengths, deployment and security status.","status":"met","auto":true,"note":"auto-evidenced from inventory/policy"},{"id":"2.0","level":2,"category":"S","name":"Cryptographic Modularity","description":"The system is modular so that changes to cryptographic components do not affect other components.","problem":"Vulnerable implementations must be replaceable without disrupting core logic.","acceptance":"Crypto implementations, parameters and primitives can be exchanged without affecting other components.","example":"APIs separate cryptographic functions from business logic.","status":"no","auto":false,"note":""},{"id":"2.1","level":2,"category":"K","name":"Algorithm IDs","description":"The algorithms used are uniquely identifiable.","problem":"Without common naming conventions and parameters, procedures cannot be negotiated.","acceptance":"Each algorithm with its specific parameters is uniquely referenced by an identifier.","example":"TLS ciphersuites demonstrate this approach.","status":"met","auto":true,"note":"auto-evidenced from inventory/policy"},{"id":"2.2","level":2,"category":"S","name":"Algorithm Intersection","description":"All subsystems share a common set of cryptographic algorithms.","problem":"Subsystems need shared algorithms for interoperability.","acceptance":"At least one algorithm is defined that is supported by all subsystems.","example":"TLS 1.3 mandates TLS_AES_128_GCM_SHA256 support.","status":"no","auto":false,"note":""},{"id":"2.3","level":2,"category":"S","name":"Algorithm Exclusion","description":"The system can disable the use of supported algorithms.","problem":"Vulnerable algorithms require a deactivation capability.","acceptance":"If an algorithm is marked obsolete, it is no longer used for cryptographic tasks.","example":"MD5 is disabled for security purposes despite legacy support.","status":"no","auto":true,"note":"auto-evidenced from inventory/policy"},{"id":"2.4","level":2,"category":"S","name":"Opportunistic Security","description":"The system always uses the strongest available algorithm.","problem":"When some algorithms are unavailable, the next-strongest beats abandoning encryption.","acceptance":"Algorithm choice is based on the greatest security supported by all subsystems.","example":"A weaker option is used as a fallback only when stronger mutual options are absent.","status":"no","auto":false,"note":""},{"id":"2.5","level":2,"category":"S","name":"Usability","description":"The system's crypto-agility module is easy to use.","problem":"Difficult implementations risk weak configuration or abandonment.","acceptance":"A usability study proves the system is easy to use.","example":"Longer keys from newer algorithms may reduce QR-code readability.","status":"no","auto":false,"note":""},{"id":"3.0","level":3,"category":"P","name":"Policies","description":"Policies are used to restrict the allowed algorithms and their parameters.","problem":"Guidelines prevent unsuitable or insecure algorithm deployment.","acceptance":"Guidelines defining minimum requirements for crypto-agile systems are specified and complied with.","example":"Minimum security levels and certification requirements are enforced.","status":"no","auto":true,"note":"auto-evidenced from inventory/policy"},{"id":"3.1","level":3,"category":"K","name":"Performance Awareness","description":"The additional effort and impact of crypto-agility is known and accepted.","problem":"Unaccounted overhead may cause performance failures and cost overruns.","acceptance":"Implementation effort and efficiency match previously established requirements.","example":"e.g. 25% connection-setup overhead and 100 person-days of effort are documented.","status":"no","auto":false,"note":""},{"id":"3.2","level":3,"category":"S","name":"Hardware Modularity","description":"Hardware and software can be improved or exchanged independently, compatibly.","problem":"Tight software-hardware coupling prevents agility.","acceptance":"Hardware can be adapted without affecting its compatibility with the software and vice versa.","example":"Interfaces enable deploying quantum or more efficient crypto hardware.","status":"no","auto":false,"note":""},{"id":"3.3","level":3,"category":"P","name":"Testing","description":"The system is regularly tested for compliance with crypto-agility requirements.","problem":"Testing measures fulfillment and quality.","acceptance":"There are test criteria the system must meet, regularly checked for compliance.","example":"Parallel test systems verify a migration before production.","status":"no","auto":false,"note":""},{"id":"3.4","level":3,"category":"P","name":"Enforceability","description":"Crypto-agility can be made mandatory for certain contexts.","problem":"Unknown requirements cannot be implemented.","acceptance":"The required techniques are specified and a crypto-agile design can be effectively prescribed.","example":"A framework like CAMM enables prescribing and enforcing requirements.","status":"no","auto":false,"note":""},{"id":"3.5","level":3,"category":"K","name":"Security","description":"The crypto-agility mechanism is secure against attacks.","problem":"A vulnerable agility mechanism defeats its own purpose.","acceptance":"No vulnerabilities are detected during audits of the system.","example":"Regular audits confirm the mechanism's security.","status":"partial","auto":true,"note":"auto-evidenced from inventory/policy"},{"id":"3.6","level":3,"category":"S","name":"Backwards Compatibility","description":"New versions are compatible with older states of the system.","problem":"Version incompatibility prevents overall system functionality.","acceptance":"New versions support all functions of the previous version during the transition phase.","example":"Version 2 keeps full functionality with version 1 subsystems.","status":"no","auto":false,"note":""},{"id":"3.7","level":3,"category":"P","name":"Transition Mechanism","description":"A strategy ensures the overall system keeps working during an update's transition period.","problem":"Updates require regulated, secure processes managing version differences.","acceptance":"A methodology regulates compatibility and secure communication between subsystem versions.","example":"A hybrid transition phase upgrades subsystems without disruption.","status":"no","auto":false,"note":""},{"id":"3.8","level":3,"category":"P","name":"Effectiveness","description":"Migration between cryptographic algorithms is feasible in a reasonable amount of time.","problem":"Long migrations leave systems vulnerable as algorithm security degrades.","acceptance":"After a vulnerability becomes known, it is eliminated promptly.","example":"The migration completes before attacks become a practical threat.","status":"no","auto":false,"note":""},{"id":"4.0","level":4,"category":"P","name":"Automation","description":"Modifications to crypto-agile modules do not require manual interaction.","problem":"Manual intervention hinders crypto-agility deployment.","acceptance":"Changes can be made automatically based on pre-determined attributes.","example":"CI/CD pipelines trigger transitions when a new version is available.","status":"no","auto":false,"note":""},{"id":"4.1","level":4,"category":"S","name":"Context Independence","description":"The techniques used to implement crypto-agility also apply to other scenarios.","problem":"Scenario-specific approaches limit broader applicability.","acceptance":"The cryptographic approach is applicable to at least one other domain.","example":"The mechanism functions across medical and IoT environments.","status":"no","auto":false,"note":""},{"id":"4.2","level":4,"category":"P","name":"Scalability","description":"The crypto-agility implementation can be deployed in additional systems.","problem":"Platform-specific implementations require redevelopment per system.","acceptance":"The module can be deployed in other systems without extensive adaptation.","example":"Wrappers enable deployment across programming languages.","status":"no","auto":false,"note":""},{"id":"4.3","level":4,"category":"P","name":"Real-time","description":"Modifications to cryptographic functions become active in production as immediately as possible.","problem":"Delayed deployment extends vulnerability windows.","acceptance":"Added cryptography is reliably ready for use within a defined time period.","example":"Redundant external components forward cryptographic tasks dynamically.","status":"no","auto":false,"note":""},{"id":"4.4","level":4,"category":"S","name":"Cross-System Interoperability","description":"Different cryptographically agile systems are interoperable with each other.","problem":"Crypto-agility must not degrade global IT infrastructure compatibility.","acceptance":"The crypto-agile system can exchange information with all intended communication partners.","example":"A shared specification ensures interoperability across compliant systems.","status":"no","auto":false,"note":""}],"gaps":[{"id":"1.0","level":1,"category":"K","name":"System Knowledge","description":"Detailed knowledge of the affected system and its environment is required.","problem":"Understanding the systems and their domain context is essential to measure crypto-agility.","acceptance":"An in-depth understanding of the structure and operation of the systems being evaluated is available.","example":"Source code or hardware specs are needed; pure black boxes cannot be assessed.","status":"partial","auto":true,"note":"auto-evidenced from inventory/policy"},{"id":"1.1","level":1,"category":"P","name":"Updateability","description":"Maintainers can modify the system and provide updates to new software versions.","problem":"Fixes for identified vulnerabilities must be deployable.","acceptance":"Performing updates with modifications is possible.","example":"Mobile apps update easily; unsupported legacy devices cannot.","status":"no","auto":false,"note":""},{"id":"1.2","level":1,"category":"S","name":"Extensibility","description":"The system can be extended with new cryptographic algorithms and parameters.","problem":"New secure alternatives must be addable when attacks emerge.","acceptance":"Further cryptographic methods, variants and protocols can be added.","example":"IoT devices at memory/performance limits cannot accommodate additional algorithms.","status":"no","auto":false,"note":""},{"id":"1.3","level":1,"category":"P","name":"Reversibility","description":"The system can be rolled back to a previous state.","problem":"Problematic updates need rollback capability to restore functionality.","acceptance":"Rollbacks to previous versions are possible.","example":"A buggy update necessitates reverting to the prior version.","status":"no","auto":false,"note":""}],"metCount":2,"total":25}}</script>
+<script id="governance-config" type="application/json">{"_README":["Risk-Management input for beyond-shor.eu — consumed by `shorsight govern`.","The asset key is the SOURCE LABEL as ShorSight reports it ('beyond-shor'), NOT","'beyond-shor (local)' — the '(local)' suffix is the source *kind* and is not part of","the key. A mismatched key is silently ignored: owner, security objectives, economic","damage and treatments are then all dropped and every impact stays 'provisional'.","securityObjectives / economicDamage: 1-4 (BSI-style anchors, 4 = existential).","shelfLifeYears = X (how long the data must stay confidential), migrationYears = Y."],"risk":{"crqcYear":2035,"crqcYearSignatures":2030,"migrationYears":1,"defaultShelfLifeYears":5},"assets":{"beyond-shor":{"shelfLifeYears":5,"migrationYears":1,"criticality":"medium","owner":"Beyond Shor","riskOwner":"Marvin Sprey","dataClassification":"public","securityObjectives":{"confidentiality":1,"integrity":4,"authenticity":4,"nonRepudiation":3},"economicDamage":2}},"components":{"ML-DSA-65":{"migrationStatus":"pqc-only","vendorDependency":false},"ML-KEM-1024":{"migrationStatus":"pqc-only","vendorDependency":false},"SLH-DSA-SHA2-128s":{"migrationStatus":"pqc-only","vendorDependency":false},"SLH-DSA-SHA2-128f":{"migrationStatus":"pqc-only","vendorDependency":false},"FrodoKEM-1344-AES":{"migrationStatus":"pqc-only","vendorDependency":false},"Classic-McEliece":{"migrationStatus":"pqc-only","vendorDependency":false},"X25519":{"migrationStatus":"hybrid","vendorDependency":false},"EC-P256":{"migrationStatus":"not applicable","vendorDependency":false}},"treatments":{"beyond-shor :: X25519":{"option":"accept","decidedBy":"Marvin Sprey","note":"Deliberate: X25519 is the classical half of the hybrid handshake and is paired with ML-KEM-1024."},"beyond-shor :: EC-P256":{"option":"accept","decidedBy":"Marvin Sprey","note":"ECDSA P-256 is kept as the classical reference point in the signature benchmark."}}}</script>
+<script>
+const $ = s => document.querySelector(s);
+const el = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// Free text that reaches the UI — a policy's source, a waiver justification, a CAMM note —
+// routinely contains a bare URL. Print it as a real link instead of dead text.
+// Order matters and is the whole security argument: escape FIRST, then match. The pattern
+// therefore runs over already-escaped text, so it can never see a `<`, `>` or `"` (they are
+// entities by then) and the href can never break out of its attribute. Only http(s) is
+// matched, so `javascript:` stays inert text.
+const linkify = s => esc(s).replace(/\bhttps?:\/\/[^\s<>"']+/g, m => {
+  // trailing sentence punctuation belongs to the prose, not to the URL
+  const url = m.replace(/(?:&(?:amp|quot|gt|lt);|[.,;:!?)\]}])+$/, '');
+  return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>${m.slice(url.length)}`;
+});
+// a clickable circled-i. `html` is shown in a small closable panel on click and may contain links.
+const info = html => `<span class="info" role="button" tabindex="0" aria-label="more information" data-info="${esc(html)}">i</span>`;
+(function(){
+  const pop=$('#infopop'), body=pop.querySelector('.ibody');
+  let cur=null;
+  function show(icon){
+    body.innerHTML=icon.dataset.info||'';
+    pop.classList.remove('hide');
+    const r=icon.getBoundingClientRect(), cw=document.documentElement.clientWidth;
+    let left=Math.min(r.left+scrollX, scrollX+cw-pop.offsetWidth-12);
+    left=Math.max(left, scrollX+8);
+    let top=r.bottom+scrollY+8;
+    if(r.bottom+pop.offsetHeight+8>innerHeight && r.top-pop.offsetHeight-8>0) top=r.top+scrollY-pop.offsetHeight-8;
+    pop.style.left=left+'px'; pop.style.top=top+'px';
+    cur=icon;
+  }
+  function hide(){ pop.classList.add('hide'); cur=null; }
+  document.addEventListener('click', e=>{
+    const icon=e.target.closest('.info');
+    if(icon){ e.stopPropagation(); icon===cur?hide():show(icon); return; }
+    if(cur && !e.target.closest('#infopop')) hide();
+  });
+  pop.querySelector('.x').addEventListener('click', e=>{ e.stopPropagation(); hide(); });
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape'&&cur){ hide(); return; }
+    const a=document.activeElement;
+    if((e.key==='Enter'||e.key===' ')&&a&&a.classList&&a.classList.contains('info')){ e.preventDefault(); a.click(); }
+  });
+  addEventListener('resize', hide);
+})();
+// CVE/CWE links: CVE -> NVD, other ids (GHSA…) -> OSV, CWE -> MITRE. Open in a new tab.
+const cveUrl = id => /^cve-/i.test(id) ? `https://nvd.nist.gov/vuln/detail/${encodeURIComponent(id)}`
+                                       : `https://osv.dev/vulnerability/${encodeURIComponent(id)}`;
+const cweUrl = w => { const n=String(w).replace(/\D/g,''); return n?`https://cwe.mitre.org/data/definitions/${n}.html`:''; };
+// A URL that came out of the CBOM may only become an href when it is absolute http(s):
+// esc() guards HTML metacharacters, but `javascript:alert(1)` contains none of them and
+// would sail straight through into a clickable link.
+const safeUrl = u => /^https?:\/\/[^\s"'<>]+$/i.test(String(u||'')) ? String(u) : '';
+// stopPropagation so clicking a link inside a clickable table row doesn't also open the drawer
+const cveA = id => `<a href="${cveUrl(id)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${esc(id)}</a>`;
+const cweA = w => { const n=String(w).replace(/\D/g,''), u=cweUrl(w), label='CWE-'+n;
+  return u?`<a href="${u}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${label}</a>`:esc(label); };
+
+let MODEL=null, RAW_CBOM=null, SORT={k:'name',dir:1}, QFILTER='all', CONFFILTER='all', SOURCEFILTER='all', SEARCH='';
+const SRC_ICON={repository:'📦', repo:'📦', local:'📁', image:'🐳', network:'🌐', endpoint:'📡', certificate:'🔏', keystore:'🔑', config:'⚙️', manual:'✍️', imported:'📥', source:'•'};
+
+function propMap(arr){const m={},multi={};(arr||[]).forEach(p=>{if(m[p.name]===undefined)m[p.name]=p.value;(multi[p.name]=multi[p.name]||[]).push(p.value);});return {m,multi};}
+
+function parseCBOM(cbom){
+  const comps=cbom.components||[];
+  const algos=[], libs=[];
+  const vulnsByRef={};
+  (cbom.vulnerabilities||[]).forEach(v=>{
+    const r=(v.ratings||[])[0]||{};
+    const info={id:v.id,severity:(r.severity||'unknown'),score:r.score,desc:v.description,url:(v.source||{}).url,cwes:v.cwes||[]};
+    (v.affects||[]).forEach(a=>{(vulnsByRef[a.ref]=vulnsByRef[a.ref]||[]).push(info);});
+  });
+  comps.forEach(c=>{
+    const {m,multi}=propMap(c.properties);
+    if(c.type==='cryptographic-asset'){
+      const cp=c.cryptoProperties||{}, ap=cp.algorithmProperties||{};
+      algos.push({
+        name:c.name, kind:cp.assetType||'algorithm',
+        quantum:m['crypto:quantumStatus']||'unknown',
+        classical:m['crypto:classicalStatus']||'unknown',
+        family:m['crypto:family']||ap.primitive||'',
+        rationale:m['crypto:rationale']||'',
+        weaknesses:multi['crypto:weakness']||(m['crypto:cwe']?m['crypto:cwe'].split(','):[]),
+        libraries:multi['crypto:library']||[],
+        sink:m['crypto:sink']==='true',
+        sources:multi['crypto:source']||[],
+        primitive:ap.primitive, paramSet:ap.parameterSetIdentifier, mode:ap.mode,
+        nist:ap.nistQuantumSecurityLevel,
+        oid:cp.oid||'', functions:ap.cryptoFunctions||[],
+        certProps:cp.certificateProperties||null, protoProps:cp.protocolProperties||null,
+        materialType:(cp.relatedCryptoMaterialProperties||{}).type||'',
+        expired:m['crypto:expired']==='true', sigAlgName:m['crypto:signatureAlgorithmName']||'',
+        owner:m['crypto:owner']||'', dataClass:m['crypto:dataClassification']||'',
+        migrationStatus:m['crypto:migrationStatus']||'', vendorDependency:m['crypto:vendorDependency']==='true',
+        confidence:m['crypto:confidence']||'resolved',
+        occ:((c.evidence||{}).occurrences||[]).map(o=>({loc:o.location,line:o.line,ctx:o.additionalContext,sym:o.symbol})),
+      });
+    } else if(c.type==='library'){
+      const lp=propMap(c.properties).m;
+      libs.push({ref:c['bom-ref'],name:c.name,version:c.version,purl:c.purl,cves:vulnsByRef[c['bom-ref']]||[],
+                 scope:lp['crypto:dependencyScope']||'',precision:lp['crypto:versionPrecision']||'',cveStatus:lp['crypto:cveStatus']||''});
+    }
+  });
+  // sinks: structured network sinks (metadata) + crypto assets at a network boundary
+  const sinks=[];
+  ((cbom.metadata||{}).properties||[]).forEach(p=>{
+    if(p.name!=='crypto:sink') return;
+    let o; try{ o=JSON.parse(p.value); }catch(e){ o={symbol:p.value}; }
+    sinks.push(o);
+  });
+  algos.filter(a=>a.sink).forEach(a=>{
+    const loc=String((a.occ[0]||{}).loc||''); const parts=loc.split('::');
+    sinks.push({symbol:a.name, library:(a.libraries[0]||''), source:a.sources[0]||(parts.length>1?parts[0]:''),
+                location:parts.length>1?parts.slice(1).join('::'):loc, line:(a.occ[0]||{}).line,
+                note:'cryptographic asset at a network boundary'});
+  });
+  // sources (provenance): from metadata "label (kind)" + any referenced on assets
+  const sourceKind={};
+  ((cbom.metadata||{}).properties||[]).forEach(p=>{
+    if(p.name!=='crypto:source') return;
+    const mm=String(p.value).match(/^(.*)\s+\(([^)]+)\)\s*$/);
+    if(mm) sourceKind[mm[1]]=mm[2]; else sourceKind[p.value]='source';
+  });
+  algos.forEach(a=>a.sources.forEach(s=>{ if(!(s in sourceKind)) sourceKind[s]='source'; }));
+  const sources=Object.entries(sourceKind).map(([label,kind])=>({label,kind}));
+  // provenance registry: source label -> {webUrl,host,commit,pathPrefix} for deep links
+  const prov={};
+  ((cbom.metadata||{}).properties||[]).forEach(p=>{
+    if(p.name!=='crypto:provenance') return;
+    try{ const o=JSON.parse(p.value); if(o&&o.label) prov[o.label]=o; }catch(e){}
+  });
+  return {algos,libs,sinks,sources,prov,target:((cbom.metadata||{}).component||{}).name||'target',
+          tool:(((cbom.metadata||{}).tools||{}).components||[{}])[0]};
+}
+
+// Build a deep link to file:line on the repo's web host, or '' if no provenance.
+function blobUrl(prov,file,line){
+  if(!prov||!prov.webUrl||!file) return '';
+  // The provenance comes out of the CBOM, so an imported document controls it. Only an
+  // absolute http(s) base may become an href — otherwise a `javascript:` webUrl would turn
+  // every source link into a script trigger.
+  if(!safeUrl(prov.webUrl)) return '';
+  const ref=encodeURIComponent(prov.commit||'HEAD');
+  const path=((prov.pathPrefix||'')+file).replace(/^\/+/,'');
+  const enc=path.split('/').map(encodeURIComponent).join('/');
+  const L=String(line||'').replace(/\D/g,'');
+  switch(prov.host){
+    case 'gitlab':    return `${prov.webUrl}/-/blob/${ref}/${enc}${L?`#L${L}`:''}`;
+    case 'bitbucket': return `${prov.webUrl}/src/${ref}/${enc}${L?`#lines-${L}`:''}`;
+    case 'gitea':     return `${prov.webUrl}/src/commit/${ref}/${enc}${L?`#L${L}`:''}`;
+    default:          return `${prov.webUrl}/blob/${ref}/${enc}${L?`#L${L}`:''}`; // github & co.
+  }
+}
+
+function mergeCBOM(a,b){
+  const out=JSON.parse(JSON.stringify(a||{components:[]}));
+  out.components=out.components||[];
+  const byRef={}; out.components.forEach(c=>byRef[c['bom-ref']||c.name]=c);
+  (b.components||[]).forEach(c=>{
+    const ref=c['bom-ref']||c.name, ex=byRef[ref];
+    if(!ex){ const cc=JSON.parse(JSON.stringify(c)); out.components.push(cc); byRef[ref]=cc; return; }
+    const occ=(ex.evidence=ex.evidence||{}).occurrences=ex.evidence.occurrences||[];
+    const have=new Set(occ.map(o=>o.location+'|'+(o.line||'')));
+    ((c.evidence||{}).occurrences||[]).forEach(o=>{const k=o.location+'|'+(o.line||''); if(!have.has(k)){have.add(k);occ.push(o);}});
+    ex.properties=ex.properties||[]; const ph=new Set(ex.properties.map(p=>p.name+'='+p.value));
+    (c.properties||[]).forEach(p=>{const k=p.name+'='+p.value; if(!ph.has(k)){ph.add(k);ex.properties.push(p);}});
+    if(!ex.version&&c.version)ex.version=c.version;
+    if(!ex.purl&&c.purl)ex.purl=c.purl;
+  });
+  out.vulnerabilities=out.vulnerabilities||[]; const vById={}; out.vulnerabilities.forEach(v=>vById[v.id]=v);
+  (b.vulnerabilities||[]).forEach(v=>{ if(!vById[v.id]){out.vulnerabilities.push(JSON.parse(JSON.stringify(v)));vById[v.id]=v;}
+    else { const refs=new Set((vById[v.id].affects||[]).map(a=>a.ref)); (v.affects||[]).forEach(a=>{if(!refs.has(a.ref))(vById[v.id].affects=vById[v.id].affects||[]).push(a);}); }});
+  const mp=(out.metadata=out.metadata||{}).properties=out.metadata.properties||[];
+  const mph=new Set(mp.map(p=>p.name+'='+p.value));
+  ((b.metadata||{}).properties||[]).forEach(p=>{const k=p.name+'='+p.value; if(!mph.has(k)){mph.add(k);mp.push(p);}});
+  const n=mp.filter(p=>p.name==='crypto:source').length;
+  out.metadata.component=out.metadata.component||{type:'application',name:'inventory'};
+  out.metadata.component.name='inventory ('+n+' sources)';
+  out.metadata.component['bom-ref']=MERGED_ROOT;
+  out.dependencies=mergeDeps([a&&a.dependencies, b&&b.dependencies],
+                             new Set(out.components.map(c=>c['bom-ref']||c.name)));
+  if(!out.dependencies.length) delete out.dependencies;
+  return out;
+}
+
+// Mirror of cbom/merge.py:_merge_dependencies — collapse the per-document target roots
+// into the merged root and drop edges to components that aren't in the merged inventory,
+// so the graph never dangles.
+const MERGED_ROOT='target/inventory';
+function mergeDeps(graphs,refs){
+  const nodes={};
+  const node=r=>nodes[r]=nodes[r]||{dependsOn:[],provides:[]};
+  const extend=(bucket,vals)=>(vals||[]).forEach(v=>{if(refs.has(v)&&bucket.indexOf(v)<0)bucket.push(v);});
+  (graphs||[]).forEach(g=>(g||[]).forEach(e=>{
+    if(!e.ref) return;
+    const t=node(e.ref.indexOf('target/')===0?MERGED_ROOT:e.ref);
+    extend(t.dependsOn,e.dependsOn); extend(t.provides,e.provides);
+  }));
+  refs.forEach(r=>node(r));
+  if(!(nodes[MERGED_ROOT]||{}).dependsOn||!nodes[MERGED_ROOT].dependsOn.length) delete nodes[MERGED_ROOT];
+  return Object.keys(nodes).sort().map(ref=>{
+    const e={ref};
+    if(nodes[ref].dependsOn.length) e.dependsOn=nodes[ref].dependsOn.slice().sort();
+    if(nodes[ref].provides.length) e.provides=nodes[ref].provides.slice().sort();
+    return e;
+  });
+}
+
+function countBy(arr,key){const m={};arr.forEach(a=>m[a[key]]=(m[a[key]]||0)+1);return m;}
+
+function donut(counts){
+  const order=[['safe','var(--safe)'],['unsafe','var(--unsafe)'],['unknown','var(--unknown)']];
+  const total=order.reduce((s,[k])=>s+(counts[k]||0),0)||1;
+  let acc=0; const segs=order.map(([k,col])=>{const v=counts[k]||0;const a=acc/total*100;acc+=v;return `${col} ${a}% ${acc/total*100}%`;}).join(',');
+  const d=el('div'); d.style.cssText=`width:156px;height:156px;border-radius:50%;background:conic-gradient(${segs});position:relative;box-shadow:0 8px 24px -16px rgba(0,0,0,.8)`;
+  const hole=el('div','', `<div style="font-size:30px;font-weight:800;letter-spacing:-.02em">${total}</div><div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.06em">assets</div>`);
+  hole.style.cssText='position:absolute;inset:28px;background:var(--panel);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center';
+  d.appendChild(hole);
+  $('#donut').innerHTML=''; $('#donut').appendChild(d);
+  $('#qlegend').innerHTML=order.map(([k,col])=>`<div><span style="background:${col}"></span>${k} — <b>${counts[k]||0}</b></div>`).join('');
+}
+
+function classBars(counts){
+  const order=[['secure','var(--secure)'],['weak','var(--weak)'],['broken','var(--broken)'],['unknown','var(--unknown)']];
+  const total=order.reduce((s,[k])=>s+(counts[k]||0),0)||1;
+  $('#classbars').innerHTML=order.map(([k,col])=>{
+    const v=counts[k]||0; return `<div class="barrow"><span class="lab">${k}</span><div class="track"><div class="fill" style="width:${v/total*100}%;background:${col}"></div></div><b>${v}</b></div>`;
+  }).join('');
+}
+
+// Status values normally come from a fixed enum, but an *imported* CBOM (a supplier's, a
+// hand-written one) can put anything in a `crypto:*Status` property — so the value is both
+// escaped for the text node and reduced to a known token for the CSS class, and never
+// interpolated raw into either.
+const CLASS_TOKEN = new Set(['safe','unsafe','unknown','secure','weak','broken',
+                             'critical','high','medium','low','none']);
+const cls = v => CLASS_TOKEN.has(String(v)) ? String(v) : 'unknown';
+const STATUS_TOKEN = new Set(['met','partial','no']);
+const cls2 = v => STATUS_TOKEN.has(String(v)) ? String(v) : 'no';
+const badge=(type,val)=>`<span class="badge b-${cls(val)}">${esc(val)}</span>`;
+// evidence grade -> tint + rank (literal strongest). See crypto:confidence in the CBOM builder.
+const CONF_TINT={literal:'safe',resolved:'unknown','name-only':'weak'};
+const CONF_RANK={'name-only':0,resolved:1,literal:2};
+const confBadge=v=>`<span class="badge b-${CONF_TINT[v]||'unknown'}">${esc(v||'resolved')}</span>`;
+const sevBadge=c=>`<span class="badge sev-${cls(c.severity)}" title="${esc(c.severity)} — open advisory">${cveA(c.id)}${c.score!=null?' '+esc(c.score):''}</span>`;
+
+function renderCards(M){
+  const q=countBy(M.algos,'quantum'), cl=countBy(M.algos,'classical');
+  const cveCount=M.libs.reduce((s,l)=>s+l.cves.length,0);
+  const cards=[
+    ['assets',M.algos.length,''],['quantum-safe',q.safe||0,'safe'],['quantum-unsafe',q.unsafe||0,'unsafe'],
+    ['quantum-unknown',q.unknown||0,'unknown'],['broken/weak',(cl.broken||0)+(cl.weak||0),'unsafe'],
+    ['libraries',M.libs.length,''],['CVEs',cveCount,cveCount?'unsafe':''],['sinks',M.sinks.length,''],
+  ];
+  $('#cards').innerHTML=cards.map(([l,n,c])=>`<div class="card ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+  donut(q); classBars(cl);
+  const srcCount={}; M.algos.forEach(a=>a.sources.forEach(s=>srcCount[s]=(srcCount[s]||0)+1));
+  const kindOf={}; M.sources.forEach(s=>kindOf[s.label]=s.kind);
+  const srcList = M.sources.length
+    ? M.sources.map(s=>`<div class="occ">${SRC_ICON[s.kind]||'•'} <b>${esc(s.label)}</b> `
+        + `<span class="muted">${esc(s.kind)} · ${srcCount[s.label]||0} assets</span></div>`).join('')
+    : '<span class="muted">—</span>';
+  $('#meta').innerHTML=`<b>${esc(M.target)}</b>`
+    + `<div style="margin-top:8px"><b>Sources (${M.sources.length})</b>${srcList}</div>`;
+}
+
+function renderAlgos(M){
+  let rows=M.algos.slice();
+  if(QFILTER!=='all') rows=rows.filter(a=>a.quantum===QFILTER);
+  if(CONFFILTER!=='all') rows=rows.filter(a=>a.confidence===CONFFILTER);
+  if(SOURCEFILTER!=='all') rows=rows.filter(a=>a.sources.includes(SOURCEFILTER));
+  if(SEARCH) rows=rows.filter(a=>(a.name+' '+a.family+' '+a.sources.join(' ')).toLowerCase().includes(SEARCH));
+  rows.sort((a,b)=>{const k=SORT.k; let x=a[k],y=b[k]; if(k==='count'){x=a.occ.length;y=b.occ.length;} else if(k==='confidence'){x=CONF_RANK[a.confidence]??1;y=CONF_RANK[b.confidence]??1;} x=x==null?'':x;y=y==null?'':y; return (x>y?1:x<y?-1:0)*SORT.dir;});
+  const kindOf={}; M.sources.forEach(s=>kindOf[s.label]=s.kind);
+  $('#algoTable tbody').innerHTML=rows.map((a,i)=>`<tr data-i="${M.algos.indexOf(a)}">
+    <td><b>${esc(a.name)}</b>${a.sink?' <span class="badge b-unsafe">sink</span>':''}</td>
+    <td class="muted">${esc(a.kind)}</td>
+    <td>${badge('q',a.quantum)}</td>
+    <td>${badge('c',a.classical)}</td>
+    <td class="muted">${esc(a.family)}</td>
+    <td>${confBadge(a.confidence)}</td>
+    <td>${a.sources.map(s=>`<span class="pill" title="${esc(s)}">${SRC_ICON[kindOf[s]]||'•'} ${esc(s)}</span>`).join(' ')||'<span class="muted">—</span>'}</td>
+    <td>${a.occ.length}</td></tr>`).join('') || `<tr><td colspan="8" class="muted">no matches</td></tr>`;
+  $('#algoTable tbody').querySelectorAll('tr[data-i]').forEach(tr=>tr.onclick=()=>showAlgo(M.algos[+tr.dataset.i]));
+}
+
+function renderLibs(M){
+  const cveCell=l=>{
+    if(l.cves.length) return l.cves.slice(0,3).map(sevBadge).join(' ')+(l.cves.length>3?` +${l.cves.length-3}`:'');
+    if(l.cveStatus==='unaffected') return '<span class="badge b-safe" title="version pinned; no known CVEs">✓ not affected</span>';
+    if(l.cveStatus==='unknown'||l.precision==='unpinned') return '<span class="muted" title="version not pinned (no lockfile)">unknown</span>';
+    return '<span class="muted">none</span>';
+  };
+  $('#libTable tbody').innerHTML=M.libs.map((l,i)=>`<tr data-i="${i}">
+    <td><b>${esc(l.name)}</b>${l.scope==='transitive'?' <span class="pill" title="pulled in transitively">transitive</span>':''}${l.purl?`<br><span class="muted" style="font-size:11px">${esc(l.purl)}</span>`:''}</td>
+    <td>${esc(l.version||'—')}${l.precision==='exact'?' <span title="exact, from a lockfile">📌</span>':l.version?' <span class="muted" title="from a manifest range, not pinned">~</span>':''}</td>
+    <td>${cveCell(l)}</td></tr>`).join('')
+    || `<tr><td colspan="3" class="muted">no libraries</td></tr>`;
+  $('#libTable tbody').querySelectorAll('tr[data-i]').forEach(tr=>tr.onclick=()=>showLib(M.libs[+tr.dataset.i]));
+}
+
+function renderSinks(M){
+  const kindOf={}; M.sources.forEach(s=>kindOf[s.label]=s.kind);
+  $('#sinks').innerHTML = M.sinks.length ? M.sinks.map(s=>{
+    const where=s.location?esc(s.location)+(s.line?':'+s.line:''):'';
+    const url=s.location?blobUrl((M.prov||{})[s.source], s.location, s.line):'';
+    const loc=url?`<a class="srclink" href="${esc(url)}" target="_blank" rel="noopener" title="Open in repository">${where} ↗</a>`:where;
+    return `<div class="sinkrow">
+      <span class="call">${esc(s.symbol||'sink')}</span>
+      ${s.library?`<span class="pill">${esc(s.library)}</span>`:''}
+      ${s.source?`<span class="pill" title="source">${SRC_ICON[kindOf[s.source]]||'•'} ${esc(s.source)}</span>`:''}
+      ${where?`<span class="muted">@ ${loc}</span>`:''}
+      ${s.note?`<span class="muted">— ${esc(s.note)}</span>`:''}
+    </div>`;
+  }).join('') : '<span class="muted">none detected</span>';
+}
+
+function showAlgo(a){
+  let h=`<h2>${esc(a.name)}</h2><div>${badge('q',a.quantum)} ${badge('c',a.classical)} ${confBadge(a.confidence)} <span class="muted">${esc(a.kind)} · ${esc(a.family)}</span></div>`;
+  h+=`<section><h3>Properties</h3>`;
+  const funcs=(a.functions||[]).filter(f=>f&&f!=='unknown').join(', ');
+  [['primitive',a.primitive],['key size / param',a.paramSet],['mode',a.mode],['NIST PQ level',a.nist],
+   ['OID',a.oid],['operation',funcs]].forEach(([k,v])=>{ if(v!=null&&v!=='') h+=`<div class="kv"><span class="muted">${k}</span><span>${esc(v)}</span></div>`;});
+  h+=`</section>`;
+  if(a.kind==='certificate'&&a.certProps){const cpp=a.certProps;
+    h+=`<section><h3>Certificate</h3>`;
+    [['subject',cpp.subjectName],['valid from',cpp.notValidBefore],['valid until',cpp.notValidAfter],
+     ['signature',a.sigAlgName],['public key',(cpp.subjectPublicKeyRef||(((cpp.relatedCryptographicAssets||[]).find(r=>r.type==='publicKey')||{}).ref)||'').replace('crypto/','')],
+     ['status',a.expired?'⚠️ EXPIRED':'valid']].forEach(([k,v])=>{ if(v!=null&&v!=='') h+=`<div class="kv"><span class="muted">${k}</span><span>${esc(v)}</span></div>`;});
+    h+=`</section>`;}
+  if(a.kind==='related-crypto-material'&&a.materialType)
+    h+=`<section><h3>Related crypto material</h3><div class="kv"><span class="muted">type</span><span>${esc(a.materialType)}</span></div></section>`;
+  if(a.kind==='protocol'&&a.protoProps){const pp=a.protoProps;
+    h+=`<section><h3>Protocol</h3>`;
+    [['type',pp.type],['version',pp.version]].forEach(([k,v])=>{ if(v) h+=`<div class="kv"><span class="muted">${k}</span><span>${esc(v)}</span></div>`;});
+    if((pp.cipherSuites||[]).length) h+=`<div class="kv"><span class="muted">cipher suites</span><span>${pp.cipherSuites.map(s=>esc(s.name)).join(', ')}</span></div>`;
+    h+=`</section>`;}
+  if(a.owner||a.dataClass||a.migrationStatus||a.vendorDependency){
+    h+=`<section><h3>Governance (MV-CBOM)</h3>`;
+    [['owner',a.owner],['data classification',a.dataClass],['migration status',a.migrationStatus],
+     ['vendor-dependent',a.vendorDependency?'yes':'']].forEach(([k,v])=>{ if(v) h+=`<div class="kv"><span class="muted">${k}</span><span>${esc(v)}</span></div>`;});
+    h+=`</section>`;}
+  if(a.rationale) h+=`<section><h3>Assessment</h3><p>${esc(a.rationale)}</p></section>`;
+  if(a.weaknesses.length) h+=`<section><h3>Weaknesses (CWE)</h3>${a.weaknesses.map(w=>`<div class="kv">${cweA(w)}</div>`).join('')}</section>`;
+  if(a.libraries.length) h+=`<section><h3>Libraries</h3>${a.libraries.map(l=>`<span class="pill">${esc(l)}</span> `).join('')}</section>`;
+  if(a.sources.length) h+=`<section><h3>Sources</h3>${a.sources.map(s=>`<span class="pill">${esc(s)}</span> `).join('')}</section>`;
+  h+=`<section><h3>Where it is used (${a.occ.length})</h3>${a.occ.map(o=>{
+    const parts=String(o.loc).split('::'); const src=parts.length>1?parts[0]:''; const where=parts.length>1?parts.slice(1).join('::'):o.loc;
+    const url=blobUrl((MODEL&&MODEL.prov||{})[src], where, o.line);
+    const fileLine=esc(where)+(o.line?':'+o.line:'');
+    const loc=url?`<a class="srclink" href="${esc(url)}" target="_blank" rel="noopener" title="Open in repository">${fileLine} ↗</a>`:fileLine;
+    const ctx=o.ctx?(url?`<a class="srclink snip" href="${esc(url)}" target="_blank" rel="noopener" title="Open this line in the repository">${esc(o.ctx)}</a>`:esc(o.ctx)):'';
+    return `<div class="occ">${src?`<span class="badge b-unknown">${esc(src)}</span> `:''}${loc}${o.sym?`<br><span class="muted">${esc(o.sym)}</span>`:''}${ctx?`<br>${ctx}`:''}</div>`;
+  }).join('')||'<span class="muted">—</span>'}</section>`;
+  openDetail(h);
+}
+function showLib(l){
+  let h=`<h2>${esc(l.name)}</h2><div class="muted">${esc(l.version||'version unknown')}</div>`;
+  if(l.purl) h+=`<section><h3>Package</h3><span class="pill">${esc(l.purl)}</span></section>`;
+  const dep=[]; if(l.scope) dep.push(['dependency',l.scope]);
+  if(l.precision) dep.push(['version',l.precision==='exact'?'exact (lockfile)':'unpinned (manifest range)']);
+  if(l.cveStatus) dep.push(['CVE status',l.cveStatus==='affected'?'affected at this version':l.cveStatus==='unaffected'?'not affected (version pinned, no CVEs)':'unknown (pin the version to confirm)']);
+  if(dep.length) h+=`<section><h3>Dependency</h3>${dep.map(([k,v])=>`<div class="kv"><span class="muted">${k}</span><span>${esc(v)}</span></div>`).join('')}</section>`;
+  h+=`<section><h3>Vulnerabilities (${l.cves.length})</h3>`;
+  h+= l.cves.length? l.cves.map(c=>`<div class="occ">${sevBadge(c)} ${c.cwes.map(cweA).join(' ')}<br>${esc(c.desc||'')}<br><a href="${esc(safeUrl(c.url)||cveUrl(c.id))}" target="_blank" rel="noopener">open advisory ↗</a></div>`).join('') : '<span class="muted">none</span>';
+  h+=`</section>`;
+  openDetail(h);
+}
+function openDetail(h){$('#detailBody').innerHTML=h;$('#detail').classList.add('open');}
+function closeDetail(){$('#detail').classList.remove('open');}
+
+function render(cbom){
+  MODEL=parseCBOM(cbom); RAW_CBOM=cbom;
+  document.body.classList.add('has-data');           // reveals the working header toolbar
+  $('#loader').classList.add('hide'); $('#dash').classList.remove('hide');
+  ['exportBtn','clearBtn'].forEach(id=>$('#'+id).classList.remove('hide'));
+  if(window.__SERVE__) $('#workbookBtn').classList.remove('hide');
+  if(SOURCEFILTER!=='all' && !MODEL.sources.some(s=>s.label===SOURCEFILTER)) SOURCEFILTER='all';
+  $('#qfilters').innerHTML='<span class="muted" style="margin:0 4px">quantum:</span>'
+    + ['all','safe','unsafe','unknown'].map(k=>`<span class="chip ${k===QFILTER?'active':''}" data-q="${k}">${k}</span>`).join('');
+  $('#qfilters').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{QFILTER=c.dataset.q;render(cbom);});
+  $('#cfilters').innerHTML='<span class="muted" style="margin:0 4px">evidence:</span>'
+    + ['all','literal','resolved','name-only'].map(k=>`<span class="chip ${k===CONFFILTER?'active':''}" data-cf="${k}">${k}</span>`).join('');
+  $('#cfilters').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{CONFFILTER=c.dataset.cf;render(cbom);});
+  const sf=['all',...MODEL.sources.map(s=>s.label)];
+  $('#sfilters').innerHTML = MODEL.sources.length>1
+    ? '<span class="muted" style="margin:0 4px">source:</span>'
+      + sf.map(k=>`<span class="chip ${k===SOURCEFILTER?'active':''}" data-s="${esc(k)}">${esc(k)}</span>`).join('')
+    : '';
+  $('#sfilters').querySelectorAll('.chip').forEach(c=>c.onclick=()=>{SOURCEFILTER=c.dataset.s;render(cbom);});
+  renderCards(MODEL); renderAlgos(MODEL); renderLibs(MODEL); renderSinks(MODEL);
+  if(window.afterRender) window.afterRender();
+}
+
+// ---- input wiring ----
+// every load/scan is merged into the current inventory (multi-source); Clear resets
+function ingest(cbom){ render(RAW_CBOM ? mergeCBOM(RAW_CBOM, cbom) : cbom); }
+function loadText(t){ try{ ingest(JSON.parse(t)); }catch(e){ $('#loaderr').textContent='Invalid CBOM JSON: '+e.message; } }
+
+function uploadCapture(file){
+  $('#loaderr').textContent='Scanning '+file.name+' …';
+  // same progress plumbing as runScan (the helpers below are hoisted into this block)
+  const job=newJobId(); progShow(file.name); const stop=pollProgress(job);
+  const url='/api/scan-upload?name='+encodeURIComponent(file.name)+'&assess=1&job='+job;
+  fetch(url,{method:'POST',body:file}).then(r=>r.json().then(j=>({ok:r.ok,j}))).then(({ok,j})=>{
+    if(!ok){$('#loaderr').textContent=j.error||'scan failed';} else {$('#loaderr').textContent='';ingest(j);}
+  }).catch(e=>$('#loaderr').textContent=String(e))
+    .finally(()=>{ stop(); progHide(); });
+}
+function handleFile(file){
+  if(!file) return;
+  if(/\.json$/i.test(file.name)) file.text().then(loadText);
+  else if(/\.(pcap|pcapng|cap)$/i.test(file.name)){
+    if(window.__SERVE__) uploadCapture(file);
+    else $('#loaderr').textContent='Scanning .pcap needs the local server — run: shorsight serve';
+  } else file.text().then(loadText);   // best-effort: try as CBOM JSON
+}
+$('#fileInput').onchange=e=>handleFile(e.target.files[0]);
+const drop=$('#drop');
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',e=>handleFile(e.dataTransfer.files[0]));
+
+function download(name, blob){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+}
+$('#clearBtn').onclick=()=>{
+  RAW_CBOM=null; MODEL=null; SOURCEFILTER='all'; QFILTER='all'; CONFFILTER='all'; SEARCH='';
+  if(typeof GOVRESULT!=='undefined') GOVRESULT=null;
+  if(typeof ACTIVE_TAB!=='undefined') ACTIVE_TAB='inventory';
+  document.body.classList.remove('has-data');        // back to the clean empty hero
+  $('#dash').classList.add('hide'); $('#loader').classList.remove('hide');
+  document.querySelectorAll('.view').forEach(v=>v.classList.add('hide'));
+  $('#view-inventory').classList.remove('hide');
+  ['exportBtn','clearBtn','workbookBtn'].forEach(id=>$('#'+id).classList.add('hide'));
+  $('#loaderr').textContent=''; if($('#search')) $('#search').value='';
+};
+$('#workbookBtn').onclick=()=>{
+  if(!RAW_CBOM) return;
+  const body=JSON.stringify({cbom:RAW_CBOM, config:(typeof GOV!=='undefined'&&GOV)?GOV:{}});
+  fetch('/api/export',{method:'POST',headers:{'Content-Type':'application/json'},body})
+    .then(r=>r.ok?r.blob():r.json().then(j=>Promise.reject(j.error||'export failed')))
+    .then(blob=>download('shorsight.xlsx', blob))
+    .catch(e=>$('#loaderr').textContent=String(e));
+};
+$('#search').oninput=e=>{SEARCH=e.target.value.toLowerCase(); if(MODEL) renderAlgos(MODEL);};
+function saveCbom(doc){
+  const name=(((doc.metadata||{}).component||{}).name||'cbom').replace(/[^A-Za-z0-9._-]+/g,'-');
+  const blob=new Blob([JSON.stringify(doc,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='cbom-'+name+'.json'; document.body.appendChild(a); a.click();
+  a.remove(); URL.revokeObjectURL(a.href);
+}
+$('#exportBtn').onclick=()=>{
+  if(!RAW_CBOM)return;
+  // Export the same document `shorsight enrich` writes: the governance answers stamped in.
+  // The stamping happens server-side so the browser and the console cannot drift apart;
+  // without a server (a static report) there is nothing to stamp with, so the raw CBOM goes.
+  if(!window.__SERVE__ || !GOV){ saveCbom(RAW_CBOM); return; }
+  fetch('/api/enrich',{method:'POST',headers:{'Content-Type':'application/json'},
+                       body:JSON.stringify({cbom:RAW_CBOM,config:GOV})})
+    .then(r=>r.ok?r.json():r.json().then(j=>Promise.reject(j.error||'enrich failed')))
+    .then(saveCbom)
+    .catch(e=>{ $('#loaderr').textContent='could not stamp the governance overlay: '+e
+                  +' — exporting the raw CBOM instead.'; saveCbom(RAW_CBOM); });
+};
+document.querySelectorAll('#algoTable th').forEach(th=>th.onclick=()=>{const k=th.dataset.k; if(!k)return; SORT.dir=(SORT.k===k)?-SORT.dir:1; SORT.k=k; if(MODEL) renderAlgos(MODEL);});
+
+// scan endpoint (only present when served)
+// give the empty-state hero the brand icon (reuse the header logo, no duplicate base64)
+{const hl=document.querySelector('.hero-logo'), bl=document.querySelector('.brand .logo'); if(hl&&bl)hl.src=bl.src;}
+$('#heroLoad').onclick=()=>$('#fileInput').click();
+
+// --- scan progress -------------------------------------------------------------
+// The scan answers on one connection; this polls /api/scan-progress on another and
+// draws what the server reports. A scan without a job id simply shows no bar.
+function newJobId(){
+  try{ if(crypto&&crypto.randomUUID) return crypto.randomUUID().replace(/-/g,''); }catch(e){}
+  return 'j'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+}
+function progShow(what){
+  const p=$('#scanprog'); if(!p) return;
+  $('#spWhat').textContent=what; $('#spStage').textContent='starting…';
+  $('#spCount').textContent=''; $('#spFill').style.width='0';
+  p.classList.add('indet'); p.classList.remove('hide');
+}
+function progHide(){
+  const p=$('#scanprog'); if(!p) return;
+  // let the bar land on 100% before it goes, instead of vanishing mid-fill
+  p.classList.remove('indet'); $('#spFill').style.width='100%';
+  setTimeout(()=>{ p.classList.add('hide'); $('#spFill').style.width='0'; }, 180);
+}
+function progPaint(s){
+  if(!s||s.unknown) return;
+  const p=$('#scanprog'); if(!p) return;
+  $('#spStage').textContent=s.stage||'';
+  if(s.label) $('#spWhat').textContent=s.label;
+  if(s.total>0){
+    p.classList.remove('indet');
+    $('#spFill').style.width=(s.percent||0)+'%';
+    $('#spCount').textContent=s.current+' / '+s.total+' '+(s.phase||'files')
+      +'  ·  '+(s.percent||0).toFixed(1)+'%';
+  }else{                       // indeterminate step: sweep, and show no numbers
+    // clear the inline width, or it would beat the .indet sweep rule and the bar would
+    // keep the width it happened to reach in the previous determinate phase
+    p.classList.add('indet'); $('#spCount').textContent=''; $('#spFill').style.width='';
+  }
+}
+// Poll until stopped. Returns a stop function; never rejects — a failed poll is not a
+// failed scan, so it is swallowed and the next tick tries again.
+function pollProgress(job){
+  let stopped=false;
+  (function tick(){
+    if(stopped) return;
+    fetch('/api/scan-progress?job='+encodeURIComponent(job))
+      .then(r=>r.json()).then(s=>{ if(!stopped) progPaint(s); })
+      .catch(()=>{})
+      .finally(()=>{ if(!stopped) setTimeout(tick, 250); });
+  })();
+  return ()=>{ stopped=true; };
+}
+
+function runScan(target, btn){
+  if(!target) return;
+  const label=btn&&btn.textContent; if(btn) btn.innerHTML='<span class="spin"></span>';
+  $('#loaderr').textContent='';
+  const job=newJobId();
+  progShow(target);
+  const stop=pollProgress(job);
+  const url='/api/scan?target='+encodeURIComponent(target)+'&assess=1&job='+job;
+  fetch(url).then(r=>r.json().then(j=>({ok:r.ok,j}))).then(({ok,j})=>{
+    if(!ok){$('#loaderr').textContent=j.error||'scan failed';} else ingest(j);
+  }).catch(e=>$('#loaderr').textContent=String(e))
+    .finally(()=>{ stop(); progHide(); if(btn) btn.textContent=label; });
+}
+// active endpoint scan (network) — gated behind an explicit authorization acknowledgement
+function openNetModal(){ $('#netErr').textContent=''; $('#netAck').checked=false; $('#netGo').disabled=true;
+  $('#netStatus').classList.add('hide'); $('#netStatus').textContent='';
+  $('#netmodal').classList.remove('hide'); $('#netTarget').focus(); }
+function closeNetModal(){ $('#netmodal').classList.add('hide'); }
+function runNetScan(target, btn){
+  if(!target){ $('#netErr').textContent='enter a target'; return; }
+  if(!$('#netAck').checked){ $('#netErr').textContent='you must confirm authorization first'; return; }
+  const label=btn&&btn.textContent; if(btn){ btn.disabled=true; btn.innerHTML='<span class="spin"></span>'; }
+  $('#netErr').textContent='';
+  const isRange = target.includes('/') || !target.includes(':');
+  const status=$('#netStatus'); status.classList.remove('hide');
+  status.innerHTML='<span class="spin"></span> Scanning… '
+    + (isRange ? 'discovering hosts and enumerating a whole network — this can take several minutes.'
+               : 'enumerating the endpoint — this can take a moment.');
+  fetch('/api/netscan?target='+encodeURIComponent(target)+'&ack=1'
+        +'&assess=1',
+        {method:'POST'})
+    .then(r=>r.json().then(j=>({ok:r.ok,j})))
+    .then(({ok,j})=>{ if(!ok){ $('#netErr').textContent=j.error||'scan failed'; }
+                      else { closeNetModal(); ingest(j); } })
+    .catch(e=>{ $('#netErr').textContent=String(e); })
+    .finally(()=>{ status.classList.add('hide'); if(btn){ btn.disabled=false; btn.textContent=label; } });
+}
+if(window.__SERVE__){
+  document.querySelectorAll('.scanui').forEach(e=>e.classList.remove('hide'));
+  $('#scanBtn').onclick=()=>runScan($('#scanTarget').value.trim(), $('#scanBtn'));
+  $('#heroScanBtn').onclick=()=>runScan($('#heroScan').value.trim(), $('#heroScanBtn'));
+  $('#heroScan').onkeydown=e=>{ if(e.key==='Enter') runScan($('#heroScan').value.trim(), $('#heroScanBtn')); };
+  $('#scanTarget').onkeydown=e=>{ if(e.key==='Enter') runScan($('#scanTarget').value.trim(), $('#scanBtn')); };
+  $('#netBtn').onclick=openNetModal;
+  $('#heroNetBtn').onclick=openNetModal;
+  $('#netCancel').onclick=closeNetModal;
+  $('#netAck').onchange=()=>{ $('#netGo').disabled=!$('#netAck').checked; };
+  $('#netGo').onclick=()=>runNetScan($('#netTarget').value.trim(), $('#netGo'));
+  $('#netTarget').onkeydown=e=>{ if(e.key==='Enter'&&!$('#netGo').disabled) runNetScan($('#netTarget').value.trim(), $('#netGo')); };
+  $('#netmodal').onclick=e=>{ if(e.target===$('#netmodal')) closeNetModal(); };
+}
+
+// auto-render embedded CBOM (report mode): show the boot spinner first, then render
+const boot=$('#boot');
+const embedded=JSON.parse(document.getElementById('cbom-data').textContent);
+if(embedded){
+  document.body.classList.add('report');           // read-only: hide load/scan/export controls
+  setTimeout(()=>{ render(embedded); boot.classList.add('hide'); }, 30);
+} else {
+  boot.classList.add('hide');
+}
+</script>
+
+<script>
+// ===== Governance (compliance · risk · maturity) =====
+let GOV = JSON.parse(document.getElementById('governance-config').textContent) || null;
+let GOVRESULT = JSON.parse(document.getElementById('governance-data').textContent);   // null if none
+let ACTIVE_TAB = 'inventory';
+let MQMODE = 'overview', QIDX = 0;     // CAMM maturity: overview vs guided questionnaire
+const REPORT = () => document.body.classList.contains('report');
+const TABS = [['inventory','Inventory'],['risk','Risk&nbsp;Management']];
+// beyond-shor.eu: Compliance / Maturity / Governance / How-to are dropped — this page
+// is a showcase of a scan result, not the working tool.
+// Human-in-the-loop impact model (security objectives + economic damage), 1–4 with BSI-style anchors.
+const SZ_KEYS=['confidentiality','integrity','authenticity','nonRepudiation'];
+const SZ_LABEL={confidentiality:'Confidentiality',integrity:'Integrity',authenticity:'Authenticity',nonRepudiation:'Non-repudiation'};
+const SZ_ANCHORS={
+  confidentiality:['disclosure harmless','limited internal damage','substantial (penalty / reputational damage)','existential / legal or compliance breach'],
+  integrity:['manipulation inconsequential','limited wrong decisions','substantial misdirection / fraud','existential manipulation'],
+  authenticity:['impersonation inconsequential','limited misuse','substantial identity misuse','existential account takeover'],
+  nonRepudiation:['deniability inconsequential','limited disputes','substantial legal consequences','existential liability / loss of evidence']};
+const ECON_ANCHORS=['negligible outage damage','limited financial damage','substantial financial damage','existential financial damage'];
+const TREAT_LABEL={avoid:'Avoid',reduce:'Reduce',transfer:'Transfer',accept:'Accept'};
+const ALWAYS_TABS = new Set(['inventory']);
+const GOV_FORMAT = `{
+  "policy": {                       // compliance policy (allow-list)
+    "name": "BSI TR-02102 (edited)",
+    "allowed": [ { "name": "AES", "minParameterSet": 128, "modes": ["gcm","cbc"] }, ... ],
+    "disallowed": ["MD5", "SHA-1", "DES", "RC4"],
+    "minKeySizes": { "RSA": 3000, "ECDSA": 250 },
+    "deprecations": { "3DES": 2029 },         // allowed until <year>
+    "requireQuantumSafe": false
+  },
+  "risk": { "crqcYear": 2035, "crqcYearSignatures": 2030, "migrationYears": 3, "defaultShelfLifeYears": 10 },
+  "assets": { "<source-label>": { "shelfLifeYears": 15, "migrationYears": 3, "criticality": "high",
+              "owner": "Team Alpha", "riskOwner": "CISO", "dataClassification": "restricted",
+              // security objectives 1–4 + economic damage 1–4 (Risk-Management impact, human-set)
+              "securityObjectives": { "confidentiality": 4, "integrity": 3, "authenticity": 3, "nonRepudiation": 2 },
+              "economicDamage": 3 } },
+  "components": { "RSA-2048": { "migrationStatus": "planned", "vendorDependency": true } },
+  "treatments": { "<source-label> :: RSA-2048": { "option": "reduce", "decidedBy": "CISO" } },
+  "unknowns": [ { "label": "PLC S7 (OT)", "info": "proprietary", "asset": "OT-net" } ],
+  "camm": { "1.1": { "status": "met", "note": "CI/CD" } }   // status: met|partial|no
+}`;
+
+window.afterRender = function(){
+  renderHowTo();
+  // serve: ALWAYS recompute governance for the current (possibly just-merged) CBOM, so newly
+  // added assets show immediately — never reuse a stale GOVRESULT from a previous load.
+  if(window.__SERVE__){
+    renderTabs();
+    // A loaded CBOM may carry its own governance (it was enriched on export). Adopt it into
+    // GOV before evaluating, so the Risk Management and Maturity editors show the same
+    // values the analysis uses — otherwise the tabs would compute from the stamped record
+    // while every input field sat empty. Anything already in GOV wins: it is the live copy.
+    const go = () => { if(GOV){ refreshGovernance(); }
+      else fetch('/api/config-template').then(r=>r.json()).then(t=>{GOV=t; refreshGovernance();})
+           .catch(()=>{GOV={}; refreshGovernance();}); };
+    adoptCarriedGovernance().then(go).catch(go);
+  } else if(GOVRESULT){ if(!GOV) GOV={}; renderTabs(); renderGovAll(); }  // embedded governance (static)
+  else { renderTabs(); }   // static page without governance: Inventory + How-to only
+};
+
+function govAvailable(){ return !!GOVRESULT || window.__SERVE__; }
+function switchTab(id){
+  ACTIVE_TAB=id;
+  document.querySelectorAll('.view').forEach(v=>v.classList.add('hide'));
+  $('#view-'+id).classList.remove('hide'); renderTabs();
+}
+function tabBadge(id){
+  if(!GOVRESULT) return '';
+  if(id==='compliance'){const n=GOVRESULT.compliance.violations.length; return n?` <span class="badge b-unsafe">${n}</span>`:'';}
+  if(id==='risk'){const b=GOVRESULT.risk.buckets,n=b.acute+b.quantum; return n?` <span class="badge b-weak">${n}</span>`:'';}
+  if(id==='maturity'){return ` <span class="badge b-unknown">L${GOVRESULT.camm.level}</span>`;}
+  return '';
+}
+function renderTabs(){
+  const tabs = TABS.filter(([id])=> ALWAYS_TABS.has(id) || govAvailable());
+  $('#tabs').innerHTML = tabs.map(([id,label])=>
+    `<button data-tab="${id}" class="${id===ACTIVE_TAB?'active':''}">${label}${tabBadge(id)}</button>`).join('');
+  $('#tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+}
+// Merge the governance an enriched CBOM carries into GOV, filling only what GOV lacks.
+// Returns a promise; a failure is not fatal — the evaluation still absorbs it server-side.
+function adoptCarriedGovernance(){
+  if(!window.__SERVE__ || !RAW_CBOM) return Promise.resolve();
+  return fetch('/api/absorb',{method:'POST',headers:{'Content-Type':'application/json'},
+                              body:JSON.stringify({cbom:RAW_CBOM})})
+    .then(r=>r.ok?r.json():{})
+    .then(ov=>{
+      if(!ov || ov.error || !Object.keys(ov).length) return;
+      GOV=GOV||{};
+      ['assets','components'].forEach(sec=>{
+        if(!ov[sec]) return; GOV[sec]=GOV[sec]||{};
+        Object.entries(ov[sec]).forEach(([k,v])=>{
+          const cur=GOV[sec][k]=GOV[sec][k]||{};
+          Object.entries(v).forEach(([f,val])=>{ if(cur[f]===undefined) cur[f]=val; });
+        });
+      });
+      ['treatments','camm'].forEach(sec=>{
+        if(!ov[sec]) return; GOV[sec]=GOV[sec]||{};
+        Object.entries(ov[sec]).forEach(([k,v])=>{ if(GOV[sec][k]===undefined) GOV[sec][k]=v; });
+      });
+      if(ov.risk){ GOV.risk=GOV.risk||{};
+        Object.entries(ov.risk).forEach(([k,v])=>{ if(GOV.risk[k]===undefined) GOV.risk[k]=v; }); }
+    });
+}
+
+function refreshGovernance(){
+  fetch('/api/govern',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({cbom:RAW_CBOM, config:GOV||{}})})
+   .then(r=>r.json()).then(j=>{ if(j.error){console.warn(j.error);return;} GOVRESULT=j; renderTabs(); renderGovAll(); })
+   .catch(e=>console.warn('govern:',e));
+}
+function renderGovAll(){ renderCompliance(); renderRisk(); renderMaturity(); renderGovernanceEditor(); }
+
+function renderCompliance(){
+  const c=GOVRESULT.compliance;
+  const waived=c.waived||[];
+  const soon=waived.filter(w=>w.expiring_soon).length;
+  let h=`<div class="panel"><h2>Compliance — ${esc(c.policy)}</h2>`;
+  const wsfx=waived.length?` with ${waived.length} accepted waiver(s)${soon?` (${soon} expiring soon)`:''}`:'';
+  h+= c.compliant ? `<p class="gv-none">✓ Compliant${esc(wsfx)} (${c.checked} algorithms checked)</p>`
+                  : `<p class="gv-acute">${c.violations.length} violation(s) of ${c.checked} algorithms checked${esc(wsfx)}</p>`;
+  if(c.violations.some(v=>v.kind==='NOT_ALLOWED')){
+    h+=`<p class="muted" style="border-left:3px solid var(--accent,#4ea1ff);padding-left:8px">
+      <b>Note on “NOT_ALLOWED”:</b> this is an <i>allow-list</i> check. A flagged algorithm is not
+      necessarily weak or insecure — it simply isn't on this policy's explicitly recommended list
+      (e.g. a modern AEAD or curve the standard doesn't name). Treat these as <b>review items</b>:
+      confirm the algorithm is acceptable for your context, then add it to the policy or record a
+      waiver. Genuinely broken/weak crypto is shown as DISALLOWED / KEY_SIZE / WEAK_PROTOCOL.</p>`;
+  }
+  if(c.violations.length){
+    const issueTT=`The kind of policy violation.<br><b>NOT_ALLOWED</b>: secure, but not on ${esc(c.policy)}'s allow-list. Treat it as a review item, not a weakness.<br><b>DISALLOWED</b>, <b>KEY_SIZE</b> and <b>WEAK_PROTOCOL</b>: genuinely broken or too weak.<br>The badge colour shows the severity.`;
+    h+=`<table><thead><tr><th>Asset</th><th>Issue ${info(issueTT)}</th><th>Detail</th><th>Source</th></tr></thead><tbody>`;
+    h+=c.violations.map(v=>`<tr><td><b>${esc(v.component)}</b></td>
+      <td>${v.kind==='NOT_ALLOWED'
+        ? `<span class="badge b-unknown">⚠ ${esc(v.kind)}</span>`
+        : `<span class="badge sev-${v.severity==='high'?'high':'medium'}">${esc(v.kind)}</span>`}</td>
+      <td>${linkify(v.detail)}${v.reference?`<br><span class="muted" style="font-size:11px">⟶ ${linkify(v.reference)}</span>`:''}</td>
+      <td class="muted">${esc((v.sources||[]).join(', ')||'-')}</td></tr>`).join('');
+    h+=`</tbody></table>`;
+  }
+  h+=`</div>`;
+  // accepted waivers — violations consciously accepted with justification + expiry
+  if(waived.length){
+    h+=`<div class="panel"><h2>Accepted waivers (${waived.length})</h2>
+      <p class="muted">Policy deviations consciously accepted, with justification and expiry. These do
+      not count as violations until they expire.</p>
+      <table><thead><tr><th>Asset</th><th>Issue</th><th>Justification</th><th>Expires</th><th>Approved by</th></tr></thead><tbody>`;
+    h+=waived.map(w=>`<tr><td><b>${esc(w.component)}</b></td>
+      <td><span class="badge b-unknown">${esc(w.kind)}</span></td>
+      <td>${linkify(w.reason||'—')}</td>
+      <td>${esc(''+(w.expires||'—'))}${w.expiring_soon?` <span class="badge b-unsafe">soon</span>${info('This waiver expires within the warning window.<br>Review it again before it lapses, otherwise the deviation counts as a violation once more.')}`:''}</td>
+      <td class="muted">${esc(w.approved_by||'—')}</td></tr>`).join('');
+    h+=`</tbody></table></div>`;
+  }
+  // dated transitions — still compliant today, but with a recommended sunset year
+  const tl=c.timeline||[];
+  if(tl.length){
+    h+=`<div class="panel"><h2>Migration timeline — dated transitions</h2>
+      <p class="muted">Still compliant today, but the policy gives these mechanisms a recommended
+      end date. Plan migration to quantum-safe (hybrid) schemes before each year.</p>
+      <table><thead><tr><th>By</th><th>Asset</th><th>What</th></tr></thead><tbody>`;
+    const mandateTip="This is a policy-wide milestone, not a single asset.<br>By this year, every classical "
+      +"(quantum-unsafe) algorithm in the inventory must be migrated to a quantum-safe or hybrid scheme.";
+    h+=tl.map(t=>`<tr><td><b>${esc(''+t.year)}</b></td>
+      <td>${t.kind==='quantum-mandate'?`<span class="badge b-unsafe">PQC mandate</span>${info(mandateTip)}`:`<b>${esc(t.component)}</b>`}</td>
+      <td>${linkify(t.detail)}</td></tr>`).join('');
+    h+=`</tbody></table></div>`;
+  }
+  // advisory CVEs — deliberately a separate panel: NOT policy violations
+  const recs=c.recommendations||[];
+  if(recs.length){
+    h+=`<div class="panel"><h2>Recommendations — advisory, not policy violations</h2>
+      <p class="muted">Known CVEs in the libraries you use. Policy / BSI&nbsp;TR-02102 compliance is about
+      which algorithms and key sizes are <i>allowed</i> — it does <b>not</b> mean a dependency is free of
+      vulnerabilities. These come from the library, not the algorithm:
+      <b>open each CVE/CWE and check whether your version and usage are actually affected before acting.</b></p>
+      <table><thead><tr><th>CVE ${info('An open advisory in a library you depend on.<br>The badge colour shows the severity (critical, high, medium or low).<br>Click the id to open the NVD or OSV entry and check whether your version is affected.')}</th><th>Library</th><th>Affects</th><th>CWE</th><th>Source</th></tr></thead><tbody>`;
+    h+=recs.map(r=>`<tr>
+      <td><span class="badge sev-${cls(r.severity)}">${cveA(r.id)}</span></td>
+      <td>${(r.libraries||[]).map(l=>`<span class="pill">${esc(l)}</span>`).join(' ')}</td>
+      <td>${(r.components||[]).map(esc).join(', ')}</td>
+      <td>${(r.cwes||[]).map(cweA).join(' ')||'<span class="muted">—</span>'}</td>
+      <td class="muted">${esc((r.sources||[]).join(', ')||'-')}</td></tr>`).join('');
+    h+=`</tbody></table></div>`;
+  }
+  $('#view-compliance').innerHTML=h;
+}
+function renderRisk(){
+  const r=GOVRESULT.risk,b=r.buckets;
+  const editable = window.__SERVE__ && !REPORT();
+  const rm=r.riskMatrix||{axes:{},acute:{cells:[]},quantum:{cells:[]}};
+  const ax=rm.axes||{};
+  const sigYr=r.params.crqcYearSignatures;
+  const CF='<a href="https://blog.cloudflare.com/post-quantum-roadmap/" target="_blank" rel="noopener">Cloudflare post-quantum roadmap</a>';
+  const TT={
+    acute:"Broken or weak with today's computers, or carrying a library CVE.<br>Act on these now, independently of any quantum concern. A serious (critical/high) CVE is acute even on a quantum-unsafe asset; a minor (medium/low) CVE is acute only when the asset is otherwise quantum-safe.",
+    quantum:"Secure today, but breakable by a future quantum computer (Shor).<br>The urgency follows Mosca's X+Y>Z rule. Confidentiality is judged against the assumed CRQC year "+r.params.crqcYear+" (an attacker can harvest now and decrypt later), and signatures against "+(sigYr||'~2030')+".",
+    none:"Quantum-safe and classically secure today.<br>No action is needed.",
+    crqc:"The number of years until a cryptographically relevant quantum computer (CRQC) is assumed to exist.<br>Confidentiality uses the BSI estimate of about "+r.params.crqcYear+".<br>Signatures use the more aggressive Google and Cloudflare projection of about "+(sigYr||2030)+".<br>Source: "+CF+"."};
+  const critBadge=c=>`<span class="badge ${c==='high'?'b-unsafe':(c==='medium'?'b-weak':'b-unknown')}">${esc(c)}</span>`;
+  const dash='<span class="muted">—</span>';
+
+  let h=`<div class="panel" style="padding-bottom:8px"><h2 style="margin-top:0">Risk Management</h2>
+    <p class="muted" style="margin-bottom:6px">Risk analysis modelled on <b>BSI-Standard 200-3</b>, with <b>Mosca</b> as the engine of urgency.
+    The <b>impact</b> of each object (algorithm × asset) is derived from human-set <b>security objectives</b> and the
+    <b>economic damage</b> per asset; the <b>urgency</b> from the classical status (acute) or Mosca (quantum).
+    Two matrices separate the regimes. Fields a human must complete are marked <span class="badge needs-input">⚠ needs input</span>.</p></div>`;
+
+  // risk cards
+  h+=`<div class="cards">
+    <div class="card unsafe"><div class="n">${b.acute}</div><div class="l">acute risk ${info(TT.acute)}</div></div>
+    <div class="card"><div class="n gv-quantum">${b.quantum}</div><div class="l">quantum risk ${info(TT.quantum)}</div></div>
+    <div class="card safe"><div class="n">${b.none}</div><div class="l">no risk ${info(TT.none)}</div></div>
+    <div class="card"><div class="n">${r.params.yearsUntilCrqc}y</div><div class="l">until CRQC ${r.params.crqcYear} · sig ${sigYr||2030} ${info(TT.crqc)}</div></div></div>`;
+
+  // --- the two BSI-200-3 risk matrices, side by side ---
+  const impLab=ax.impact||['1','2','3','4'];
+  const legend=`<div class="rmlegend">
+    <span><i class="cell-r1"></i> low</span><span><i class="cell-r2"></i> medium</span>
+    <span><i class="cell-r3"></i> high</span><span><i class="cell-r4"></i> very high</span>
+    <span><i class="hatch"></i> provisional (not yet assessed)</span></div>`;
+  function cellHtml(regime,cell,idx){
+    const has=cell.count>0, prov=has && cell.tuples.some(t=>t.impactState==='provisional');
+    const cls=`cell cell-r${cell.categoryRank}${has?' has':''}${prov?' cell-prov':''}`;
+    const body=has?cell.count:'<span class="zero">·</span>';
+    return `<div class="${cls}" data-rm="${regime}" data-i="${idx}" title="risk: ${esc(cell.category)}${prov?' · contains provisional (not yet assessed) impact':''}${has?' · click to list objects':''}">${body}</div>`;
+  }
+  function matrixHtml(title,sub,regime,urgLabels,note){
+    const cells=(rm[regime]||{cells:[]}).cells;
+    let g=`<div class="rmx"><div class="corner">impact ↓<br>urgency →</div>`;
+    (urgLabels||['1','2','3','4']).forEach((u,i)=>g+=`<div class="hd"><b>${i+1}</b>${esc(u)}</div>`);
+    [4,3,2,1].forEach(imp=>{
+      g+=`<div class="yl"><b>${imp}</b>${esc(impLab[imp-1])}</div>`;
+      [1,2,3,4].forEach(urg=>{const idx=cells.findIndex(c=>c.impact===imp&&c.urgency===urg);
+        g+=idx>=0?cellHtml(regime,cells[idx],idx):`<div class="cell"></div>`;});
+    });
+    g+=`</div>`;
+    return `<div class="panel"><h2 style="margin-top:0">${title} <span class="muted" style="font-size:12px;font-weight:400">${sub}</span></h2>
+      <p class="muted" style="margin-top:0;min-height:34px">${note}</p>${g}${legend}</div>`;
+  }
+  const impactExplain="<b>Impact axis (1–4)</b> — for every object it is "
+    +"<code>max( the asset&rsquo;s role-relevant security objectives , its economic damage )</code>, set in the impact "
+    +"assessment below. A signature uses integrity / authenticity / non-repudiation, encryption uses confidentiality; "
+    +"the economic damage always applies. Until an asset is fully assessed the impact is <i>provisional</i> "
+    +"(hatched cell), derived from its criticality.";
+  const cellExplain="<b>Cell = risk</b> — a BSI-200-3 lookup of impact × urgency, coloured low → medium → high → very high.";
+  const qTip="<b>How an object lands in this matrix.</b><br><br>"+impactExplain
+    +"<br><br><b>Urgency axis (1–4)</b> — Mosca&rsquo;s <code>X + Y &gt; Z</code>: <b>X</b> = data shelf-life, "
+    +"<b>Y</b> = migration time, <b>Z</b> = the assumed CRQC year (set in Governance). Bands: "
+    +"<b>4 overdue</b> (X+Y already past Z → harvest-now-decrypt-later, migrate now), <b>3 urgent</b> (≤2 y of head-room), "
+    +"<b>2 mid-term</b> (≤5 y), <b>1 watch</b> (more). Signatures ignore X (no retroactive forgery) and race the earlier "
+    +"signature CRQC year.<br><br>"+cellExplain;
+  const aTip="<b>How an object lands in this matrix.</b><br><br>"+impactExplain
+    +"<br><br><b>Urgency axis (1–4)</b> — classical exploitability <i>now</i>, the worse of the algorithm&rsquo;s status "
+    +"(<b>broken → 4</b>, <b>weak → 3</b>) and its library CVE severity (<b>critical → 4</b>, <b>high → 3</b>, "
+    +"<b>medium → 2</b>, <b>low → 1</b>). Mosca&rsquo;s X/Y/Z play no role here.<br><br>"+cellExplain;
+  h+=`<div class="mxrow">`
+    +matrixHtml('Quantum risk matrix','horizon · Mosca','quantum',ax.urgencyQuantum,
+        'Classically secure but quantum-unsafe/unknown. '+info(qTip))
+    +matrixHtml('Acute risk matrix','today','acute',ax.urgencyAcute,
+        'Broken/weak today, or a library CVE. '+info(aTip))
+    +`</div>`;
+
+  // --- per-asset impact assessment (security objectives + economic damage) ---
+  const numSel=(attrs,val)=>{let o=`<option value="">–</option>`;for(let v=1;v<=4;v++)o+=`<option value="${v}" ${(+val)===v?'selected':''}>${v}</option>`;return `<select ${attrs}>${o}</select>`;};
+  const roVal=v=>`<span class="ro-val">${v==null||v===''?'—':esc(''+v)}</span>`;
+  const fld=(labelHtml,control,cls)=>`<div class="field${cls?' '+cls:''}"><span class="flab">${labelHtml}</span>${control}</div>`;
+  const objField=(a,k)=>{const tip=SZ_LABEL[k]+' — impact if broken:<br>'+SZ_ANCHORS[k].map((t,i)=>`<b>${i+1}</b> ${t}`).join('<br>');const v=(a.securityObjectives||{})[k];
+    return fld(`${SZ_LABEL[k]} ${info(tip)}`, editable?numSel(`data-so="${esc(a.asset)}" data-k="${k}"`,v):roVal(v), 'narrow');};
+  const econField=a=>{const tip='Economic damage if the asset fails (BIA/SBF complement):<br>'+ECON_ANCHORS.map((t,i)=>`<b>${i+1}</b> ${t}`).join('<br>');
+    return fld(`Economic damage ${info(tip)}`, editable?numSel(`data-econ="${esc(a.asset)}"`,a.economicDamage):roVal(a.economicDamage), 'narrow');};
+  const critField=a=>fld('Criticality', editable?`<select data-crit="${esc(a.asset)}">${['unknown','low','medium','high'].map(c=>`<option ${a.criticality===c?'selected':''}>${c}</option>`).join('')}</select>`:roVal(a.criticality));
+  const txtField=(name,attr,a,val,ph)=>fld(name, editable?`<input ${attr}="${esc(a.asset)}" value="${esc(val||'')}" placeholder="${ph||''}">`:roVal(val));
+  const numField=(name,attr,a,val)=>fld(name, editable?`<input type="number" ${attr}="${esc(a.asset)}" value="${val}">`:roVal(val+'y'), 'num');
+  h+=`<div class="panel"><h2>Impact assessment — per asset (human-in-the-loop)</h2>
+    <p class="muted" style="margin-top:0">Per source: four <b>security objectives</b> (1–4) and the <b>economic damage</b> on failure.
+    An object&rsquo;s impact = <code>max( role-relevant objectives , economic damage )</code>.
+    Not-yet-assessed assets fall back provisionally to their criticality.</p>`;
+  (r.assets||[]).forEach(a=>{const prov=a.impactState==='provisional';
+    h+=`<div class="asset-card">
+      <div class="ac-head">
+        <div class="ac-name"><b>${esc(a.asset)}</b> <span class="muted">${esc(a.kind)}</span></div>
+        ${prov?`<span class="badge needs-input" title="security objectives + economic damage not fully set">⚠ needs input</span>`:`<span class="badge b-safe">assessed</span>`}</div>
+      <div class="fieldrow">${txtField('Owner','data-owner',a,a.owner,'team')}${txtField('Risk owner','data-riskowner',a,a.riskOwner,'role / name')}${txtField('Data Classification','data-dataclass',a,a.dataClassification,'e.g. restricted')}${critField(a)}</div>
+      <div class="fieldrow">${numField('Shelf-life X (y)','data-life',a,a.shelfLifeYears)}${numField('Migration Y (y)','data-my',a,a.migrationYears)}
+        <div class="field"><span class="flab">Remediation deadline</span><span class="ro-val">${a.deadlineYear||'—'}</span></div></div>
+      <div class="grp-title">Security objectives (1–4) &amp; economic damage</div>
+      <div class="fieldrow">${SZ_KEYS.map(k=>objField(a,k)).join('')}${econField(a)}</div>
+    </div>`;});
+  if(!(r.assets||[]).length) h+=`<p class="muted">no assets</p>`;
+  h+=`</div>`;
+
+  // --- per-tuple risk treatment (with the impact=4 guardrail) ---
+  const tuples=[];
+  ['quantum','acute'].forEach(reg=>(rm[reg]||{cells:[]}).cells.forEach(c=>c.tuples.forEach(t=>tuples.push(Object.assign({regime:reg},t)))));
+  if(tuples.length){
+    const MST=['not-started','planned','in-progress','hybrid','pqc-only','not-applicable'];
+    const impTip="Impact (1–4) = <code>max( the asset&rsquo;s role-relevant security objectives , its economic damage )</code>, "
+      +"set in the impact assessment above.<br>A signature inherits integrity / authenticity / non-repudiation; encryption "
+      +"inherits confidentiality; economic damage always applies as a floor.<br>&lsquo;~&rsquo; marks a provisional value "
+      +"derived from criticality until the asset is fully assessed.";
+    const trTip="The risk-treatment decision for this object (BSI-200-3): <b>Avoid</b> (remove the risk), <b>Reduce</b> "
+      +"(mitigate, e.g. migrate to PQC), <b>Transfer</b> (shift to a third party), <b>Accept</b> (consciously bear it).<br>"
+      +"At <b>impact 4</b> (existential), Transfer and Accept are barred — only Avoid or Reduce.<br>"
+      +"Record who owns the decision under &lsquo;Decided by&rsquo; and <i>how</i> you will act under &lsquo;Treatment details&rsquo;.";
+    const vdTip="Vendor-dependent = the migration is not self-controlled (you depend on a vendor/product to ship the fix).";
+    h+=`<div class="panel"><h2>Risk treatment — per object (algorithm × asset)</h2>
+      <p class="muted" style="margin-top:0">One decision per object, owned by the <b>risk owner</b> (prefilled from the asset above).
+      At <b>impact 4</b> (existential) <b>transfer and accept are barred</b> — only avoid or reduce.</p>
+      <div style="overflow-x:auto"><table><thead><tr><th>Object</th><th>Regime</th><th>Risk</th><th>Impact ${info(impTip)}</th><th>Treatment ${info(trTip)}</th><th>Treatment details</th><th>Decided by</th><th>Migration</th><th>Vendor-dep. ${info(vdTip)}</th></tr></thead><tbody>`;
+    tuples.forEach(t=>{
+      let opts=`<option value="">– choose –</option>`;
+      ['avoid','reduce','transfer','accept'].forEach(o=>{const allow=(t.allowedTreatments||[]).includes(o);
+        opts+=`<option value="${o}" ${t.treatment===o?'selected':''} ${allow?'':'disabled'}>${TREAT_LABEL[o]}${allow?'':' (barred)'}</option>`;});
+      const barred=(t.impactLevel||0)>=4;
+      const migOpts=MST.map(m=>`<option ${t.migrationStatus===m?'selected':''}>${m}</option>`).join('');
+      const vd=t.vendorDependency?'yes':'no';
+      h+=`<tr><td><b>${esc(t.component)}</b><br><span class="muted">${esc(t.asset)}</span></td>
+        <td>${t.regime==='acute'?'<span class="badge b-unsafe">acute</span>':'<span class="badge b-weak">quantum</span>'}</td>
+        <td><span class="badge cell-r${t.categoryRank}">${esc(t.category)}</span></td>
+        <td>${t.impactLevel}${t.impactState==='provisional'?' <span class="muted" title="provisional, from criticality">~</span>':''}</td>
+        <td>${editable?`<select data-treat-a="${esc(t.asset)}" data-treat-c="${esc(t.component)}">${opts}</select>${barred?'<br><span class="muted" style="font-size:10px">transfer/accept barred</span>':''}`:(t.treatment?TREAT_LABEL[t.treatment]:dash)}</td>
+        <td>${editable?`<input data-tn-a="${esc(t.asset)}" data-tn-c="${esc(t.component)}" value="${esc(t.treatmentNote||'')}" placeholder="how you will address it">`:linkify(t.treatmentNote||'—')}</td>
+        <td>${editable?`<input data-db-a="${esc(t.asset)}" data-db-c="${esc(t.component)}" value="${esc(t.decidedBy||'')}" placeholder="risk owner">`:esc(t.decidedBy||'—')}</td>
+        <td>${editable?`<select data-mig="${esc(t.component)}">${migOpts}</select>`:esc(t.migrationStatus||'not-started')}</td>
+        <td>${editable?`<select data-vendor="${esc(t.component)}"><option value="no" ${vd==='no'?'selected':''}>no</option><option value="yes" ${vd==='yes'?'selected':''}>yes</option></select>`:`${t.vendorDependency?'yes 🔒':'no'}`}</td></tr>`;});
+    h+=`</tbody></table></div></div>`;
+  }
+
+  // --- kept: Mosca findings + quantum exposure register (read-only summaries) ---
+  const migTip="Manual MV-CBOM migration status: not-started / planned / in-progress / hybrid / pqc-only / not-applicable.<br>The deadline is the year migration must be complete, implied by the Mosca analysis.";
+  const migBadge=(s)=>{const cls=s==='pqc-only'||s==='not-applicable'?'b-safe':(s==='in-progress'||s==='hybrid'||s==='planned'?'b-weak':'b-unknown');return `<span class="badge ${cls}">${esc(s||'not-started')}</span>`;};
+  const migCell=i=>`${migBadge(i.migrationStatus)}${i.vendorDependency?' <span title="vendor-dependent — migration not self-controlled">🔒</span>':''}${i.deadlineYear?`<br><span class="muted">by ${i.deadlineYear}</span>`:''}`;
+  const reason=(s,m)=>`${linkify(s)}${m?`<br><span class="muted">${linkify(m)}</span>`:''}`;
+  const refLinks=i=>{const seen={},parts=[];
+    (i.cves||[]).forEach(c=>{if(c.id&&!seen[c.id]){seen[c.id]=1;parts.push(`<span class="badge sev-${cls(c.severity)}" title="${esc(c.severity)} — open advisory">${cveA(c.id)}</span>`);}});
+    (i.cwes||[]).forEach(w=>parts.push(cweA(w)));
+    return parts.length?`<div style="margin-top:6px">${parts.join(' ')}</div>`:'';};
+  const riskTT="Each finding is sorted with Mosca's X+Y>Z rule.<br><b>ACUTE</b>: broken/weak today or a library CVE.<br><b>QUANTUM!</b>: quantum-breakable and urgent.<br><b>quantum</b>: quantum-breakable, not yet urgent.";
+  h+=`<div class="panel"><h2>Findings by risk (Mosca)</h2><table><thead><tr><th>Asset</th><th>Risk ${info(riskTT)}</th><th>Reason</th><th>Migration ${info(migTip)}</th><th>Sources</th></tr></thead><tbody>`;
+  h+=r.items.filter(i=>i.category!=='none').map(i=>{
+    const cls=i.category==='acute'?'b-unsafe':(i.urgent?'b-unsafe':'b-weak');
+    const lab=i.category==='acute'?'ACUTE':(i.urgent?'QUANTUM!':'quantum');
+    return `<tr><td><b>${esc(i.component)}</b></td><td><span class="badge ${cls}">${lab}</span></td>
+      <td>${reason(i.summary,i.mosca)}${refLinks(i)}</td><td>${migCell(i)}</td><td class="muted">${esc((i.sources||[]).join(', ')||'-')}</td></tr>`;}).join('');
+  h+=(r.unknowns||[]).map(u=>`<tr><td><b>${esc(u.label)}</b> <span class="muted">(unknown)</span></td>
+     <td><span class="badge b-weak">quantum</span></td><td>${u.info?linkify(u.info)+'<br>':''}${reason(u.summary,u.mosca)}</td>
+     <td class="muted">—</td><td class="muted">${esc(u.asset)}</td></tr>`).join('');
+  h+=`</tbody></table></div>`;
+  h+=`<div class="panel"><h2>Quantum exposure register — priority order</h2>
+    <p class="muted">Sorted by urgency, then business criticality. Owner, risk owner, data classification, shelf-life (X) and migration are edited above in this tab.</p>
+    <table><thead><tr><th>Asset</th><th>Owner</th><th>Risk owner</th><th>Data Classification</th><th>Criticality</th><th>Shelf-life</th><th>Deadline</th><th>Acute</th><th>Quantum</th><th></th></tr></thead><tbody>`;
+  h+=(r.assets||[]).map(a=>`<tr><td><b>${esc(a.asset)}</b> <span class="muted">${esc(a.kind)}</span></td>
+    <td>${a.owner?esc(a.owner):dash}</td><td>${a.riskOwner?esc(a.riskOwner):dash}</td>
+    <td>${a.dataClassification?`<span class="pill">${esc(a.dataClassification)}</span>`:dash}</td>
+    <td>${critBadge(a.criticality)}</td><td>${a.shelfLifeYears}y</td>
+    <td>${a.deadlineYear?esc(a.deadlineYear):dash}</td><td>${a.acute||0}</td><td>${a.quantum||0}</td>
+    <td>${a.urgent?'<span class="badge b-unsafe">act now</span>':''}</td></tr>`).join('')
+    || `<tr><td colspan="10" class="muted">no assets</td></tr>`;
+  h+=`</tbody></table></div>`;
+
+  $('#view-risk').innerHTML=h;
+  wireMatrix(rm);
+  if(editable) wireRiskMgmt();
+}
+function wireMatrix(rm){
+  $('#view-risk').querySelectorAll('.cell.has').forEach(el=>el.onclick=()=>{
+    const cell=(rm[el.dataset.rm]||{cells:[]}).cells[+el.dataset.i]; if(!cell)return;
+    openDetail(`<h2>Risk: ${esc(cell.category)} — ${cell.count} object(s)</h2>
+      <p class="muted">Regime: ${el.dataset.rm==='acute'?'acute (today)':'quantum (Mosca horizon)'} · impact ${cell.impact} · urgency ${cell.urgency}</p>
+      <table><tbody>${cell.tuples.map(t=>`<tr><td><b>${esc(t.component)}</b></td><td class="muted">${esc(t.asset)}</td>
+        <td>${t.impactState==='provisional'?'<span class="badge needs-input">provisional</span>':''}</td>
+        <td>${t.treatment?TREAT_LABEL[t.treatment]:'<span class="muted">untreated</span>'}</td></tr>`).join('')}</tbody></table>`);
+  });
+}
+function wireRiskMgmt(){
+  GOV=GOV||{}; GOV.assets=GOV.assets||{}; GOV.components=GOV.components||{}; GOV.treatments=GOV.treatments||{};
+  const V=$('#view-risk');
+  const setAsset=(a,k,v)=>{GOV.assets[a]=GOV.assets[a]||{};GOV.assets[a][k]=v;refreshGovernance();};
+  const setObj=(a,k,v)=>{GOV.assets[a]=GOV.assets[a]||{};const so=GOV.assets[a].securityObjectives=GOV.assets[a].securityObjectives||{};if(v==='')delete so[k];else so[k]=parseInt(v);refreshGovernance();};
+  const setEcon=(a,v)=>{GOV.assets[a]=GOV.assets[a]||{};if(v==='')delete GOV.assets[a].economicDamage;else GOV.assets[a].economicDamage=parseInt(v);refreshGovernance();};
+  const setComp=(c,k,v)=>{GOV.components[c]=GOV.components[c]||{};GOV.components[c][k]=v;refreshGovernance();};
+  const setTreat=(a,c,k,v)=>{const key=a+' :: '+c;GOV.treatments[key]=GOV.treatments[key]||{};GOV.treatments[key][k]=v;refreshGovernance();};
+  V.querySelectorAll('input[data-owner]').forEach(e=>e.onchange=()=>setAsset(e.dataset.owner,'owner',e.value));
+  V.querySelectorAll('input[data-riskowner]').forEach(e=>e.onchange=()=>setAsset(e.dataset.riskowner,'riskOwner',e.value));
+  V.querySelectorAll('input[data-dataclass]').forEach(e=>e.onchange=()=>setAsset(e.dataset.dataclass,'dataClassification',e.value));
+  V.querySelectorAll('select[data-crit]').forEach(e=>e.onchange=()=>setAsset(e.dataset.crit,'criticality',e.value));
+  V.querySelectorAll('input[data-life]').forEach(e=>e.onchange=()=>setAsset(e.dataset.life,'shelfLifeYears',parseInt(e.value)||0));
+  V.querySelectorAll('input[data-my]').forEach(e=>e.onchange=()=>setAsset(e.dataset.my,'migrationYears',parseInt(e.value)||0));
+  V.querySelectorAll('select[data-so]').forEach(e=>e.onchange=()=>setObj(e.dataset.so,e.dataset.k,e.value));
+  V.querySelectorAll('select[data-econ]').forEach(e=>e.onchange=()=>setEcon(e.dataset.econ,e.value));
+  V.querySelectorAll('select[data-treat-a]').forEach(e=>e.onchange=()=>setTreat(e.dataset.treatA,e.dataset.treatC,'option',e.value));
+  V.querySelectorAll('input[data-tn-a]').forEach(e=>e.onchange=()=>setTreat(e.dataset.tnA,e.dataset.tnC,'note',e.value));
+  V.querySelectorAll('input[data-db-a]').forEach(e=>e.onchange=()=>setTreat(e.dataset.dbA,e.dataset.dbC,'decidedBy',e.value));
+  V.querySelectorAll('select[data-mig]').forEach(e=>e.onchange=()=>setComp(e.dataset.mig,'migrationStatus',e.value));
+  V.querySelectorAll('select[data-vendor]').forEach(e=>e.onchange=()=>setComp(e.dataset.vendor,'vendorDependency',e.value==='yes'));
+}
+const CAT_NAME={K:'Knowledge',P:'Process',S:'System'};
+const labelOf=s=>({met:'yes',partial:'partial',no:'no'})[s]||s;
+function statusBadge(s){const cl=s==='met'?'b-safe':(s==='partial'?'b-weak':'b-unknown');return `<span class="badge ${cl}">${labelOf(s)}</span>`;}
+function renderMaturity(){
+  const m=GOVRESULT.camm; window.__CAMM=m;
+  const editable = window.__SERVE__ && !REPORT();
+  let h=`<div class="panel"><div class="formrow" style="justify-content:space-between">
+      <div><div class="level">Level ${m.level}</div><div class="muted">${esc(m.levelName)} · ${m.metCount}/${m.total} requirements met${m.nextLevel?` · next: Level ${m.nextLevel}`:''}</div></div>
+      <div style="min-width:240px;flex:1;max-width:360px">`;
+  ['K','P','S'].forEach(c=>{const v=m.categories[c],pct=v.total?Math.round(v.met/v.total*100):0;
+    h+=`<div class="bar2"><span class="lab">${esc(CAT_NAME[c]||c)}</span><div class="track"><div class="fill" style="width:${pct}%;background:var(--accent)"></div></div><b>${v.met}/${v.total}</b></div>`;});
+  h+=`</div></div>`;
+  if(editable) h+=`<div class="formrow" style="margin:0 0 4px">
+      <button id="mq-overview" class="${MQMODE!=='questionnaire'?'primary':''}">Overview</button>
+      <button id="mq-quest" class="${MQMODE==='questionnaire'?'primary':''}">Questionnaire</button>
+      <span class="muted">Answer guided questions; the result maps onto the requirements and stays editable.</span></div>`;
+  h+=`</div>`;
+  h += (editable && MQMODE==='questionnaire') ? buildQuestionnaire(m) : buildOverview(m, editable);
+  $('#view-maturity').innerHTML=h;
+  wireMaturity(m, editable);
+}
+function buildOverview(m, editable){
+  let h=`<p class="muted">Click a requirement for its description, problem, acceptance criterion and example.</p>`;
+  const byLevel={}; m.requirements.forEach(r=>(byLevel[r.level]=byLevel[r.level]||[]).push(r));
+  Object.keys(byLevel).sort().forEach(L=>{
+    const lvl=byLevel[L], achieved=lvl.every(r=>r.status==='met');
+    h+=`<div class="panel"><h2>Level ${L}${achieved?' <span class="badge b-safe">achieved</span>':''}</h2><table><tbody>`;
+    h+=lvl.map(r=>{
+      let ctrl;
+      if(editable){const opts=['met','partial','no'].map(s=>`<option value="${s}" ${r.status===s?'selected':''}>${labelOf(s)}</option>`).join('');
+        ctrl=`<select class="mstat mstat-${cls2(r.status)}" data-req="${esc(r.id)}">${opts}</select>`;}
+      else ctrl=statusBadge(r.status);
+      return `<tr><td style="width:42px;min-width:42px"><b>${esc(r.id)}</b></td>
+        <td><a href="#" data-camm="${esc(r.id)}">${esc(r.name)}</a> <span class="muted">[${esc(r.category)}]</span></td>
+        <td style="width:130px;text-align:right">${ctrl}</td></tr>`;}).join('');
+    h+=`</tbody></table></div>`;});
+  return h;
+}
+function buildQuestionnaire(m){
+  const list=m.requirements, n=list.length, r=list[QIDX];
+  const ans=((GOV.camm||{})[r.id]||{}), cur=ans.status||r.status, note=ans.note||'';
+  const pct=Math.round(QIDX/n*100);
+  const opt=(s,lab)=>`<button class="ans ${cur===s?'primary':''}" data-ans="${s}" style="padding:10px 16px">${lab}</button>`;
+  return `<div class="panel">
+    <div class="bar2"><span class="lab">Progress</span><div class="track"><div class="fill" style="width:${pct}%;background:var(--accent)"></div></div><b>${QIDX+1}/${n}</b></div>
+    <div class="muted">Level ${esc(r.level)} · ${esc(CAT_NAME[r.category]||r.category)} · ${esc(r.id)}</div>
+    <h2 style="margin:6px 0">${esc(r.name)}</h2>
+    <p>${linkify(r.description)}</p>
+    <p class="muted"><b>Why it matters:</b> ${linkify(r.problem)}</p>
+    <p class="muted"><b>Example:</b> ${linkify(r.example)}</p>
+    <p class="muted" style="font-size:12px"><b>Met when:</b> ${linkify(r.acceptance)}</p>
+    <div class="formrow" style="margin-top:14px">${opt('met','Yes')} ${opt('partial','Partial')} ${opt('no','No')}</div>
+    <div class="formrow"><textarea id="q-note" rows="2" style="width:100%;max-width:560px" placeholder="optional note / evidence">${esc(note)}</textarea></div>
+    <div class="formrow" style="justify-content:space-between">
+      <button id="q-back" ${QIDX===0?'disabled':''}>← Back</button>
+      <div>${QIDX<n-1?'<button id="q-skip">Skip</button> <button id="q-next">Next →</button>':'<button id="q-finish" class="primary">Finish</button>'}</div>
+    </div></div>`;
+}
+function wireMaturity(m, editable){
+  const v=$('#view-maturity');
+  v.querySelectorAll('a[data-camm]').forEach(a=>a.onclick=e=>{e.preventDefault();showCammReq(a.dataset.camm);});
+  if(!editable) return;
+  const ov=$('#mq-overview'), qu=$('#mq-quest');
+  if(ov)ov.onclick=()=>{MQMODE='overview';renderMaturity();};
+  if(qu)qu.onclick=()=>{MQMODE='questionnaire';QIDX=0;renderMaturity();};
+  v.querySelectorAll('select[data-req]').forEach(s=>s.onchange=()=>{
+    GOV=GOV||{};GOV.camm=GOV.camm||{};GOV.camm[s.dataset.req]={status:s.value};refreshGovernance();});
+  if(MQMODE==='questionnaire'){
+    const list=m.requirements, r=list[QIDX], n=list.length;
+    const saveNote=()=>{const t=$('#q-note'); if(!t)return; GOV.camm=GOV.camm||{}; const e=GOV.camm[r.id]||{}; e.note=t.value; GOV.camm[r.id]=e;};
+    v.querySelectorAll('button[data-ans]').forEach(b=>b.onclick=()=>{
+      GOV.camm=GOV.camm||{}; const e=GOV.camm[r.id]||{}; e.status=b.dataset.ans; e.note=($('#q-note')||{}).value||e.note||''; GOV.camm[r.id]=e;
+      refreshGovernance();});   // select only — user advances with Next
+    const back=$('#q-back'); if(back)back.onclick=()=>{saveNote(); if(QIDX>0)QIDX--; renderMaturity();};
+    const next=$('#q-next'); if(next)next.onclick=()=>{saveNote(); if(QIDX<n-1)QIDX++; renderMaturity();};
+    const skip=$('#q-skip'); if(skip)skip.onclick=()=>{if(QIDX<n-1)QIDX++; renderMaturity();};
+    const fin=$('#q-finish'); if(fin)fin.onclick=()=>{saveNote(); MQMODE='overview'; refreshGovernance();};
+  }
+}
+function showCammReq(id){
+  const r=(window.__CAMM.requirements||[]).find(x=>x.id===id); if(!r)return;
+  openDetail(`<h2>${esc(r.id)} — ${esc(r.name)}</h2>
+    <div>${statusBadge(r.status)} <span class="muted">Level ${esc(r.level)} · ${esc(CAT_NAME[r.category]||r.category)}</span></div>
+    <section><h3>Description</h3><p>${linkify(r.description)}</p></section>
+    <section><h3>Problem</h3><p>${linkify(r.problem)}</p></section>
+    <section><h3>Acceptance</h3><p>${linkify(r.acceptance)}</p></section>
+    <section><h3>Example</h3><p>${linkify(r.example)}</p></section>`);
+}
+function renderGovernanceEditor(){
+  const editable = window.__SERVE__ && !REPORT();
+  GOV=GOV||{};
+  const rk=GOVRESULT.risk.params, dis=editable?'':'disabled';
+  // 1) actions + format help
+  let h=`<div class="panel"><h2>Governance configuration</h2>
+    <p class="muted" style="margin-top:0">A <code>governance.json</code> holds your policy, Mosca parameters, per-asset settings, manual unknowns and CAMM answers — evaluated against the current inventory.</p>`;
+  if(editable) h+=`<div class="formrow">
+      <input type="file" id="govFile" accept=".json" class="hide">
+      <button onclick="document.getElementById('govFile').click()">Load governance.json</button>
+      <button id="govSave">⬇ Save governance.json</button>
+      <button id="govTpl">Reset policy to BSI TR-02102</button></div>`;
+  h+=`<details><summary class="muted" style="cursor:pointer">governance.json format</summary>
+      <pre class="occ" style="white-space:pre-wrap">${esc(GOV_FORMAT)}</pre></details></div>`;
+  // 2) Mosca horizon (Z) — org-wide policy parameter; X/Y & per-asset fields live in Risk Management
+  h+=`<div class="panel"><h2>Mosca horizon (Z) — CRQC assumption</h2><div class="formrow">
+      <label>CRQC year — confidentiality (Z)<input type="number" id="g-z" value="${rk.crqcYear}" ${dis}></label>
+      <label>CRQC year — signatures (Z_sig)<input type="number" id="g-zsig" value="${rk.crqcYearSignatures}" ${dis}></label></div>
+      <p class="muted" style="margin-bottom:0">Z is the organisation-wide horizon (BSI ~2035 for confidentiality; Google/Cloudflare ~2030 for signatures).
+      The per-asset shelf-life (X), migration time (Y), security objectives, economic damage, migration status and risk treatment are set in the <b>Risk&nbsp;Management</b> tab.</p></div>`;
+  // 4) unknowns
+  h+=`<div class="panel"><h2>Manual unknowns — always placed in quantum risk</h2>`;
+  (GOV.unknowns||[]).forEach((u,i)=>h+=`<div class="occ">${esc(u.label)} <span class="muted">${esc(u.info||'')}${u.asset?' @ '+esc(u.asset):''}</span>${editable?` <button data-unk="${i}" style="float:right">✕</button>`:''}</div>`);
+  if(!(GOV.unknowns||[]).length) h+=`<p class="muted">None.</p>`;
+  if(editable) h+=`<div class="formrow"><input id="u-label" placeholder="label (e.g. PLC S7)"><input id="u-info" placeholder="info"><input id="u-asset" placeholder="asset"><button id="u-add">+ add unknown</button></div>`;
+  h+=`</div>`;
+  // 5) policy
+  h+=`<div class="panel"><h2>Policy — ${esc((GOV.policy||{}).name||'policy')}</h2>
+      <p class="muted" style="margin-top:0">Full compliance policy (allowed · disallowed · minKeySizes · deprecations). Edit and apply to re-check.</p>
+      <textarea id="g-policy" rows="16" style="width:100%;font-family:ui-monospace,monospace;font-size:12px" ${dis}>${esc(JSON.stringify(GOV.policy||{}, null, 2))}</textarea>`;
+  if(editable) h+=`<div class="formrow"><button id="g-policy-apply" class="primary">Apply policy</button><span class="gv-acute" id="g-policy-err"></span></div>`;
+  h+=`</div>`;
+  $('#view-governance').innerHTML=h;
+  if(editable) wireGovernance();
+}
+function wireGovernance(){
+  GOV.risk=GOV.risk||{}; GOV.policy=GOV.policy||{}; GOV.assets=GOV.assets||{}; GOV.unknowns=GOV.unknowns||[];
+  const onNum=(id,key)=>{const e=$('#'+id); if(e)e.onchange=()=>{GOV.risk[key]=parseInt(e.value)||0; refreshGovernance();};};
+  onNum('g-z','crqcYear'); onNum('g-zsig','crqcYearSignatures');
+  const ua=$('#u-add'); if(ua)ua.onclick=()=>{GOV.unknowns.push({label:$('#u-label').value,info:$('#u-info').value,asset:$('#u-asset').value});refreshGovernance();};
+  $('#view-governance').querySelectorAll('button[data-unk]').forEach(b=>b.onclick=()=>{GOV.unknowns.splice(+b.dataset.unk,1);refreshGovernance();});
+  const pa=$('#g-policy-apply'); if(pa)pa.onclick=()=>{try{GOV.policy=JSON.parse($('#g-policy').value);$('#g-policy-err').textContent='';refreshGovernance();}catch(err){$('#g-policy-err').textContent='invalid JSON: '+err.message;}};
+  const gf=$('#govFile'); if(gf)gf.onchange=e=>{const f=e.target.files[0]; if(f)f.text().then(t=>{try{GOV=JSON.parse(t);refreshGovernance();}catch(err){alert('invalid governance.json: '+err.message);}});};
+  const gsv=$('#govSave'); if(gsv)gsv.onclick=()=>download('governance.json',new Blob([JSON.stringify(GOV,null,2)],{type:'application/json'}));
+  const gt=$('#govTpl'); if(gt)gt.onclick=()=>fetch('/api/config-template').then(r=>r.json()).then(t=>{GOV.policy=t.policy;refreshGovernance();});
+}
+
+function renderHowTo(){
+  $('#view-howto').innerHTML = `<div class="panel howto">
+  <h2 style="margin-top:0">ShorSight — how it works</h2>
+  <p>ShorSight builds a <b>cryptography inventory</b> from source code, deployment artefacts and the network, assesses it for
+  classical and <b>quantum</b> weaknesses, and adds governance: <b>compliance</b>, <b>risk</b> and <b>maturity</b>.
+  The pipeline is: <code>scan → CBOM (inventory) → assessment → governance</code>.</p>
+
+  <h2>Source code — nine languages</h2>
+  <p><b>Python, JavaScript/TypeScript, Java, Go, PHP, Rust, C#, C and C++</b> —
+  each with a dedicated <b>semantic</b> detector that resolves imports, types and call arguments (not just plain
+  text), so it knows the difference between using <code>AES-256-GCM</code> and merely mentioning it.</p>
+  <h2>Crypto beyond source code</h2>
+  <p>A real organisation's crypto lives largely <i>outside</i> application code. ShorSight reads these sources
+  directly and folds them into the same inventory, so they get the same quantum/classical assessment, compliance
+  and risk — each tagged with its own provenance (🔏 certificate · ⚙️ config · 🔑 keystore · 🌐 capture ·
+  📡 live endpoint · 🐳 image · ✍️ manual):</p>
+  <ul>
+    <li><b>🔏 X.509 certificates</b> (<code>.pem · .crt · .cer · .der</code>, incl. PEM bundles) — parsed with the
+        <code>cryptography</code> library: the subject <b>public-key</b> algorithm &amp; size (RSA-2048 / EC-P384 /
+        Ed25519 …), the <b>signature</b> algorithm (e.g. <code>sha256WithRSAEncryption</code> → SHA-256 + RSA), and
+        the subject + validity — with <b>EXPIRED</b> certificates flagged.</li>
+    <li><b>⚙️ TLS / SSH configuration</b> (<code>sshd_config</code>, <code>ssh_config</code>, nginx / Apache / HAProxy,
+        <code>openssl.cnf</code>) — reads the relevant directives (<code>ssl_protocols</code>, <code>ssl_ciphers</code>,
+        <code>Ciphers</code> / <code>KexAlgorithms</code> / <code>MACs</code>, <code>ssl_ecdh_curve</code>) into
+        <b>protocol versions</b> (TLS&nbsp;1.0 / SSLv3 flagged), cipher suites, KEX, MAC and curve assets. Disabled
+        entries (<code>!aNULL</code>, <code>-TLSv1</code>) are ignored.</li>
+    <li><b>🔑 Keystores &amp; key files</b> (PKCS#12 <code>.p12/.pfx</code>, Java <code>.jks/.keystore</code>, PEM/DER
+        <code>.key</code>) — reports the <b>key type and size</b> plus any embedded certificates; private-key
+        material is never read.</li>
+    <li><b>🌐 Network captures</b> (<code>.pcap/.pcapng</code>) — reassembles TCP and reads the cleartext handshakes:
+        <b>TLS</b> negotiated suite + version, <b>SSH</b> banner + KEXINIT (KEX / host-key / cipher / MAC),
+        <b>QUIC</b> and <b>IKEv2</b> transforms, plus cleartext ports (HTTP/FTP/…).</li>
+    <li><b>📡 Live endpoints</b> (<b>Network scan…</b> button, or <code>shorsight netscan</code>) — actively enumerates
+        what a deployed <b>SSH/TLS</b> service really offers: protocol-version support, cipher / KEX / MAC / host-key
+        algorithms, and the served certificate. nmap discovers open ports across a host or CIDR, then
+        <code>ssh-audit</code>/<code>testssl.sh</code> (or a built-in probe) enumerate each. <b>Active scanning is
+        gated behind an authorization acknowledgement</b>; only scan systems you are allowed to test.</li>
+    <li><b>🐳 Container images</b> (<code>docker://name:tag</code>, <code>podman://…</code>,
+        <code>oci-archive:/path.tar</code>) — the <i>deployment artefact</i>: what actually ships. The image is
+        exported and its layers are flattened (whiteouts applied), then every source above runs over the result —
+        so baked-in <b>certificates and keys</b>, the <b>shipped TLS/SSH configuration</b> and any application
+        source are inventoried in one pass. On top of that, the <b>installed crypto libraries</b> are read from the
+        package databases with their exact versions — <code>apk</code>, <code>dpkg</code> and all three
+        <code>rpm</code> backends (sqlite, Berkeley DB, ndb) — plus installed Python distributions
+        (<code>*.dist-info</code>), npm packages (<code>node_modules</code>) and JARs. Exact versions mean
+        <b>version-precise CVE matching</b> for the OpenSSL a base image ships, which no manifest declares.
+        The image is <b>never executed</b>: everything is read from files. A database that exists but cannot be
+        read is reported as a scan note, never silently skipped.</li>
+    <li><b>✍️ Manual entry / CBOM import</b> — for systems no scanner reaches (HSMs, mainframes, hardware, third-party
+        appliances): declare assets in a small <code>crypto-assets.json</code>, or import an existing CycloneDX CBOM
+        from another tool. Unrecognised algorithms are kept and placed in quantum risk (never silently dropped).</li>
+  </ul>
+  <p class="muted">Recognition is by file type / name and content, gated so unrelated files stay silent. The
+  certificate &amp; keystore parsers need the optional <code>cryptography</code> extra
+  (<code>pip install 'shorsight[certs]'</code>) and pcap needs <code>[pcap]</code>; without them those stages are
+  simply skipped. Dependency versions are resolved from <b>lockfiles</b> (poetry.lock, package-lock.json, go.sum,
+  Cargo.lock, …) — and, for a container image, from what is <b>installed</b> — for version-precise CVE matching.
+  Scanning an image needs <code>docker</code>, <code>podman</code> or <code>skopeo</code> on the <code>PATH</code>
+  of the machine running the scan; a local <code>oci-archive:</code> needs nothing at all.</p>
+
+  <h2>The tabs</h2>
+  <div class="step"><h3>Inventory</h3><p>Every detected algorithm/protocol with its <b>quantum</b> and <b>classical</b>
+  status, key size, the <b>library</b> it comes from (with known CVEs), and its <b>provenance</b> (which repo /
+  path / 🐳 image / capture / 🔏 certificate). Click a row for all occurrences (<code>file:line</code>); for open-source repos each
+  occurrence and code snippet links straight to that line on the host (GitHub/GitLab/…). Each row also carries an
+  <b>Evidence</b> grade (see below).</p></div>
+  <div class="step"><h3>Evidence levels &amp; network sinks</h3>
+  <p>The <b>Evidence</b> column says how strong the proof is that an algorithm is really used — strongest to weakest:</p>
+  <ul>
+    <li><b>literal</b> — a concrete value was read straight from the code: a key size, mode or algorithm string
+        (e.g. <code>RSA(key_size=2048)</code> → RSA-2048, <code>"AES/GCM/NoPadding"</code>, a certificate's actual key).</li>
+    <li><b>resolved</b> — the algorithm was identified by resolving an import / type / symbol
+        (e.g. <code>use sha2::Sha256</code>, <code>EVP_aes_256_gcm()</code>, <code>Aes.Create()</code>). You know
+        <i>which</i> algorithm, just not necessarily its parameters.</li>
+    <li><b>name-only</b> — only a name or identifier matched: a class/file named after an algorithm, a bare library
+        import, a token in a compound name. Plausible but heuristic — worth a look.</li>
+  </ul>
+  <p>An asset shows the <b>strongest</b> grade across all its occurrences; you can filter the inventory by grade to
+  hide heuristic hits. A <b>network sink</b> is a point where data crosses a network boundary — a socket / HTTP /
+  curl call, or a cryptographic asset used right at such a boundary. Sinks mark where plaintext could leave the
+  system, so you can confirm it's protected and spot cleartext protocols (e.g. plain HTTP/FTP).</p></div>
+  <div class="step"><h3>Compliance</h3><p>Checks the inventory against a <b>policy</b> (seeded from <b>BSI TR-02102</b>,
+  fully editable in Governance). Violations: <em>DISALLOWED</em> (forbidden/broken), <em>KEY_SIZE</em> (too small),
+  <em>DEPRECATED</em> (past its allowed-until year), <em>NOT_ALLOWED</em> (not on the allow-list),
+  <em>QUANTUM_NOT_ALLOWED</em> (if you require PQC).</p></div>
+  <div class="step"><h3>Risk Management (Mosca + BSI 200-3)</h3><p>Risk analysis modelled on <b>BSI-Standard 200-3</b>
+  with <b>Mosca</b> as the engine of urgency. Every object is an <b>(algorithm × asset)</b> tuple, placed in one of
+  <b>two matrices</b> (BSI categories <em>low/medium/high/very high</em>): an <b>acute</b> matrix (classical severity
+  today) and a <b>quantum</b> matrix (Mosca urgency <code>X + Y &gt; Z</code> — data shelf-life X + migration time Y
+  vs. years to a quantum computer Z; if X+Y passes Z, data captured today could be decrypted later, “harvest-now-decrypt-later”).
+  The shared <b>impact</b> axis is human-set per asset: four <b>security objectives</b> (confidentiality, integrity,
+  authenticity, non-repudiation) and the <b>economic damage</b> on failure (1–4); an object's impact is
+  <code>max(role-relevant objectives, economic damage)</code>, falling back to criticality (⚠ needs input) until
+  assessed. Each object gets a <b>risk treatment</b> (avoid / reduce / transfer / accept) owned by the risk owner —
+  at impact 4, transfer &amp; accept are barred. Shelf-life X, migration time Y, owner, migration status and the
+  treatment all live in this tab.</p></div>
+  <div class="step"><h3>Maturity (CAMM)</h3><p>The <a href="https://camm.h-da.io" target="_blank" rel="noopener">Crypto-Agility
+  Maturity Model</a> — levels 0–4 across Knowledge/Process/System. <b>Overview</b> shows your level and each
+  requirement (click for description/problem/acceptance/example). <b>Questionnaire</b> walks you through every
+  requirement step by step (yes / partial / no + note) — great for workshops — then maps onto the level. A few
+  requirements ShorSight can evidence itself (e.g. the inventory exists); the rest are organizational and answered
+  manually. (Crypto-agility is measured <i>here</i>, not in Risk Management.)</p></div>
+  <div class="step"><h3>Governance</h3><p>Edit the <code>governance.json</code>: the org-wide <b>CRQC horizon Z</b>
+  (<code>crqcYear</code> / <code>crqcYearSignatures</code>), manual unknowns, and the full policy JSON. Per-asset
+  fields (X, Y, security objectives, treatment, …) live in <b>Risk Management</b>. <b>Save</b>/<b>Load</b> keeps the
+  config next to your CBOM. Everything recomputes live.</p></div>
+
+  <h2>Getting data in</h2>
+  <ul>
+    <li><b>Load file…</b> — a CBOM <code>.json</code>, or (when running <code>shorsight serve</code>) a
+        <code>.pcap</code>/<code>.pcapng</code> capture that is scanned server-side.</li>
+    <li><b>Scan</b> (serve only) — a local path or a <b>GitHub URL</b>; repos are shallow-cloned to a temp dir and
+        deleted right after. Every load/scan is <b>merged</b> into the current inventory (multi-source), and scans
+        always look up <b>CVEs</b> — no toggles to forget.</li>
+    <li><b>Export CBOM</b> — download the current inventory as JSON. <b>Workbook (xlsx)</b> — a multi-sheet
+        spreadsheet (Overview, Inventory, Libraries &amp; Network, Compliance, Risk, Maturity) for Excel/LibreOffice.
+        <b>Clear</b> — reset.</li>
+  </ul>
+
+  <h2>serve vs workbook</h2>
+  <p><code>shorsight serve</code> is interactive (scan, edit governance, recompute). A <b>workbook</b>
+  (<code>.xlsx</code>, via the button or <code>shorsight export</code>) is a shareable, read-only snapshot of the
+  same content as sheets you can open, filter and pivot in Excel/LibreOffice.</p>
+
+  <h2>CLI</h2>
+  <pre class="occ" style="white-space:pre-wrap">shorsight scan &lt;path|git-url|capture.pcap&gt; -o cbom.json   # also: several at once
+shorsight policy init -o governance.json                  # seed a BSI TR-02102 policy
+shorsight govern cbom.json --config governance.json       # compliance + risk + CAMM
+shorsight compliance|risk|camm cbom.json --config governance.json
+shorsight export cbom.json --config governance.json -o shorsight.xlsx  # multi-sheet workbook
+shorsight serve                                           # this web app
+shorsight validate cbom.json                              # CycloneDX 1.7 schema check</pre>
+
+  <h2>Good to know</h2>
+  <ul>
+    <li>Detection is heuristic and intentionally skips test files; an empty result usually means crypto is
+        delegated (e.g. plain <code>tls.Config</code>) or out of scope.</li>
+    <li>What can't be scanned (hardware, HSMs, closed systems) is added as a manual <b>unknown</b> — always counted as quantum risk.</li>
+    <li>The CRQC year (Z) is an assumption (default 2035, editable) — risk is a planning aid, not a prediction.</li>
+    <li>Targets for migration are deliberately not auto-generated: choosing hybrid (classical+PQC) schemes is
+        context work. Use the risk priorities to drive it.</li>
+  </ul>
+  </div>`;
+}
+</script>
+</body>
+</html>
