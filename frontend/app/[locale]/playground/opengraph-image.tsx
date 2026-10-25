@@ -46,7 +46,7 @@ export default async function Image({ params }: { params: { locale: string } }) 
         {/* Main title block */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ color: '#06b6d4', fontSize: 15, letterSpacing: 2 }}>
-            // interactive demo
+            {'// interactive demo'}
           </div>
           <div style={{ color: '#f8fafc', fontSize: 56, fontWeight: 700, lineHeight: 1.15 }}>
             {title}
@@ -59,7 +59,7 @@ export default async function Image({ params }: { params: { locale: string } }) 
         {/* Key-size bars */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ color: '#475569', fontSize: 13, letterSpacing: 2, marginBottom: 4 }}>
-            // {sizeLabel}
+            {`// ${sizeLabel}`}
           </div>
           {KEM_ENTRIES.map((k) => (
             <div key={k.name} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>

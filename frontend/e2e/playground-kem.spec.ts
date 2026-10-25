@@ -83,9 +83,9 @@ test('ML-KEM-1024: tamper mode — tampering KEM ciphertext causes decryption fa
   // Submit tamper — button text is "// Re-decrypt →"
   await page.getByText('// Re-decrypt →').click();
 
-  // The error message contains "AES-GCM Authentication Tag Mismatch"
+  // Step 6 reports the failed AES-GCM authentication
   await expect(
-    page.getByText(/AES-GCM Authentication Tag Mismatch/i).first()
+    page.getByText(/AES-GCM authentication tag does not match/i).first()
   ).toBeVisible({ timeout: 30_000 });
 });
 

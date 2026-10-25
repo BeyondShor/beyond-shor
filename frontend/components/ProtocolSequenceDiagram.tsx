@@ -14,12 +14,6 @@ interface Arrow {
   quantum?:   'breach' | 'safe';
 }
 
-function fmtTime(ms: number | undefined): string {
-  if (ms === undefined) return '';
-  if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
-  return `${Math.round(ms)}ms`;
-}
-
 export default function ProtocolSequenceDiagram({ activeStep, quantumMode }: Props) {
   const t = useTranslations('playground');
 

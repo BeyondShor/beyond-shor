@@ -72,9 +72,8 @@ export default async function RootLayout({
     <html lang={locale} className={`${fontSans.variable} ${fontMono.variable}`} suppressHydrationWarning>
       <body className="flex min-h-screen flex-col antialiased">
         {children}
+        <script defer src="https://analytics.beyond-shor.eu/script.js" data-website-id="1cfde2d7-291d-4c33-b7a4-e182a6c12d53"></script>
       </body>
-      {/* eslint-disable-next-line @next/next/no-before-interactive-script-component */}
-      <script defer src="https://analytics.beyond-shor.eu/script.js" data-website-id="1cfde2d7-291d-4c33-b7a4-e182a6c12d53"></script>
     </html>
   );
 }

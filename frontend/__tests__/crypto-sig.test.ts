@@ -21,7 +21,7 @@ import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
 // ── ECDSA P-256 ───────────────────────────────────────────────────────────────
 
 async function sha256(msg: Uint8Array): Promise<Uint8Array> {
-  const buf = await globalThis.crypto.subtle.digest('SHA-256', msg);
+  const buf = await globalThis.crypto.subtle.digest('SHA-256', msg.slice());
   return new Uint8Array(buf);
 }
 
@@ -81,6 +81,7 @@ describe('ECDSA P-256', () => {
     const msgHash = await sha256(msg);
     const sig = p256.sign(msgHash, secretKey);
 
+    expect(p256.verify(sig, msgHash, publicKey)).toBe(true);        // control: the right key works
     expect(p256.verify(sig, msgHash, wrongPublicKey)).toBe(false);
   });
 });

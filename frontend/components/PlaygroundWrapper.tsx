@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import HybridPlayground, { type RealWorldItem } from '@/components/HybridPlayground';
 import SignaturePlayground from '@/components/SignaturePlayground';
@@ -13,6 +13,29 @@ type PlaygroundMode = 'encryption' | 'signatures';
 // Two tracks: the PQC building blocks themselves, and what they mean for a PKI
 type PlaygroundTrack = 'pqc' | 'pki';
 
+interface View {
+  track:  PlaygroundTrack;
+  mode:   PlaygroundMode;
+  shared: ShareState | null;
+}
+
+// #state=… restores a shared run, #pki / #signatures / #encryption pick the view
+function viewFromHash(hash: string): View {
+  if (hash.startsWith('state=')) {
+    const decoded = decodeShareState(hash.slice(6));
+    if (decoded) return { track: 'pqc', mode: decoded.mode, shared: decoded };
+  }
+  if (hash === 'pki')        return { track: 'pki', mode: 'encryption', shared: null };
+  if (hash === 'signatures') return { track: 'pqc', mode: 'signatures', shared: null };
+  return { track: 'pqc', mode: 'encryption', shared: null };
+}
+
+// The hash is read once per mount. Later changes come from this page itself
+// (switching views, share links), which already holds that state.
+let hashAtMount: string | null = null;
+const readHash = () => (hashAtMount ??= window.location.hash.slice(1));
+const subscribeHash = () => () => { hashAtMount = null; };
+
 export interface PlaygroundWrapperProps {
   kemSnippetHtmls:    Record<KemAlgorithm, string>;
   dsaSnippetHtmls:    Record<DsaAlgorithm, string>;
@@ -24,35 +47,19 @@ export default function PlaygroundWrapper({
   kemSnippetHtmls, dsaSnippetHtmls, realWorldItems, sigRealWorldItems,
 }: PlaygroundWrapperProps) {
   const t = useTranslations('playground');
-  const [track, setTrack] = useState<PlaygroundTrack>('pqc');
-  const [mode, setMode] = useState<PlaygroundMode>('encryption');
-  const [initialState, setInitialState] = useState<ShareState | null>(null);
-
-  // Parse URL hash on mount — restore shared state if present, else set mode
-  useEffect(() => {
-    const hash = window.location.hash.slice(1);
-    if (hash.startsWith('state=')) {
-      const decoded = decodeShareState(hash.slice(6));
-      if (decoded) {
-        setInitialState(decoded);
-        setMode(decoded.mode);
-        return;
-      }
-    }
-    if (hash === 'pki') setTrack('pki');
-    else if (hash === 'signatures') setMode('signatures');
-    else if (hash === 'encryption') setMode('encryption');
-  }, []);
+  // the server renders the default view; the client then applies the hash
+  const hash = useSyncExternalStore(subscribeHash, readHash, () => '');
+  const fromHash = useMemo(() => viewFromHash(hash), [hash]);
+  const [chosen, setChosen] = useState<View | null>(null);
+  const { track, mode, shared: initialState } = chosen ?? fromHash;
 
   function switchMode(newMode: PlaygroundMode) {
-    setMode(newMode);
-    setInitialState(null);
+    setChosen({ track, mode: newMode, shared: null });
     history.replaceState(null, '', `#${newMode}`);
   }
 
   function switchTrack(newTrack: PlaygroundTrack) {
-    setTrack(newTrack);
-    setInitialState(null);
+    setChosen({ track: newTrack, mode, shared: null });
     history.replaceState(null, '', `#${newTrack === 'pki' ? 'pki' : mode}`);
   }
 
@@ -122,6 +129,7 @@ export default function PlaygroundWrapper({
           {/* Content */}
           {mode === 'encryption' && (
             <HybridPlayground
+              key={initialState ? 'shared' : 'fresh'}
               snippetHtmls={kemSnippetHtmls}
               realWorldItems={realWorldItems}
               initialState={initialState?.mode === 'encryption' ? initialState : undefined}
@@ -129,6 +137,7 @@ export default function PlaygroundWrapper({
           )}
           {mode === 'signatures' && (
             <SignaturePlayground
+              key={initialState ? 'shared' : 'fresh'}
               snippetHtmls={dsaSnippetHtmls}
               realWorldItems={sigRealWorldItems}
               initialState={initialState?.mode === 'signatures' ? initialState : undefined}

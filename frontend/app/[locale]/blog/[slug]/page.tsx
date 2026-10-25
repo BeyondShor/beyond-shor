@@ -40,7 +40,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!article) return { title: 'Article not found' };
 
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-  const coverUrl = getStrapiUrl(article.cover?.url);
   const otherLocale = locale === 'de' ? 'en' : 'de';
   const otherSlug = await getArticleSlugByDocumentId(article.documentId, otherLocale);
 

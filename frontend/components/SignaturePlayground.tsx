@@ -74,13 +74,6 @@ const DSA_IS_QUANTUM_SAFE: Record<DsaAlgorithm, boolean> = {
   slhdsa128f: true,
 };
 
-const DSA_STANDARD: Record<DsaAlgorithm, string> = {
-  ecdsa:      '—',
-  mldsa65:    'FIPS 204',
-  slhdsa128s: 'FIPS 205',
-  slhdsa128f: 'FIPS 205',
-};
-
 const DSA_DISPLAY_NAMES: Record<DsaAlgorithm, string> = {
   ecdsa:      'ECDSA P-256',
   mldsa65:    'ML-DSA-65',
@@ -657,16 +650,14 @@ function SigRaceCard({ dsa, entry }: { dsa: DsaAlgorithm; entry: SigRaceEntry })
 // ── StatTooltip ───────────────────────────────────────────────────────────────
 
 function StatTooltip({ label, tip }: { label: string; tip: string }) {
+  // set by pointer events only, so the portal never renders on the server
   const [rect, setRect] = useState<DOMRect | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
 
   function onEnter(e: React.MouseEvent) {
     setRect((e.currentTarget as HTMLElement).getBoundingClientRect());
   }
 
-  const tooltipEl = mounted && rect ? (() => {
+  const tooltipEl = rect ? (() => {
     const above = rect.top > 160;
     const left  = Math.max(8, Math.min(rect.left, window.innerWidth - 304));
     const top   = above ? rect.top - 8 : rect.bottom + 8;
@@ -699,9 +690,7 @@ function StatTooltip({ label, tip }: { label: string; tip: string }) {
 
 function AbbrevTooltip({ abbrev, full }: { abbrev: string; full: string }) {
   const [rect, setRect] = useState<DOMRect | null>(null);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-  const tooltipEl = mounted && rect ? createPortal(
+  const tooltipEl = rect ? createPortal(
     <div
       style={{ position: 'fixed', left: rect.left + rect.width / 2, top: rect.top - 6, transform: 'translate(-50%, -100%)', zIndex: 9999 }}
       className="rounded border border-[var(--color-glass-border)] bg-[var(--color-bg-surface)] shadow-xl px-2 py-1 pointer-events-none font-mono text-xs text-[var(--color-text-base)] whitespace-nowrap"
@@ -1174,16 +1163,40 @@ export interface SignaturePlaygroundProps {
   initialState?:   SigRunShareState | SigBenchmarkShareState;
 }
 
+// Steps of a run restored from a share link (#state=…)
+function step1FromShare(shared: SigRunShareState): SigStep1Data {
+  return {
+    publicKey: fromHex(shared.s1.pk),
+    secretKey: fromHex(shared.s1.sk),
+    keygenMs:  shared.s1.keygenMs,
+    dsa:       shared.dsa,
+  };
+}
+
+function step2FromShare(shared: SigRunShareState): SigStep2Data {
+  return {
+    message:     fromHex(shared.s2.msg),
+    messageHash: shared.s2.msgHash ? fromHex(shared.s2.msgHash) : undefined,
+    signature:   fromHex(shared.s2.sig),
+    signMs:      shared.s2.signMs,
+  };
+}
+
 export default function SignaturePlayground({ snippetHtmls, realWorldItems, initialState }: SignaturePlaygroundProps) {
   const t = useTranslations('playground');
 
-  const [dsa,        setDsa]        = useState<DsaAlgorithm>('mldsa65');
+  // A shared run or benchmark is the starting state; PlaygroundWrapper remounts
+  // this component (key) when a different one arrives.
+  const sharedRun = initialState?.type === 'run' ? initialState : undefined;
+  const [dsa,        setDsa]        = useState<DsaAlgorithm>(sharedRun?.dsa ?? 'mldsa65');
   const [message,    setMessage]    = useState(t('sigDefaultMessage'));
-  const [phase,      setPhase]      = useState<SigPhase>('idle');
+  const [phase,      setPhase]      = useState<SigPhase>(sharedRun ? 'done' : 'idle');
   const [errorMsg,   setErrorMsg]   = useState<string | null>(null);
-  const [step1,      setStep1]      = useState<SigStep1Data | null>(null);
-  const [step2,      setStep2]      = useState<SigStep2Data | null>(null);
-  const [step3,      setStep3]      = useState<SigStep3Data | null>(null);
+  const [step1,      setStep1]      = useState<SigStep1Data | null>(() => sharedRun ? step1FromShare(sharedRun) : null);
+  const [step2,      setStep2]      = useState<SigStep2Data | null>(() => sharedRun ? step2FromShare(sharedRun) : null);
+  const [step3,      setStep3]      = useState<SigStep3Data | null>(
+    sharedRun ? { valid: sharedRun.s3.valid, verifyMs: sharedRun.s3.verifyMs } : null,
+  );
   const [attackerMode, setAttackerMode] = useState(false);
   const [quantumMode,  setQuantumMode]  = useState(false);
   const [tamperMode,   setTamperMode]   = useState(false);
@@ -1192,7 +1205,9 @@ export default function SignaturePlayground({ snippetHtmls, realWorldItems, init
   const [raceActive, setRaceActive] = useState(false);
   const [shareCopied,          setShareCopied]          = useState(false);
   const [benchmarkShareCopied, setBenchmarkShareCopied] = useState(false);
-  const [benchmark,  setBenchmark]  = useState<Partial<Record<DsaAlgorithm, SigBenchmarkDsaState>>>({});
+  const [benchmark,  setBenchmark]  = useState<Partial<Record<DsaAlgorithm, SigBenchmarkDsaState>>>(
+    initialState?.type === 'benchmark' ? initialState.benchmark : {},
+  );
   const [benchmarkActive, setBenchmarkActive] = useState(false);
 
   const workerRef         = useRef<Worker | null>(null);
@@ -1209,30 +1224,6 @@ export default function SignaturePlayground({ snippetHtmls, realWorldItems, init
     raceWorkers.current = {};
     benchmarkAbortRef.current = true;
   }, []);
-
-  // Restore shared state from URL
-  useEffect(() => {
-    if (!initialState) return;
-    if (initialState.type === 'run') {
-      setDsa(initialState.dsa);
-      setStep1({
-        publicKey: fromHex(initialState.s1.pk),
-        secretKey: fromHex(initialState.s1.sk),
-        keygenMs:  initialState.s1.keygenMs,
-        dsa:       initialState.dsa,
-      } satisfies SigStep1Data);
-      setStep2({
-        message:     fromHex(initialState.s2.msg),
-        messageHash: initialState.s2.msgHash ? fromHex(initialState.s2.msgHash) : undefined,
-        signature:   fromHex(initialState.s2.sig),
-        signMs:      initialState.s2.signMs,
-      } satisfies SigStep2Data);
-      setStep3({ valid: initialState.s3.valid, verifyMs: initialState.s3.verifyMs } satisfies SigStep3Data);
-      setPhase('done');
-    } else {
-      setBenchmark(initialState.benchmark);
-    }
-  }, [initialState]);
 
   // ── Share ──────────────────────────────────────────────────────────────────
 

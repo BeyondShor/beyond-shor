@@ -172,7 +172,6 @@ function HexField({ label, bytes, isPrivate, alwaysExpanded = false,
 
   const hex = toHex(bytes);
   const needsTruncate = !alwaysExpanded && hex.length > 32 + 16 + 3;
-  const displayHex    = needsTruncate && !expanded ? truncateHex(hex) : hex;
 
   async function handleCopy() {
     await navigator.clipboard.writeText(editHex ?? hex);
@@ -826,16 +825,14 @@ function fmt2(v: number): string {
 // ── StatTooltip — label with hover tooltip ───────────────────────────────────
 
 function StatTooltip({ label, tip }: { label: string; tip: string }) {
+  // set by pointer events only, so the portal never renders on the server
   const [rect, setRect] = useState<DOMRect | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
 
   function onEnter(e: React.MouseEvent) {
     setRect((e.currentTarget as HTMLElement).getBoundingClientRect());
   }
 
-  const tooltipEl = mounted && rect ? (() => {
+  const tooltipEl = rect ? (() => {
     const above = rect.top > 160;
     const left  = Math.max(8, Math.min(rect.left, window.innerWidth - 304));
     const top   = above ? rect.top - 8 : rect.bottom + 8;
@@ -868,9 +865,7 @@ function StatTooltip({ label, tip }: { label: string; tip: string }) {
 
 function AbbrevTooltip({ abbrev, full }: { abbrev: string; full: string }) {
   const [rect, setRect] = useState<DOMRect | null>(null);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-  const tooltipEl = mounted && rect ? createPortal(
+  const tooltipEl = rect ? createPortal(
     <div
       style={{ position: 'fixed', left: rect.left + rect.width / 2, top: rect.top - 6, transform: 'translate(-50%, -100%)', zIndex: 9999 }}
       className="rounded border border-[var(--color-glass-border)] bg-[var(--color-bg-surface)] shadow-xl px-2 py-1 pointer-events-none font-mono text-xs text-[var(--color-text-base)] whitespace-nowrap"
@@ -1107,13 +1102,54 @@ function BenchmarkPanel({ benchmark, active, onStop, onClose, onShare, shareCopi
 
 // ── Main Component ─────────────────────────────────────────────────────────
 
+// Steps of a run restored from a share link (#state=…)
+function stepsFromShare(shared: KemRunShareState): PlaygroundSteps {
+  return {
+    1: {
+      clientX25519Priv: fromHex(shared.s1.cxPriv),
+      clientX25519Pub:  fromHex(shared.s1.cxPub),
+      serverX25519Priv: fromHex(shared.s1.sxPriv),
+      serverX25519Pub:  fromHex(shared.s1.sxPub),
+      kemServerPriv:    fromHex(shared.s1.kemPriv),
+      kemServerPub:     fromHex(shared.s1.kemPub),
+      kemKeygenMs:      shared.s1.keygenMs,
+      kem:              shared.kem,
+    } satisfies Step1Data,
+    2: {
+      x25519Secret:       fromHex(shared.s2.secret),
+      x25519SecretServer: fromHex(shared.s2.secret),
+    } satisfies Step2Data,
+    3: {
+      kemCiphertext:   fromHex(shared.s3.ct),
+      kemSecret:       fromHex(shared.s3.kemSecret),
+      kemSecretServer: fromHex(shared.s3.kemSecret),
+      encapMs:         shared.s3.encapMs,
+      decapMs:         shared.s3.decapMs,
+    } satisfies Step3Data,
+    4: {
+      hkdfSalt:          fromHex(shared.s4.salt),
+      combinedKey:       fromHex(shared.s4.key),
+      combinedKeyServer: fromHex(shared.s4.key),
+    } satisfies Step4Data,
+    5: {
+      iv:            fromHex(shared.s5.iv),
+      ciphertext:    fromHex(shared.s5.ct),
+      plaintextUsed: shared.s5.plaintext,
+    } satisfies Step5Data,
+    6: { decrypted: shared.s6.decrypted } satisfies Step6Data,
+  };
+}
+
 export default function HybridPlayground({ snippetHtmls, realWorldItems, initialState }: HybridPlaygroundProps) {
   const t = useTranslations('playground');
 
+  // A shared run or benchmark is the starting state; PlaygroundWrapper remounts
+  // this component (key) when a different one arrives.
+  const sharedRun = initialState?.type === 'run' ? initialState : undefined;
   const [plaintext,    setPlaintext]    = useState('');
-  const [kem,          setKem]          = useState<KemAlgorithm>('mlkem');
-  const [phase,        setPhase]        = useState<Phase>('idle');
-  const [steps,        setSteps]        = useState<PlaygroundSteps>({});
+  const [kem,          setKem]          = useState<KemAlgorithm>(sharedRun?.kem ?? 'mlkem');
+  const [phase,        setPhase]        = useState<Phase>(sharedRun ? 'done' : 'idle');
+  const [steps,        setSteps]        = useState<PlaygroundSteps>(() => sharedRun ? stepsFromShare(sharedRun) : {});
   const [error,        setError]        = useState('');
   const [elapsed,      setElapsed]      = useState(0);
   const [attackerMode, setAttackerMode] = useState(false);
@@ -1125,7 +1161,9 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
   const [raceActive,   setRaceActive]   = useState(false);
   const [shareCopied,          setShareCopied]          = useState(false);
   const [benchmarkShareCopied, setBenchmarkShareCopied] = useState(false);
-  const [benchmark,    setBenchmark]    = useState<Partial<Record<KemAlgorithm, BenchmarkKemState>>>({});
+  const [benchmark,    setBenchmark]    = useState<Partial<Record<KemAlgorithm, BenchmarkKemState>>>(
+    initialState?.type === 'benchmark' ? initialState.benchmark : {},
+  );
   const [benchmarkActive, setBenchmarkActive] = useState(false);
 
   const timerRef         = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1137,51 +1175,6 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
   const stopTimer = () => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
   };
-
-  // Restore shared state from URL
-  useEffect(() => {
-    if (!initialState) return;
-    if (initialState.type === 'run') {
-      setKem(initialState.kem);
-      setSteps({
-        1: {
-          clientX25519Priv: fromHex(initialState.s1.cxPriv),
-          clientX25519Pub:  fromHex(initialState.s1.cxPub),
-          serverX25519Priv: fromHex(initialState.s1.sxPriv),
-          serverX25519Pub:  fromHex(initialState.s1.sxPub),
-          kemServerPriv:    fromHex(initialState.s1.kemPriv),
-          kemServerPub:     fromHex(initialState.s1.kemPub),
-          kemKeygenMs:      initialState.s1.keygenMs,
-          kem:              initialState.kem,
-        } satisfies Step1Data,
-        2: {
-          x25519Secret:       fromHex(initialState.s2.secret),
-          x25519SecretServer: fromHex(initialState.s2.secret),
-        } satisfies Step2Data,
-        3: {
-          kemCiphertext:   fromHex(initialState.s3.ct),
-          kemSecret:       fromHex(initialState.s3.kemSecret),
-          kemSecretServer: fromHex(initialState.s3.kemSecret),
-          encapMs:         initialState.s3.encapMs,
-          decapMs:         initialState.s3.decapMs,
-        } satisfies Step3Data,
-        4: {
-          hkdfSalt:          fromHex(initialState.s4.salt),
-          combinedKey:       fromHex(initialState.s4.key),
-          combinedKeyServer: fromHex(initialState.s4.key),
-        } satisfies Step4Data,
-        5: {
-          iv:            fromHex(initialState.s5.iv),
-          ciphertext:    fromHex(initialState.s5.ct),
-          plaintextUsed: initialState.s5.plaintext,
-        } satisfies Step5Data,
-        6: { decrypted: initialState.s6.decrypted } satisfies Step6Data,
-      });
-      setPhase('done');
-    } else {
-      setBenchmark(initialState.benchmark);
-    }
-  }, [initialState]);
 
   useEffect(() => () => {
     stopTimer();
@@ -1576,7 +1569,7 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
         {/* ── Error ── */}
         {phase === 'error' && (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 font-mono text-sm text-red-400">
-            // error: {error}
+            {`// error: ${error}`}
           </div>
         )}
 

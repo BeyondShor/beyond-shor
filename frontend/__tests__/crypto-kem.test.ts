@@ -34,7 +34,7 @@ describe('ML-KEM-1024', () => {
   });
 
   it('shared secret is 32 bytes', () => {
-    const { publicKey, secretKey } = ml_kem1024.keygen();
+    const { publicKey } = ml_kem1024.keygen();
     const { sharedSecret } = ml_kem1024.encapsulate(publicKey);
     expect(sharedSecret.byteLength).toBe(32);
   });
@@ -113,7 +113,7 @@ async function deriveKey(x25519S: Uint8Array, kemS: Uint8Array, salt: Uint8Array
   ikm.set(kemS, x25519S.length);
   const ikmKey = await globalThis.crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveKey']);
   return globalThis.crypto.subtle.deriveKey(
-    { name: 'HKDF', hash: 'SHA-256', salt, info: new TextEncoder().encode('hybrid-pqc-playground-v1') },
+    { name: 'HKDF', hash: 'SHA-256', salt: salt.slice(), info: new TextEncoder().encode('hybrid-pqc-playground-v1') },
     ikmKey,
     { name: 'AES-GCM', length: 256 },
     true,

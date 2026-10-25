@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter, usePathname } from '@/i18n/navigation';
+import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 
 interface Category {
@@ -18,7 +18,6 @@ interface Props {
 export default function CategoryFilterDropdown({ categories, activeCategory }: Props) {
   const t = useTranslations('blog');
   const router = useRouter();
-  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 

@@ -19,10 +19,9 @@ test.describe('Smoke — German locale (default)', () => {
     await expect(page.getByText('// Generieren →')).toBeVisible();
   });
 
-  test('CBOM page loads and shows cryptographic infrastructure heading', async ({ page }) => {
+  test('CBOM page loads and shows the inventory heading', async ({ page }) => {
     await page.goto('/de/cbom');
-    // h1 content comes from t('pageTitle') — "Cryptographic Infrastructure" (EN) / "Kryptographische Infrastruktur" (DE)
-    await expect(page.locator('h1').first()).toBeVisible();
+    await expect(page.locator('h1').first()).toHaveText('Kryptografisches Inventar');
   });
 
   test('about page loads', async ({ page }) => {
@@ -52,8 +51,7 @@ test.describe('Smoke — English locale', () => {
   test('CBOM page loads in English', async ({ page }) => {
     await page.goto('/en/cbom');
     await expect(page.locator('h1').first()).toBeVisible();
-    // The CBOM heading is "Cryptographic Infrastructure"
-    await expect(page.getByText('Cryptographic Infrastructure')).toBeVisible();
+    await expect(page.locator('h1').first()).toHaveText('Cryptographic Inventory');
   });
 });
 

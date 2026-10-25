@@ -25,7 +25,7 @@ export default async function KontaktPage({ params }: PageProps) {
   setRequestLocale(locale);
 
   const t = await getTranslations('contact');
-  const { question, token } = generateMathChallenge();
+  const { question, token, issuedAt } = generateMathChallenge();
 
   return (
     <div className="bg-[var(--color-bg-surface)]">
@@ -41,7 +41,7 @@ export default async function KontaktPage({ params }: PageProps) {
       </header>
 
       <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-elevated)] p-6 sm:p-8">
-        <ContactForm captchaQuestion={question} captchaToken={token} locale={locale} />
+        <ContactForm captchaQuestion={question} captchaToken={token} loadedAt={issuedAt} locale={locale} />
       </div>
 
       <div className="mt-4">

@@ -33,13 +33,17 @@ function captchaHmac(answer: string, window: number): string {
     .digest('hex');
 }
 
-/** Call in a Server Component to generate a question and a signed token. */
-export function generateMathChallenge(): { question: string; token: string } {
+/**
+ * Call in a Server Component to generate a question and a signed token.
+ * issuedAt (ms) is when the form was served — the timing check measures from it.
+ */
+export function generateMathChallenge(): { question: string; token: string; issuedAt: number } {
   const a = Math.floor(Math.random() * 10) + 1;
   const b = Math.floor(Math.random() * 10) + 1;
   const answer = String(a + b);
-  const window = Math.floor(Date.now() / 1000 / CAPTCHA_WINDOW_S);
-  return { question: `${a} + ${b}`, token: captchaHmac(answer, window) };
+  const issuedAt = Date.now();
+  const window = Math.floor(issuedAt / 1000 / CAPTCHA_WINDOW_S);
+  return { question: `${a} + ${b}`, token: captchaHmac(answer, window), issuedAt };
 }
 
 /**

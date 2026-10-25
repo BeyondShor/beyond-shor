@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useRef, useState } from 'react';
+import { useActionState, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { submitContact, type FormState } from './actions';
@@ -10,22 +10,13 @@ const INITIAL: FormState = { status: 'idle' };
 interface Props {
   captchaQuestion: string;
   captchaToken: string;
+  loadedAt: number;   // ms, when the server rendered the form — for the timing check
   locale: string;
 }
 
-export default function ContactForm({ captchaQuestion, captchaToken, locale }: Props) {
+export default function ContactForm({ captchaQuestion, captchaToken, loadedAt, locale }: Props) {
   const t = useTranslations('contact');
-  const [state, action, pending] = useActionState(submitContact, INITIAL);
-  const loadedAtRef = useRef<number>(Date.now());
   const formRef = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-    if (state.status === 'success') {
-      formRef.current?.reset();
-      setName(''); setEmail(''); setSubject(''); setMessage('');
-      setCaptchaAnswer(''); setDsgvo(false);
-    }
-  }, [state.status]);
 
   const [name,          setName]          = useState('');
   const [email,         setEmail]         = useState('');
@@ -33,6 +24,17 @@ export default function ContactForm({ captchaQuestion, captchaToken, locale }: P
   const [message,       setMessage]       = useState('');
   const [captchaAnswer, setCaptchaAnswer] = useState('');
   const [dsgvo,         setDsgvo]         = useState(false);
+
+  // Clear the form as part of the submission itself once it went through
+  const [state, action, pending] = useActionState(async (prev: FormState, formData: FormData) => {
+    const next = await submitContact(prev, formData);
+    if (next.status === 'success') {
+      formRef.current?.reset();
+      setName(''); setEmail(''); setSubject(''); setMessage('');
+      setCaptchaAnswer(''); setDsgvo(false);
+    }
+    return next;
+  }, INITIAL);
 
   const canSubmit =
     name.trim().length          > 0 &&
@@ -53,7 +55,7 @@ export default function ContactForm({ captchaQuestion, captchaToken, locale }: P
       >
         <input type="text" name="website" tabIndex={-1} autoComplete="off" />
       </div>
-      <input type="hidden" name="_t" defaultValue={loadedAtRef.current} />
+      <input type="hidden" name="_t" defaultValue={loadedAt} />
       <input type="hidden" name="_c" value={captchaToken} readOnly />
       <input type="hidden" name="_locale" value={locale} />
 

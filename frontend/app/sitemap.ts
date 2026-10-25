@@ -5,8 +5,6 @@ import { getPathname } from '@/i18n/navigation';
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 const LOCALES = ['de', 'en'] as const;
 
-type Locale = (typeof LOCALES)[number];
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 

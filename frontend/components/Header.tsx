@@ -121,7 +121,7 @@ export default function Header() {
           >
             {/* Drawer header */}
             <div className="flex items-center justify-between p-5 border-b border-[var(--color-glass-border)]">
-              <span className="mono-label text-[var(--color-text-dim)]">// navigation</span>
+              <span className="mono-label text-[var(--color-text-dim)]">{'// navigation'}</span>
               <button
                 onClick={() => setMenuOpen(false)}
                 aria-label={t('closeMenu')}

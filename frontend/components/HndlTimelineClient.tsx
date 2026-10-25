@@ -156,7 +156,7 @@ export default function HndlTimelineClient({ events, locale }: { events: TEvent[
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <div className="mb-10">
           <p className="mono-label text-[var(--color-primary)] mb-3">
-            // harvest now, decrypt later
+            {'// harvest now, decrypt later'}
           </p>
           <h2 className="gradient-text text-2xl sm:text-3xl font-bold mb-4">
             Q-Day Timeline
