@@ -9,9 +9,8 @@ import RiskTab from '@/components/shorsight/RiskTab';
 type Tab = 'inventory' | 'risk';
 
 /**
- * Compact rendering of the ShorSight result for small screens, where ShorSight's
- * own UI (embedded on /cbom from lg upwards) does not fit. Same data: the signed
- * cbom.json and the governance result written by shorsight/build_inventory.py.
+ * Rendering of the ShorSight result on /cbom, at every width: the signed cbom.json
+ * and the governance result written by shorsight/build_inventory.py.
  */
 export default function ShorSightReport() {
   const t = useTranslations('cbom');

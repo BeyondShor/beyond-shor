@@ -4,17 +4,14 @@ import { join } from 'path';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { createHighlighter } from 'shiki';
 import CbomSignatureBadge from '@/components/CbomSignatureBadge';
-import ShorSightFrame from '@/components/ShorSightFrame';
 import ShorSightReport from '@/components/ShorSightReport';
 import cbomData from '@/public/cbom.json';
 
 /**
- * From lg upwards the inventory is ShorSight's own UI, built into a static page by
- * shorsight/build_inventory.py and embedded below. It does not fit a phone, so
- * smaller screens get ShorSightReport, a compact rendering of the same data.
+ * The inventory is ShorSightReport, a React rendering of ShorSight's result: the
+ * signed cbom.json plus the risk analysis that shorsight/build_inventory.py writes
+ * to data/governance.json. It works at every width and in both languages.
  */
-const SHORSIGHT_PAGE = '/shorsight/inventory.html';
-
 const assets = cbomData.components.filter(c => c.type === 'cryptographic-asset');
 const libs   = cbomData.components.filter(c => c.type === 'library');
 const tool   = cbomData.metadata.tools.components[0];
@@ -81,8 +78,6 @@ export default async function CbomPage({ params }: PageProps) {
               {t('intro', { count: assets.length, libs: libs.length })}
             </p>
             <p className="text-[var(--color-text-muted)] leading-relaxed">
-              <span className="hidden lg:inline">{t('embedNote')}</span>
-              <span className="lg:hidden">{t('compactNote')}</span>{' '}
               {t('detailNote')}
             </p>
             <p className="text-[var(--color-text-muted)] leading-relaxed">{t('scopeNote')}</p>
@@ -113,15 +108,8 @@ export default async function CbomPage({ params }: PageProps) {
           )}
         </header>
 
-        {/* ── ShorSight: own UI on desktop, compact rendering below lg ──────── */}
-        <section className="hidden lg:block">
-          <p className="mono-label text-[var(--color-text-muted)] mb-3">{t('embedLabel')}</p>
-          <div className="overflow-hidden rounded-xl border border-[var(--color-glass-border)] bg-[#0a0e27] shadow-[0_0_48px_var(--color-primary-glow)]">
-            <ShorSightFrame src={SHORSIGHT_PAGE} title={t('embedTitle')} />
-          </div>
-        </section>
-
-        <section className="lg:hidden">
+        {/* ── ShorSight result ──────────────────────────────────────────────── */}
+        <section>
           <ShorSightReport />
         </section>
 

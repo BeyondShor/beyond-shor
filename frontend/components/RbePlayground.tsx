@@ -195,7 +195,7 @@ export default function RbePlayground() {
   const t = useTranslations('rbePlayground');
   const locale = useLocale();
   const fmt = (v: number, digits = 0) =>
-    v.toLocaleString(locale === 'de' ? 'de-DE' : 'en-GB', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    v.toLocaleString(locale === 'de' ? 'de-DE' : 'en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
   const rich = (key: Parameters<typeof t.rich>[0], values: Record<string, string | number> = {}) =>
     t.rich(key, {
       ...values,

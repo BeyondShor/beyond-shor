@@ -14,8 +14,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const t = await getTranslations({ locale, namespace: 'home' });
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
   return {
-    title: { absolute: 'Beyond Shor — Post-Quantum Cryptography' },
+    title: { absolute: t('metaTitle') },
     description: t('heroSubtitle'),
+    // replaces the layout's openGraph as a whole, so everything has to be repeated here
+    openGraph: {
+      type: 'website',
+      siteName: 'Beyond Shor',
+      title: t('metaTitle'),
+      description: t('heroSubtitle'),
+      locale: locale === 'de' ? 'de_DE' : 'en_US',
+      images: [{ url: '/og-default.png', width: 1200, height: 630, alt: t('metaTitle') }],
+    },
     alternates: {
       canonical: `${BASE_URL}/${locale}`,
       languages: {

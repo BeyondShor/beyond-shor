@@ -14,8 +14,6 @@ export default function robots(): MetadataRoute.Robots {
           '/en/imprint',
           '/de/datenschutz',
           '/en/privacy-policy',
-          '/de/about',
-          '/en/about',
           '/de/kontakt',
           '/en/contact',
         ],

@@ -1455,6 +1455,21 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
               <span>{t('mcElieceWarning')}</span>
             </div>
           )}
+          {isMcEliece && (
+            <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-xs text-amber-400/90">
+              <span aria-hidden="true" className="mt-0.5 shrink-0">⚠</span>
+              <span>
+                {t.rich('mcElieceBsiNote', {
+                  a: (chunks) => (
+                    <Link href={{ pathname: '/blog/[slug]', params: { slug: 'classic-mceliece' } }}
+                      className="underline underline-offset-2 hover:text-amber-300">
+                      {chunks}
+                    </Link>
+                  ),
+                })}
+              </span>
+            </div>
+          )}
 
           {/* Implementation info */}
           {kem === 'mlkem' && (

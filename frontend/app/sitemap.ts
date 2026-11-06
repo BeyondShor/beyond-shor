@@ -23,6 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { href: '/datenschutz',  changeFrequency: 'monthly', priority: 0.6 },
     { href: '/playground',   changeFrequency: 'monthly', priority: 0.6 },
     { href: '/verify',       changeFrequency: 'monthly', priority: 0.6 },
+    { href: '/rbe',          changeFrequency: 'monthly', priority: 0.6 },
   ];
 
   for (const locale of LOCALES) {

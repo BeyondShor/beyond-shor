@@ -13,7 +13,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: t('fallbackTitle'),
     description: t('metaDescription'),
-    robots: { index: false, follow: false },
   };
 }
 

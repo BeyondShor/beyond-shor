@@ -114,7 +114,7 @@
           "algorithmFamily": "AES",
           "parameterSetIdentifier": "256",
           "mode": "gcm",
-          "nistQuantumSecurityLevel": 1,
+          "nistQuantumSecurityLevel": 5,
           "cryptoFunctions": [
             "keyderive"
           ]
@@ -169,6 +169,10 @@
         {
           "name": "crypto:source",
           "value": "beyond-shor"
+        },
+        {
+          "name": "beyond-shor:correction",
+          "value": "AES-256 key search is the reference for NIST category 5, not 1. (cryptoProperties.algorithmProperties.nistQuantumSecurityLevel: 1 → 5)"
         }
       ]
     },
@@ -306,7 +310,7 @@
         },
         {
           "name": "crypto:classicalStatus",
-          "value": "secure"
+          "value": "weak"
         },
         {
           "name": "crypto:family",
@@ -322,7 +326,7 @@
         },
         {
           "name": "crypto:rationale",
-          "value": "Code-based post-quantum KEM; conservative, large public keys."
+          "value": "Code-based post-quantum KEM. Since 2026-10-01 the BSI advises against new deployments: structural attacks published in 2026 put the estimated security below the claimed levels. Kept in the playground for comparison only."
         },
         {
           "name": "crypto:library",
@@ -331,6 +335,10 @@
         {
           "name": "crypto:source",
           "value": "beyond-shor"
+        },
+        {
+          "name": "beyond-shor:correction",
+          "value": "New structural cryptanalysis (2026) and the BSI advisory of 2026-10-01. (crypto:classicalStatus: \"secure\" → \"weak\"; crypto:rationale: \"Code-based post-quantum KEM; conservative, large public keys.\" → \"Code-based post-quantum KEM. Since 2026-10-01 the BSI advises against new deployments: structural attacks published in 2026 put the estimated security below the claimed levels. Kept in the playground for comparison only.\")"
         }
       ]
     },
@@ -341,7 +349,7 @@
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
-          "primitive": "key-agree",
+          "primitive": "signature",
           "parameterSetIdentifier": "256",
           "ellipticCurve": "nist/P-256",
           "cryptoFunctions": [
@@ -401,7 +409,7 @@
         },
         {
           "name": "crypto:rationale",
-          "value": "NIST P-256 elliptic curve (use not inferred from a bare curve constant); broken by Shor's algorithm."
+          "value": "ECDSA over NIST P-256 (sign/verify in the signature playground); broken by Shor's algorithm."
         },
         {
           "name": "crypto:library",
@@ -410,6 +418,10 @@
         {
           "name": "crypto:source",
           "value": "beyond-shor"
+        },
+        {
+          "name": "beyond-shor:correction",
+          "value": "Only sign and verify are used (ECDSA), so the primitive is signature, not key-agree. (cryptoProperties.algorithmProperties.primitive: \"key-agree\" → \"signature\"; crypto:rationale: \"NIST P-256 elliptic curve (use not inferred from a bare curve constant); broken by Shor's algorithm.\" → \"ECDSA over NIST P-256 (sign/verify in the signature playground); broken by Shor's algorithm.\")"
         }
       ]
     },

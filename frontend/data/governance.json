@@ -9,17 +9,39 @@
       "defaultShelfLifeYears": 5
     },
     "buckets": {
-      "acute": 0,
+      "acute": 1,
       "quantum": 2,
-      "none": 12
+      "none": 11
     },
     "items": [
       {
+        "component": "Classic-McEliece",
+        "name": "Classic McEliece",
+        "primitive": "kem",
+        "category": "acute",
+        "role": "confidentiality",
+        "quantum": "safe",
+        "classical": "weak",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 0,
+        "summary": "Weak with today's computers — should be replaced.",
+        "mosca": "",
+        "deadlineYear": 2026,
+        "startByYear": 2026,
+        "migrationStatus": "pqc-only",
+        "vendorDependency": false
+      },
+      {
         "component": "EC-P256",
         "name": "EC",
-        "primitive": "key-agree",
+        "primitive": "signature",
         "category": "quantum",
-        "role": "confidentiality",
+        "role": "signature",
         "quantum": "unsafe",
         "classical": "secure",
         "sources": [
@@ -30,9 +52,9 @@
         "urgent": false,
         "priority": 2,
         "summary": "Secure today, but a future quantum computer (Shor's algorithm) can break it.",
-        "mosca": "Protects data ~5y; migration ~1y vs ~9y until 2035. 5+1=6 ≤ 9 → there is time; plan the migration.",
-        "deadlineYear": 2035,
-        "startByYear": 2034,
+        "mosca": "Signatures can't be forged retroactively; replace before a CRQC (~2030, Google/Cloudflare; BSI ~2035); migration ~1y. 1 ≤ 4 → plan the migration.",
+        "deadlineYear": 2030,
+        "startByYear": 2029,
         "migrationStatus": "not applicable",
         "vendorDependency": false
       },
@@ -100,28 +122,6 @@
         "deadlineYear": null,
         "startByYear": null,
         "migrationStatus": "not-started",
-        "vendorDependency": false
-      },
-      {
-        "component": "Classic-McEliece",
-        "name": "Classic McEliece",
-        "primitive": "kem",
-        "category": "none",
-        "role": "confidentiality",
-        "quantum": "safe",
-        "classical": "secure",
-        "sources": [
-          "beyond-shor"
-        ],
-        "cves": [],
-        "cwes": [],
-        "urgent": false,
-        "priority": 3,
-        "summary": "Quantum-safe and secure today — no action needed.",
-        "mosca": "",
-        "deadlineYear": null,
-        "startByYear": null,
-        "migrationStatus": "pqc-only",
         "vendorDependency": false
       },
       {
@@ -332,14 +332,14 @@
         "owner": "Beyond Shor",
         "riskOwner": "Marvin Sprey",
         "dataClassification": "public",
-        "acute": 0,
+        "acute": 1,
         "quantum": 2,
-        "none": 12,
+        "none": 11,
         "urgent": false,
         "verdicts": [
           "AES-256-GCM [none]",
           "AES-GCM [none]",
-          "Classic-McEliece [none]",
+          "Classic-McEliece [acute]",
           "EC-P256 [quantum]",
           "FrodoKEM-1344-AES [none]",
           "HKDF [none]",
@@ -352,7 +352,7 @@
           "SLH-DSA-SHA2-128s [none]",
           "X25519 [quantum]"
         ],
-        "deadlineYear": 2035,
+        "deadlineYear": 2026,
         "securityObjectives": {
           "confidentiality": 1,
           "integrity": 4,
@@ -479,8 +479,33 @@
             "impact": 2,
             "category": "medium",
             "categoryRank": 2,
-            "count": 0,
-            "tuples": []
+            "count": 1,
+            "tuples": [
+              {
+                "component": "Classic-McEliece",
+                "asset": "beyond-shor",
+                "role": "confidentiality",
+                "primitive": "kem",
+                "urgency": 3,
+                "impactLevel": 2,
+                "impactState": "confirmed",
+                "category": "medium",
+                "categoryRank": 2,
+                "allowedTreatments": [
+                  "avoid",
+                  "reduce",
+                  "transfer",
+                  "accept"
+                ],
+                "treatment": "",
+                "treatmentNote": "",
+                "decidedBy": "Marvin Sprey",
+                "migrationStatus": "pqc-only",
+                "vendorDependency": false,
+                "quantum": "safe",
+                "classical": "weak"
+              }
+            ]
           },
           {
             "urgency": 4,
@@ -539,8 +564,31 @@
             "impact": 4,
             "category": "high",
             "categoryRank": 3,
-            "count": 0,
-            "tuples": []
+            "count": 1,
+            "tuples": [
+              {
+                "component": "EC-P256",
+                "asset": "beyond-shor",
+                "role": "signature",
+                "primitive": "signature",
+                "urgency": 2,
+                "impactLevel": 4,
+                "impactState": "confirmed",
+                "category": "high",
+                "categoryRank": 3,
+                "allowedTreatments": [
+                  "avoid",
+                  "reduce"
+                ],
+                "treatment": "accept",
+                "treatmentNote": "ECDSA P-256 is kept as the classical reference point in the signature benchmark.",
+                "decidedBy": "Marvin Sprey",
+                "migrationStatus": "not applicable",
+                "vendorDependency": false,
+                "quantum": "unsafe",
+                "classical": "secure"
+              }
+            ]
           },
           {
             "urgency": 3,
@@ -603,32 +651,8 @@
             "impact": 2,
             "category": "medium",
             "categoryRank": 2,
-            "count": 2,
+            "count": 1,
             "tuples": [
-              {
-                "component": "EC-P256",
-                "asset": "beyond-shor",
-                "role": "confidentiality",
-                "primitive": "key-agree",
-                "urgency": 2,
-                "impactLevel": 2,
-                "impactState": "confirmed",
-                "category": "medium",
-                "categoryRank": 2,
-                "allowedTreatments": [
-                  "avoid",
-                  "reduce",
-                  "transfer",
-                  "accept"
-                ],
-                "treatment": "accept",
-                "treatmentNote": "ECDSA P-256 is kept as the classical reference point in the signature benchmark.",
-                "decidedBy": "Marvin Sprey",
-                "migrationStatus": "not applicable",
-                "vendorDependency": false,
-                "quantum": "unsafe",
-                "classical": "secure"
-              },
               {
                 "component": "X25519",
                 "asset": "beyond-shor",

@@ -19,7 +19,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: t('pageTitle'),
     description: t('metaDescription'),
-    robots: { index: false, follow: false },
   };
 }
 
@@ -33,7 +32,7 @@ const DERIVED = derive(PARAMS);
 
 // Demo values come straight from the parameters the code uses, so table and code cannot drift apart
 const demoValues = (locale: string) => ({
-  q:   PARAMS.q.toLocaleString(locale === 'de' ? 'de-DE' : 'en-GB'),
+  q:   PARAMS.q.toLocaleString(locale === 'de' ? 'de-DE' : 'en-US'),
   nR:  PARAMS.nR,
   n:   PARAMS.n,
   d:   DERIVED.d,

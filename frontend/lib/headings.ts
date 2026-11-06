@@ -13,6 +13,11 @@ export interface Heading {
 export function slugify(text: string): string {
   return text
     .toLowerCase()
+    // transliterate German umlauts, otherwise \w drops them ("Einführung" → "einfhrung")
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
     .replace(/[^\w\s-]/g, '')
     .trim()
     .replace(/\s+/g, '-');

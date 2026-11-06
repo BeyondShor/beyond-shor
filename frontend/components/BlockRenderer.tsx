@@ -6,6 +6,7 @@ import rehypeKatex from 'rehype-katex';
 import type { ContentBlock, RichTextBlock, MediaBlock, QuoteBlock, SliderBlock } from '@/lib/types';
 import { getStrapiUrl } from '@/lib/strapi';
 import { Link } from '@/i18n/navigation';
+import { routing } from '@/i18n/routing';
 import { applyAutoLinksToMarkdown } from '@/lib/autolinker';
 import type { AutoLink } from '@/lib/autolinker';
 import { createHighlighter, type Highlighter } from 'shiki';
@@ -75,8 +76,15 @@ async function RichText({ body }: { block: RichTextBlock; body: string }) {
             const isSafe = href && /^(https?:\/\/|\/|#|mailto:)/.test(href);
             if (!isSafe) return <>{children}</>;
             if (href.startsWith('/blog/')) {
-              const slug = href.slice('/blog/'.length).split('?')[0];
+              const slug = href.slice('/blog/'.length).split(/[?#]/)[0];
               return <Link href={{ pathname: '/blog/[slug]', params: { slug } }}>{children}</Link>;
+            }
+            // other pages of this site, written locale-free in Strapi ("/cbom", "/playground#pki"):
+            // same tab, current locale
+            const [pathname, hash] = href.split('#');
+            if (pathname in routing.pathnames && pathname !== '/blog/[slug]') {
+              const internal = pathname as Exclude<keyof typeof routing.pathnames, '/blog/[slug]'>;
+              return <Link href={{ pathname: internal, hash }}>{children}</Link>;
             }
             return (
               <a href={href} target="_blank" rel="noopener noreferrer">

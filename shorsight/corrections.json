@@ -1,0 +1,23 @@
+{
+  "_comment": "Manual corrections applied by scripts/sign-cbom.mjs to ShorSight's raw scan before it is published and signed. Each corrected component records what was changed in a 'beyond-shor:correction' property. Fix these in ShorSight itself, then drop the entry.",
+  "components": {
+    "crypto/aes-256-gcm": {
+      "set": { "cryptoProperties.algorithmProperties.nistQuantumSecurityLevel": 5 },
+      "reason": "AES-256 key search is the reference for NIST category 5, not 1."
+    },
+    "crypto/ec-p256": {
+      "set": {
+        "cryptoProperties.algorithmProperties.primitive": "signature",
+        "properties.crypto:rationale": "ECDSA over NIST P-256 (sign/verify in the signature playground); broken by Shor's algorithm."
+      },
+      "reason": "Only sign and verify are used (ECDSA), so the primitive is signature, not key-agree."
+    },
+    "crypto/classic-mceliece": {
+      "set": {
+        "properties.crypto:classicalStatus": "weak",
+        "properties.crypto:rationale": "Code-based post-quantum KEM. Since 2026-10-01 the BSI advises against new deployments: structural attacks published in 2026 put the estimated security below the claimed levels. Kept in the playground for comparison only."
+      },
+      "reason": "New structural cryptanalysis (2026) and the BSI advisory of 2026-10-01."
+    }
+  }
+}

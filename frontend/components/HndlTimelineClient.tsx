@@ -538,7 +538,7 @@ export default function HndlTimelineClient({ events, locale }: { events: TEvent[
         {/* ── Q-Day slider ─────────────────────────────────────────────────── */}
         <div className="mt-4 rounded-xl glass-panel p-5">
           <div className="flex items-center justify-between mb-1">
-            <p className="mono-label text-[var(--color-text-muted)]">{en ? 'Adjust Q-Day estimate' : 'Q-Day Schätzung verschieben'}</p>
+            <p className="mono-label text-[var(--color-text-muted)]">{en ? 'Adjust Q-Day estimate' : 'Q-Day-Schätzung verschieben'}</p>
             <span className="font-mono text-lg font-bold" style={{ color: '#fb923c' }}>
               {qdayYear}
             </span>
@@ -552,7 +552,7 @@ export default function HndlTimelineClient({ events, locale }: { events: TEvent[
             value={qdayYear}
             onChange={e => setQdayYear(Number(e.target.value))}
             className="w-full accent-orange-400 mt-3"
-            aria-label={en ? `Q-Day estimate: ${qdayYear}` : `Q-Day Schätzung: ${qdayYear}`}
+            aria-label={en ? `Q-Day estimate: ${qdayYear}` : `Q-Day-Schätzung: ${qdayYear}`}
           />
 
           <div className="flex justify-between mt-1 font-mono text-[10px] text-[var(--color-text-muted)]">
@@ -576,7 +576,7 @@ export default function HndlTimelineClient({ events, locale }: { events: TEvent[
             <p className="text-sm font-semibold text-red-300 leading-snug">
               {en
                 ? <>Whenever Q-Day arrives, data you send <span className="text-red-200">today</span> is already exposed.</>
-                : <>Egal, wann Q-Day kommt: Was du <span className="text-red-200">heute</span> verschickst, ist schon jetzt gefährdet.</>}
+                : <>Egal, wann Q-Day kommt: Was Sie <span className="text-red-200">heute</span> verschicken, ist schon jetzt gefährdet.</>}
               <span className="block mt-1 text-xs font-normal text-red-400/80">
                 {en
                   ? `Traffic recorded today can be decrypted after Q-Day. If Q-Day came in ${qdayYear}, anything that must stay confidential for more than ${Math.max(qdayYear - CURRENT_YEAR, 0)} years would already be affected.`

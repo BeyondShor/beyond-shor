@@ -82,7 +82,7 @@ export default async function RssPage({ params }: PageProps) {
                 );
                 const teaser = firstRichText ? stripMarkdown(firstRichText.body) : null;
                 const pubDate = new Date(goLiveDate(article)).toLocaleDateString(
-                  locale === 'de' ? 'de-DE' : 'en-GB',
+                  locale === 'de' ? 'de-DE' : 'en-US',
                   { day: 'numeric', month: 'long', year: 'numeric' },
                 );
 

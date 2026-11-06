@@ -72,24 +72,32 @@ export function applyAutoLinksToMarkdown(
     segments.push({ protected: false, content: markdown.slice(lastIndex) });
   }
 
-  return segments
-    .map((seg) => {
-      if (seg.protected) return seg.content;
+  // A link inserted for one slug becomes a protected segment right away, so a
+  // shorter slug can never match inside it: "Classic McEliece" → classic-mceliece
+  // must not turn into [Classic [McEliece](/blog/mceliece)](/blog/classic-mceliece).
+  for (const link of relevantLinks) {
+    if (linked.has(link.slug)) continue;
+    const regex = slugToRegex(link.slug);
 
-      let text = seg.content;
-      for (const link of relevantLinks) {
-        if (linked.has(link.slug)) continue;
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      if (seg.protected) continue;
+      regex.lastIndex = 0;
+      const m = regex.exec(seg.content);
+      if (!m) continue;
 
-        const regex = slugToRegex(link.slug);
-        let found = false;
-        text = text.replace(regex, (matchedText) => {
-          if (found) return matchedText; // skip subsequent occurrences
-          found = true;
-          linked.add(link.slug);
-          return `[${matchedText}](${link.path})`;
-        });
-      }
-      return text;
-    })
-    .join('');
+      const before = seg.content.slice(0, m.index);
+      const after = seg.content.slice(m.index + m[0].length);
+      segments.splice(
+        i, 1,
+        { protected: false, content: before },
+        { protected: true, content: `[${m[0]}](${link.path})` },
+        { protected: false, content: after },
+      );
+      linked.add(link.slug);
+      break; // first occurrence only
+    }
+  }
+
+  return segments.map((seg) => seg.content).join('');
 }
