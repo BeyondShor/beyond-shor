@@ -1516,10 +1516,8 @@
       "aria": "Schaubild der PKI mit Beteiligten und Datenflüssen",
       "steps": "Ablauf",
       "start": "Start",
-      "replay": "Noch einmal abspielen",
       "toDetails": "↓ Zu den Details",
-      "idleText": "Mit Start läuft die PKI des gewählten Profils einmal komplett durch: Schlüsselzeremonie, Antrag, Domainprüfung, Ausstellung und Handshake. Darunter können Sie jeden Schritt im Detail nachlesen und einzeln wiederholen.",
-      "doneText": "Durchgelaufen. Alle Ergebnisse stehen unten in den Schritten 01 bis 03, die Vertiefungen ab Schritt 04 bauen darauf auf.",
+      "idleText": "Start führt Sie Schritt für Schritt durch die PKI des gewählten Profils: Schlüsselzeremonie, Antrag, Domainprüfung, Ausstellung, Handshake und Ergebnis. Jeder Schritt läuft wirklich und zeigt seine echten Werte. Mit Weiter geht es zum nächsten Schritt, mit Zurück zum vorherigen. Alle Details stehen darunter.",
       "verdictText": "{accepted} von {total} Clients akzeptieren die Verbindung. Warum, steht unten in Schritt 03.",
       "node": {
         "ra": "Registrierungsstelle",
@@ -1581,6 +1579,24 @@
         "verdict": {
           "short": "Ergebnis"
         }
+      },
+      "stepOf": "Schritt {n} von {total}",
+      "running": "wird ausgeführt …",
+      "back": "Zurück",
+      "next": "Weiter",
+      "restart": "Neu starten",
+      "fact": {
+        "ceremony": "Root: {alg}, öffentlicher Schlüssel {pk} Byte · Root-Zertifikat {root} Byte · Zertifikat der ausstellenden CA {issuing} Byte",
+        "ceremonyMtc": "Zwei Cosigner-Schlüssel mit {alg}, je {pk} Byte öffentlicher Schlüssel · kein Root-Zertifikat",
+        "request": "Schlüsselpaar {alg} in {ms} erzeugt · Antrag (CSR) {csr} Byte · Besitznachweis gültig",
+        "validate": "{name} TXT „{value}“ · geprüft von {n, plural, one {# Standort} other {# Standorten}} · CAA: {caa}",
+        "caaOk": "erlaubt diese CA",
+        "caaBad": "verbietet diese CA",
+        "caaPrivate": "nicht vorgeschrieben",
+        "issuePrivate": "Serverzertifikat {bytes} Byte, signiert mit {alg}",
+        "issueWeb": "Serverzertifikat {bytes} Byte mit zwei eingebetteten SCTs, signiert mit {alg}",
+        "issueMtc": "Log mit {size} Einträgen · Inklusionsbeweis aus {hashes} Hashes · landmark-relativ {lr} Byte, standalone {sa} Byte",
+        "handshake": "Erster Server-Flug {tcp} Byte über TCP · über QUIC {quic} von höchstens {limit} Byte vor der Adressbestätigung"
       }
     }
   }

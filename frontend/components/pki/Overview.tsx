@@ -1,12 +1,13 @@
 'use client';
 
-// Animated overview: the same steps the lab runs, as packets moving between the
-// parties. The animation follows the real work (key ceremony, request, ACME,
-// issuance, handshake); the details below are filled by the same run.
+// Step-by-step overview: the lab's steps as packets moving between the parties.
+// Each step runs the real work (key ceremony, request, ACME, issuance, handshake)
+// and shows its actual values; the details below are filled by the same run.
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { ALGS, PRIVATE_CLIENTS, PROFILES, WEB_CLIENTS, type ProfileId } from '@/lib/pki/meta';
-import type { HandshakeView } from '@/lib/pki/worker-types';
+import type { HandshakeView, LeafView, PkiView } from '@/lib/pki/worker-types';
+import { useFormat } from './ui';
 
 export type Phase = 'idle' | 'ceremony' | 'request' | 'validate' | 'issue' | 'handshake' | 'verdict';
 export const PHASES: Phase[] = ['ceremony', 'request', 'validate', 'issue', 'handshake', 'verdict'];
@@ -89,39 +90,36 @@ function pointAt(pts: Pt[], f: number): Pt {
 
 interface Move { from: NodeId; to: NodeId; label: string; delay: number }
 
-const DURATION = 1100;          // ms per packet
-export const PHASE_MS = 2600;   // minimum time a phase stays on screen
+const DURATION = 1700;          // ms a packet travels
+const PAUSE = 1500;             // ms before the step's animation repeats
 
-function useNarrow() {
+function useMedia(query: string) {
   return useSyncExternalStore(
-    (cb) => { const m = window.matchMedia('(max-width: 639px)'); m.addEventListener('change', cb); return () => m.removeEventListener('change', cb); },
-    () => window.matchMedia('(max-width: 639px)').matches,
+    (cb) => { const m = window.matchMedia(query); m.addEventListener('change', cb); return () => m.removeEventListener('change', cb); },
+    () => window.matchMedia(query).matches,
     () => false,
   );
 }
 
-function useReducedMotion() {
-  return useSyncExternalStore(
-    (cb) => { const m = window.matchMedia('(prefers-reduced-motion: reduce)'); m.addEventListener('change', cb); return () => m.removeEventListener('change', cb); },
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-    () => false,
-  );
-}
+export interface TourData { pki: PkiView | null; leaf: LeafView | null; handshakes: HandshakeView[] | null }
 
-export default function Overview({ profileId, phase, attacker, handshakes, onStart, running, done }: {
-  profileId: ProfileId; phase: Phase; attacker: boolean; handshakes: HandshakeView[] | null;
-  onStart: () => void; running: boolean; done: boolean;
+export default function Overview({ profileId, step, attacker, data, busy, onStart, onNext, onBack }: {
+  profileId: ProfileId; step: number; attacker: boolean; data: TourData; busy: boolean;
+  onStart: () => void; onNext: () => void; onBack: () => void;
 }) {
   const t = useTranslations('pkiLab');
-  const narrow = useNarrow();
-  const reduced = useReducedMotion();
+  const f = useFormat();
+  const narrow = useMedia('(max-width: 639px)');
+  const reduced = useMedia('(prefers-reduced-motion: reduce)');
   const L = narrow ? NARROW : WIDE;
   const p = PROFILES[profileId];
   const priv = p.scope === 'private';
   const clients = priv ? PRIVATE_CLIENTS : WEB_CLIENTS;
   const kind = p.mtc ? 'mtc' : priv ? 'private' : 'web';
+  const phase: Phase = step < 0 ? 'idle' : PHASES[step];
+  const handshakes = data.handshakes;
 
-  // packets per phase, read from the profile
+  // packets per step, derived from the profile
   const moves: Record<Phase, Move[]> = {
     idle: [],
     ceremony: p.mtc
@@ -130,38 +128,37 @@ export default function Overview({ profileId, phase, attacker, handshakes, onSta
     request: [{ from: 'server', to: 'ra', label: 'CSR', delay: 0 }],
     validate: [
       { from: 'server', to: 'dns', label: 'TXT', delay: 0 },
-      { from: 'ra', to: 'dns', label: t('overview.pkt.lookup'), delay: 900 },
+      { from: 'ra', to: 'dns', label: t('overview.pkt.lookup'), delay: 1500 },
     ],
     issue: p.mtc
       ? [{ from: 'root', to: 'issuing', label: t('overview.pkt.subtree'), delay: 0 },
-         { from: 'issuing', to: 'root', label: t('overview.pkt.cosignature'), delay: 700 },
-         { from: 'root', to: 'server', label: t('overview.pkt.cert'), delay: 1400 }]
+         { from: 'issuing', to: 'root', label: t('overview.pkt.cosignature'), delay: 1300 },
+         { from: 'root', to: 'server', label: t('overview.pkt.cert'), delay: 2600 }]
       : priv
         ? [{ from: 'issuing', to: 'aux', label: t('overview.pkt.logEntry'), delay: 0 },
-           { from: 'issuing', to: 'server', label: t('overview.pkt.cert'), delay: 600 }]
+           { from: 'issuing', to: 'server', label: t('overview.pkt.cert'), delay: 1300 }]
         : [{ from: 'issuing', to: 'aux', label: t('overview.pkt.precert'), delay: 0 },
-           { from: 'aux', to: 'issuing', label: 'SCT', delay: 800 },
-           { from: 'issuing', to: 'server', label: t('overview.pkt.cert'), delay: 1500 }],
-    handshake: (['c0', 'c1', 'c2'] as const).map((c, i) => ({ from: 'server', to: c, label: t('overview.pkt.chain'), delay: i * 250 })),
+           { from: 'aux', to: 'issuing', label: 'SCT', delay: 1300 },
+           { from: 'issuing', to: 'server', label: t('overview.pkt.cert'), delay: 2600 }],
+    handshake: (['c0', 'c1', 'c2'] as const).map((c, i) => ({ from: 'server', to: c, label: t('overview.pkt.chain'), delay: i * 400 })),
     // revocation data: private clients fetch CRLs; browsers use pre-distributed data, the CLI tool checks nothing
     verdict: p.mtc ? [{ from: 'aux', to: 'c1', label: 'Landmark', delay: 0 }]
-      : priv ? (['c0', 'c1', 'c2'] as const).map((c, i) => ({ from: 'crl', to: c, label: 'CRL', delay: i * 350 }))
-        : (['c0', 'c1'] as const).map((c, i) => ({ from: 'crl', to: c, label: t('overview.pkt.revocation'), delay: i * 350 })),
+      : priv ? (['c0', 'c1', 'c2'] as const).map((c, i) => ({ from: 'crl', to: c, label: 'CRL', delay: i * 500 }))
+        : (['c0', 'c1'] as const).map((c, i) => ({ from: 'crl', to: c, label: t('overview.pkt.revocation'), delay: i * 500 })),
   };
 
+  // the step's animation runs in a loop while the step is shown
+  const cycle = Math.max(0, ...moves[phase].map((m) => m.delay)) + DURATION + PAUSE;
   const [now, setNow] = useState(0);
   const start = useRef(0);
   useEffect(() => {
     if (phase === 'idle' || reduced) return;
     start.current = performance.now();
     let raf = 0;
-    const tick = () => {
-      setNow(performance.now() - start.current);
-      if (performance.now() - start.current < PHASE_MS + 200) raf = requestAnimationFrame(tick);
-    };
+    const tick = () => { setNow((performance.now() - start.current) % cycle); raf = requestAnimationFrame(tick); };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [phase, reduced]);
+  }, [phase, reduced, cycle]);
 
   const activeNodes = new Set<NodeId>(moves[phase].flatMap((m) => [m.from, m.to]));
   if (phase === 'ceremony') activeNodes.add('root');
@@ -191,20 +188,48 @@ export default function Overview({ profileId, phase, attacker, handshakes, onSta
   else edges.push(['crl', 'c0'], ['crl', 'c1']);
 
   const verdictOf = (id: NodeId) => {
-    if (!handshakes || !['c0', 'c1', 'c2'].includes(id)) return undefined;
+    if (phase !== 'verdict' || !handshakes || !['c0', 'c1', 'c2'].includes(id)) return undefined;
     return handshakes.find((h) => h.client === clients[Number(id[1])])?.accepted;
   };
-  const accepted = handshakes?.filter((h) => h.accepted).length ?? 0;
-  const stepIndex = PHASES.indexOf(phase);
+
+  // the real values of this run, per step
+  const fact = (): string | null => {
+    const { pki, leaf } = data;
+    switch (phase) {
+      case 'ceremony':
+        if (!pki) return null;
+        if (pki.cosigners) return t('overview.fact.ceremonyMtc', { alg: pki.cosigners[0].alg, pk: f.n(pki.cosigners[0].publicKeyBytes) });
+        return t('overview.fact.ceremony', { alg: ALGS[p.root].name, pk: f.n(pki.root!.parsed.publicKey.length), root: f.n(pki.root!.der.length), issuing: f.n(pki.issuing!.der.length) });
+      case 'request':
+        if (!leaf) return null;
+        return t('overview.fact.request', { alg: ALGS[p.leaf].name, ms: f.ms(leaf.timings.keygen), csr: f.n(leaf.csrBytes) });
+      case 'validate':
+        if (!leaf?.acme) return null;
+        return t('overview.fact.validate', {
+          name: leaf.acme.txtName, value: `${leaf.acme.txtValue.slice(0, 12)}…`, n: leaf.acme.perspectives.length,
+          caa: t(leaf.acme.caa.checked ? (leaf.acme.caa.ok ? 'overview.fact.caaOk' : 'overview.fact.caaBad') : 'overview.fact.caaPrivate'),
+        });
+      case 'issue':
+        if (!leaf) return null;
+        if (leaf.mtc) return t('overview.fact.issueMtc', { lr: f.n(leaf.mtc.landmark.der.length), sa: f.n(leaf.mtc.standalone.der.length), hashes: leaf.mtc.proofHashes, size: f.n(leaf.mtc.logSize) });
+        return t(priv ? 'overview.fact.issuePrivate' : 'overview.fact.issueWeb', { bytes: f.n(leaf.leaf.der.length), alg: ALGS[p.intermediate].name });
+      case 'handshake': {
+        // the client that supports the profile best (current client / browser with MTC landmark)
+        const h = handshakes?.find((x) => x.client === 'modern' || x.client === 'browserMtc') ?? handshakes?.find((x) => x.validation.path.length > 0);
+        if (!h) return null;
+        return t('overview.fact.handshake', { tcp: f.n(h.tls.transport.tcpServerBytes), quic: f.n(h.tls.transport.quicServerBytes), limit: f.n(h.tls.transport.quicLimit) });
+      }
+      case 'verdict':
+        if (!handshakes) return null;
+        return handshakes.map((h) => `${t(`clients.${h.client}.name`)} ${h.accepted ? '✓' : '✗'}`).join(' · ');
+      default: return null;
+    }
+  };
+  const factText = fact();
 
   return (
     <figure className="rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-bg-surface)]/70 p-3 sm:p-4">
       <svg viewBox={`0 0 ${L.w} ${L.h}`} className="w-full h-auto" role="img" aria-label={t('overview.aria')}>
-        <defs>
-          <marker id="pki-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto">
-            <path d="M0,0 L6,3 L0,6 z" fill="#475569" />
-          </marker>
-        </defs>
         {edges.map(([a, b]) => {
           const on = moves[phase].some((m) => (m.from === a && m.to === b) || (m.from === b && m.to === a));
           return <polyline key={`${a}-${b}`} points={route(L, a, b).map((q) => q.join(',')).join(' ')} fill="none"
@@ -213,27 +238,32 @@ export default function Overview({ profileId, phase, attacker, handshakes, onSta
         {(Object.keys(L.nodes) as NodeId[]).filter((id) => id !== 'mallory' || attacker).map((id) => {
           const [x, y, w, h] = L.nodes[id];
           const { title, sub, alg } = label(id);
-          const v = phase === 'verdict' || (phase === 'idle' && done) ? verdictOf(id) : undefined;
+          const v = verdictOf(id);
           const active = activeNodes.has(id);
           const stroke = id === 'mallory' ? '#f87171' : v === true ? '#34d399' : v === false ? '#f87171' : active ? '#06b6d4' : '#1e3a5f';
-          const fs = narrow && id.startsWith('c') ? 10 : 12;
+          const small = narrow && id.startsWith('c');
           return (
             <g key={id}>
               <rect x={x} y={y} width={w} height={h} rx={8} fill={id === 'mallory' ? '#1a0b10' : '#060b16'}
                 stroke={stroke} strokeWidth={active || v !== undefined ? 1.8 : 1} />
-              <text x={x + 8} y={y + 17} fill="#e2e8f0" fontSize={fs} fontFamily="'JetBrains Mono',monospace" fontWeight="600">{title}</text>
-              <text x={x + 8} y={y + 31} fill="#94a3b8" fontSize={fs - 1.5} fontFamily="Inter,sans-serif">{sub}</text>
-              {alg && <text x={x + 8} y={y + h - 8} fill="#06b6d4" fontSize={fs - 1.5} fontFamily="'JetBrains Mono',monospace">{alg}</text>}
-              {v !== undefined && (
-                <text x={x + w - 10} y={y + 18} textAnchor="end" fill={v ? '#34d399' : '#f87171'} fontSize={14} fontWeight="700">{v ? '✓' : '✗'}</text>
-              )}
+              {/* HTML inside the box: long titles are cut with an ellipsis, subtitles wrap */}
+              <foreignObject x={x + 1} y={y + 1} width={w - 2} height={h - 2}>
+                <div className="flex h-full flex-col overflow-hidden px-2 py-1.5 leading-tight">
+                  <div className="flex items-start gap-1">
+                    <span className={`min-w-0 flex-1 font-mono font-semibold text-[#e2e8f0] ${small ? 'text-[10px] line-clamp-2 break-words' : 'text-[12px] truncate'}`}>{title}</span>
+                    {v !== undefined && <span className={`font-bold ${v ? 'text-emerald-400' : 'text-red-400'}`}>{v ? '✓' : '✗'}</span>}
+                  </div>
+                  <span className={`mt-0.5 text-[#94a3b8] ${small ? 'text-[9px] line-clamp-2' : `text-[10.5px] ${alg ? 'line-clamp-1' : 'line-clamp-2'}`}`}>{sub}</span>
+                  {alg && <span className="mt-auto truncate font-mono text-[10.5px] text-[var(--color-primary)]">{alg}</span>}
+                </div>
+              </foreignObject>
             </g>
           );
         })}
         {!reduced && moves[phase].map((m, i) => {
-          const f = Math.max(0, Math.min(1, (now - m.delay) / DURATION));
-          if (now < m.delay || f >= 1) return null;          // packets vanish on arrival
-          const e = f < 0.5 ? 2 * f * f : 1 - (-2 * f + 2) ** 2 / 2;      // ease in-out
+          const fr = (now - m.delay) / DURATION;
+          if (fr < 0 || fr >= 1) return null;                      // not yet started, or arrived
+          const e = fr < 0.5 ? 2 * fr * fr : 1 - (-2 * fr + 2) ** 2 / 2;   // ease in-out
           const [x, y] = pointAt(route(L, m.from, m.to), e);
           const w = Math.max(34, m.label.length * 7 + 14);
           return (
@@ -248,33 +278,57 @@ export default function Overview({ profileId, phase, attacker, handshakes, onSta
       <figcaption className="mt-3 flex flex-col gap-3">
         <ol className="flex flex-wrap gap-1.5" aria-label={t('overview.steps')}>
           {PHASES.map((ph, i) => (
-            <li key={ph} className={`rounded-full border px-2.5 py-0.5 font-mono text-[0.7rem] ${i === stepIndex
-              ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/15 text-[var(--color-primary)]'
-              : i < stepIndex || (phase === 'idle' && done) ? 'border-[var(--color-border)] text-[var(--color-text-base)]' : 'border-[var(--color-border-dim)] text-[var(--color-text-muted)]'}`}>
+            <li key={ph} aria-current={i === step ? 'step' : undefined}
+              className={`rounded-full border px-2.5 py-0.5 font-mono text-[0.7rem] ${i === step
+                ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/15 text-[var(--color-primary)]'
+                : i < step ? 'border-[var(--color-border)] text-[var(--color-text-base)]' : 'border-[var(--color-border-dim)] text-[var(--color-text-muted)]'}`}>
               {i + 1} {t(`overview.phase.${ph}.short`)}
             </li>
           ))}
         </ol>
-        <div aria-live="polite" className="min-h-[3.5rem]">
+        <div aria-live="polite" className="flex min-h-[4.5rem] flex-col gap-1.5">
           {phase === 'idle' ? (
-            <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">{t(done ? 'overview.doneText' : 'overview.idleText')}</p>
+            <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">{t('overview.idleText')}</p>
           ) : (
-            <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
-              <span className="font-semibold text-[var(--color-text-base)]">{t(`overview.phase.${phase}.short`)}: </span>
-              {phase === 'verdict'
-                ? t('overview.verdictText', { accepted, total: handshakes?.length ?? 3 })
-                : t(`overview.phase.${phase}.${kind}`)}
-            </p>
+            <>
+              <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">
+                <span className="font-semibold text-[var(--color-text-base)]">{t('overview.stepOf', { n: step + 1, total: PHASES.length })} · {t(`overview.phase.${phase}.short`)}: </span>
+                {phase === 'verdict'
+                  ? t('overview.verdictText', { accepted: handshakes?.filter((h) => h.accepted).length ?? 0, total: handshakes?.length ?? 3 })
+                  : t(`overview.phase.${phase}.${kind}`)}
+              </p>
+              <p className="font-mono text-xs text-[var(--color-primary)] break-words">
+                {busy || !factText ? <span className="text-[var(--color-text-muted)]">{t('overview.running')}</span> : factText}
+              </p>
+            </>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <button type="button" onClick={onStart} disabled={running}
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-5 py-2 font-mono text-sm font-semibold text-[var(--color-bg-base)] hover:opacity-90 disabled:opacity-50">
-            {running ? <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" aria-hidden="true" /> : '▶'}
-            {t(done && !running ? 'overview.replay' : 'overview.start')}
-          </button>
-          {done && !running && (
-            <a href="#ceremony" className="font-mono text-xs text-[var(--color-primary)] hover:underline">{t('overview.toDetails')}</a>
+        <div className="flex flex-wrap items-center gap-2">
+          {phase === 'idle' ? (
+            <button type="button" onClick={onStart} disabled={busy}
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-5 py-2 font-mono text-sm font-semibold text-[var(--color-bg-base)] hover:opacity-90 disabled:opacity-50">
+              ▶ {t('overview.start')}
+            </button>
+          ) : (
+            <>
+              <button type="button" onClick={onBack} disabled={busy || step === 0}
+                className="rounded-lg border border-[var(--color-border)] px-4 py-2 font-mono text-sm text-[var(--color-text-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:opacity-40">
+                ← {t('overview.back')}
+              </button>
+              {step < PHASES.length - 1 ? (
+                <button type="button" onClick={onNext} disabled={busy}
+                  className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary)] px-5 py-2 font-mono text-sm font-semibold text-[var(--color-bg-base)] hover:opacity-90 disabled:opacity-50">
+                  {busy && <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" aria-hidden="true" />}
+                  {t('overview.next')} →
+                </button>
+              ) : (
+                <button type="button" onClick={onStart} disabled={busy}
+                  className="rounded-lg bg-[var(--color-primary)] px-5 py-2 font-mono text-sm font-semibold text-[var(--color-bg-base)] hover:opacity-90 disabled:opacity-50">
+                  ↺ {t('overview.restart')}
+                </button>
+              )}
+              <a href="#ceremony" className="ml-1 font-mono text-xs text-[var(--color-primary)] hover:underline">{t('overview.toDetails')}</a>
+            </>
           )}
         </div>
       </figcaption>

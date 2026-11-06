@@ -68,6 +68,7 @@ function dynamicKeys(): string[] {
     ...['ServerHello', 'ChangeCipherSpec', 'encrypted'].map((p) => `budget.record.${p}`),
     ...['ceremony', 'request', 'validate', 'issue', 'handshake'].flatMap((ph) => ['short', 'private', 'web', 'mtc'].map((k) => `overview.phase.${ph}.${k}`)),
     'overview.phase.verdict.short',
+    ...['caaOk', 'caaBad', 'caaPrivate'].map((k) => `overview.fact.${k}`),
     ...['notQuantumSafe', 'quantumSafe', 'notInTr', 'notHybrid', 'trConform', 'draft', 'notHybridBelow', 'today', 'hypothetical', 'planned'].map((b) => `badges.${b}`),
     ...['ca', 'ra', 'subscriber', 'relyingParty'].flatMap((r) => [`basics.${r}.name`, `basics.${r}.desc`]),
     ...['trust', 'algorithms', 'transparency', 'lifetime', 'pq'].flatMap((k) => ['label', 'private', 'web'].map((x) => `compare.${k}.${x}`)),

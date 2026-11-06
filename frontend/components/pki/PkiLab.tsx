@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { ALGS, PRIVATE_PROFILES, PROFILES, WEB_PROFILES, type ProfileId, type Scope } from '@/lib/pki/meta';
 import { usePkiWorker } from '@/lib/pki/use-pki-worker';
 import type { HandshakeView, LeafView, PkiView } from '@/lib/pki/worker-types';
-import Overview, { PHASE_MS, type Phase } from './Overview';
+import Overview, { PHASES } from './Overview';
 import CertViewer from './CertViewer';
 import ValidationList from './ValidationList';
 import ByteBudget from './ByteBudget';
@@ -44,43 +44,40 @@ export default function PkiLab({ articles }: { articles: ArticleRef[] }) {
   const [attacker, setAttacker] = useState(false);
   const [pkiKey, setPkiKey] = useState(0);
 
-  const [phase, setPhase] = useState<Phase>('idle');
-  const [running, setRunning] = useState(false);
+  // guided tour through the overview: -1 = not started, otherwise index into PHASES
+  const [step, setStep] = useState(-1);
+  const [tourBusy, setTourBusy] = useState(false);
 
   const p = PROFILES[profile];
   const ready = !!pki && pki.profile === profile;
 
-  /** The overview's start button: runs the real steps and paces the animation. */
-  async function runAll() {
-    setRunning(true); setError(null); setLeaf(null); setHandshakes(null);
-    const pace = async <T,>(ph: Phase, work: () => Promise<T>): Promise<T> => {
-      setPhase(ph);
-      const [r] = await Promise.all([work(), new Promise((res) => setTimeout(res, PHASE_MS))]);
-      return r;
-    };
-    try {
-      const view = await pace('ceremony', () => call({ op: 'createPki', profile }).done);
-      setPki(view);
-      const issued = call({ op: 'issueLeaf', variant: 'ok' }).done;      // one call: request, validation, issuance
-      await pace('request', () => Promise.resolve());
-      await pace('validate', () => Promise.resolve());
-      const r = await pace('issue', () => issued);
-      setLeaf(r.leaf);
-      setPkiKey((k) => k + 1);
-      const hs = await pace('handshake', () => call({ op: 'handshakes', crlReachable: true }).done);
-      setHandshakes(hs);
-      await pace('verdict', () => Promise.resolve());
-      setPhase('idle');
-    } catch (e) {
-      setError((e as Error).message);
-      setPhase('idle');
-    } finally {
-      setRunning(false);
+  async function tourWork(work: () => Promise<void>) {
+    setTourBusy(true); setError(null);
+    try { await work(); } catch (e) { setError((e as Error).message); } finally { setTourBusy(false); }
+  }
+
+  /** Start: the key ceremony runs as step 1. */
+  function startTour() {
+    setLeaf(null); setHandshakes(null); setStep(0);
+    void tourWork(async () => { setPki(await call({ op: 'createPki', profile }).done); setPkiKey((k) => k + 1); });
+  }
+
+  /** Next: request/validation/issuance run on entering step 2, the handshake on step 5. Steps already done are only shown again. */
+  function nextStep() {
+    const s = Math.min(step + 1, PHASES.length - 1);
+    setStep(s);
+    if (PHASES[s] === 'request' && !leaf) {
+      void tourWork(async () => { const r = await call({ op: 'issueLeaf', variant: 'ok' }).done; setLeaf(r.leaf); setPkiKey((k) => k + 1); });
+    }
+    if (PHASES[s] === 'handshake' && !handshakes) {
+      void tourWork(async () => { setHandshakes(await call({ op: 'handshakes', crlReachable: true }).done); });
     }
   }
 
+  const prevStep = () => setStep((s) => Math.max(0, s - 1));
+
   function choose(next: ProfileId) {
-    setProfile(next); setPki(null); setLeaf(null); setHandshakes(null); setError(null); setPhase('idle');
+    setProfile(next); setPki(null); setLeaf(null); setHandshakes(null); setError(null); setStep(-1);
   }
 
   function switchScope(s: Scope) {
@@ -160,8 +157,9 @@ export default function PkiLab({ articles }: { articles: ArticleRef[] }) {
         </fieldset>
       </div>
 
-      <Overview profileId={profile} phase={phase} attacker={attacker} handshakes={ready ? handshakes : null}
-        onStart={runAll} running={running} done={ready && !!handshakes} />
+      <Overview profileId={profile} step={step} attacker={attacker} busy={tourBusy}
+        data={{ pki: ready ? pki : null, leaf: ready ? leaf : null, handshakes: ready ? handshakes : null }}
+        onStart={startTour} onNext={nextStep} onBack={prevStep} />
 
       {error && <Note tone="danger">{t('error', { message: error })}</Note>}
 

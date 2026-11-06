@@ -1516,10 +1516,8 @@
       "aria": "Diagram of the PKI with its parties and data flows",
       "steps": "Steps",
       "start": "Start",
-      "replay": "Play again",
       "toDetails": "↓ To the details",
-      "idleText": "Start runs the PKI of the selected profile once from beginning to end: key ceremony, request, domain validation, issuance and handshake. Below, you can read up on every step in detail and repeat it on its own.",
-      "doneText": "Done. All results are in steps 01 to 03 below; the deep dives from step 04 on build on them.",
+      "idleText": "Start takes you step by step through the PKI of the selected profile: key ceremony, request, domain validation, issuance, handshake and result. Each step really runs and shows its actual values. Next moves on, Back goes to the previous step. All details are below.",
       "verdictText": "{accepted} of {total} clients accept the connection. Step 03 below explains why.",
       "node": {
         "ra": "Registration authority",
@@ -1581,6 +1579,24 @@
         "verdict": {
           "short": "Result"
         }
+      },
+      "stepOf": "Step {n} of {total}",
+      "running": "running …",
+      "back": "Back",
+      "next": "Next",
+      "restart": "Start over",
+      "fact": {
+        "ceremony": "Root: {alg}, public key {pk} bytes · root certificate {root} bytes · issuing CA certificate {issuing} bytes",
+        "ceremonyMtc": "Two cosigner keys with {alg}, {pk}-byte public key each · no root certificate",
+        "request": "{alg} key pair generated in {ms} · request (CSR) {csr} bytes · proof of possession valid",
+        "validate": "{name} TXT “{value}” · checked from {n, plural, one {# perspective} other {# perspectives}} · CAA: {caa}",
+        "caaOk": "allows this CA",
+        "caaBad": "forbids this CA",
+        "caaPrivate": "not required",
+        "issuePrivate": "Server certificate {bytes} bytes, signed with {alg}",
+        "issueWeb": "Server certificate {bytes} bytes with two embedded SCTs, signed with {alg}",
+        "issueMtc": "Log of {size} entries · inclusion proof of {hashes} hashes · landmark-relative {lr} bytes, standalone {sa} bytes",
+        "handshake": "First server flight {tcp} bytes over TCP · over QUIC {quic} of at most {limit} bytes before address validation"
       }
     }
   }
