@@ -11,7 +11,7 @@
     "buckets": {
       "acute": 1,
       "quantum": 2,
-      "none": 14
+      "none": 15
     },
     "items": [
       {
@@ -260,6 +260,28 @@
         "vendorDependency": false
       },
       {
+        "component": "ML-KEM-768",
+        "name": "ML-KEM",
+        "primitive": "kem",
+        "category": "none",
+        "role": "confidentiality",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "not-started",
+        "vendorDependency": false
+      },
+      {
         "component": "SHA-256",
         "name": "SHA-256",
         "primitive": "hash",
@@ -403,7 +425,7 @@
         "dataClassification": "public",
         "acute": 1,
         "quantum": 2,
-        "none": 14,
+        "none": 15,
         "urgent": false,
         "verdicts": [
           "AES-256-GCM [none]",
@@ -416,6 +438,7 @@
           "ML-DSA-44 [none]",
           "ML-DSA-65 [none]",
           "ML-KEM-1024 [none]",
+          "ML-KEM-768 [none]",
           "SHA-256 [none]",
           "SHA-512 [none]",
           "SHAKE256 [none]",
@@ -654,7 +677,7 @@
                   "reduce"
                 ],
                 "treatment": "accept",
-                "treatmentNote": "Accepted: ECDSA P-256 appears only in the playgrounds, as the classical reference in the signature benchmark and in the classical PKI profiles. It protects nothing on the site.",
+                "treatmentNote": "Accepted: ECDSA P-256 appears only in the playgrounds: as the classical reference in the signature benchmark, in the classical PKI profiles and as the ACME account key. It protects nothing on the site.",
                 "decidedBy": "Marvin Sprey",
                 "migrationStatus": "not applicable",
                 "vendorDependency": false,
@@ -743,7 +766,7 @@
                   "accept"
                 ],
                 "treatment": "accept",
-                "treatmentNote": "Accepted: X25519 appears only in the playground, and only as the classical half of the hybrid key exchange with ML-KEM-1024. No data with a protection requirement depends on it.",
+                "treatmentNote": "Accepted: X25519 appears only in the playgrounds, and only as the classical half of hybrid key exchanges (with ML-KEM-1024, and as X25519MLKEM768 in the PKI playground's TLS handshake). No data with a protection requirement depends on it.",
                 "decidedBy": "Marvin Sprey",
                 "migrationStatus": "not applicable",
                 "vendorDependency": false,

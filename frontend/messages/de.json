@@ -752,6 +752,7 @@
       "ml-dsa-44": "Post-Quanten-Signatur nach NIST FIPS 204, NIST-Level 2. Im PKI-Playground für Zertifikate, CT-Logs und die Cosignaturen der Merkle Tree Certificates.",
       "ml-dsa-65": "Post-Quantum-Signatur nach NIST FIPS 204 (CRYSTALS-Dilithium).",
       "ml-kem-1024": "Post-Quantum-KEM nach NIST FIPS 203 (CRYSTALS-Kyber), Sicherheitslevel 5.",
+      "ml-kem-768": "Post-Quanten-KEM nach NIST FIPS 203, NIST-Level 3. Im PKI-Playground die ML-KEM-Hälfte der hybriden Schlüsseleinigung X25519MLKEM768 im TLS-Handshake.",
       "sha-256": "SHA-2; Grover senkt die Urbildsicherheit nur auf 2^128 und damit auf ein weiterhin sicheres Niveau.",
       "sha-512": "SHA-2; großer Abstand zur Quantensuche. Im PKI-Playground der Vorab-Hash von Composite ML-DSA.",
       "shake256": "Keccak-basierte Extendable-Output-Function (SHA-3-Familie); Grover senkt das Sicherheitsniveau, es bleibt aber ausreichend.",

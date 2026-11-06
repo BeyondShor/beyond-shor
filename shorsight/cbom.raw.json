@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:5d54d914-6b76-4819-8740-22a3472aab7d",
+  "serialNumber": "urn:uuid:0be1c081-f9fb-4d8b-9f33-5a0f40fb3137",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-06T15:00:17.633587+00:00",
+    "timestamp": "2026-11-06T16:30:52.814343+00:00",
     "tools": {
       "components": [
         {
@@ -30,7 +30,7 @@
       },
       {
         "name": "crypto:provenance",
-        "value": "{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"6877ad51faa612edd7c96f502370dacd05a15015\", \"pathPrefix\": \"\"}"
+        "value": "{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"41273c820815cc0c1dcc5e8a4c4be14957f2673b\", \"pathPrefix\": \"\"}"
       },
       {
         "name": "crypto:sink",
@@ -219,6 +219,18 @@
             "line": 184,
             "additionalContext": "const ciphertextBuf  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: asBuf(iv) }, combinedKeyObj, asBuf(plaintextBytes));",
             "symbol": "WebCrypto:AES-GCM"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 80,
+            "additionalContext": "const params = { name: 'AES-GCM', iv: Uint8Array.from(iv), additionalData: Uint8Array.from(aad), tagLength: 128 };",
+            "symbol": "WebCrypto:AES-GCM"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 79,
+            "additionalContext": "const k = await crypto.subtle.importKey('raw', Uint8Array.from(key), 'AES-GCM', false, [mode]);",
+            "symbol": "crypto.subtle.importKey"
           }
         ]
       },
@@ -375,6 +387,42 @@
             "line": 50,
             "additionalContext": "return p256.verify(sig, msgHash, pub, { prehash: false });",
             "symbol": "@noble/curves/nist.js.p256.verify"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/acme.ts",
+            "line": 55,
+            "additionalContext": "try { return p256.verify(fromB64url(jws.signature), utf8Bytes(`${jws.protected}.${jws.payload}`), pub, { lowS: false }); }",
+            "symbol": "@noble/curves/nist.js.p256.verify"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/acme.ts",
+            "line": 41,
+            "additionalContext": "const sig = p256.sign(utf8Bytes(`${prot}.${pl}`), account.secretKey);   // compact 64-byte R ‖ S, SHA-256 prehash",
+            "symbol": "@noble/curves/nist.js.p256.sign"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/acme.ts",
+            "line": 24,
+            "additionalContext": "const pub = p256.getPublicKey(secretKey, false);",
+            "symbol": "@noble/curves/nist.js.p256.getPublicKey"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/acme.ts",
+            "line": 23,
+            "additionalContext": "const secretKey = p256.utils.randomSecretKey();",
+            "symbol": "@noble/curves/nist.js.p256.utils.randomSecretKey"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/acme.ts",
+            "line": 25,
+            "additionalContext": "const jwk = { crv: 'P-256' as const, kty: 'EC' as const, x: base64url(pub.subarray(1, 33)), y: base64url(pub.subarray(33, 65)) };",
+            "symbol": "curve:P-256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/acme.ts",
+            "line": 17,
+            "additionalContext": "jwk: { crv: 'P-256'; kty: 'EC'; x: string; y: string };",
+            "symbol": "curve:P-256"
           },
           {
             "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
@@ -566,6 +614,30 @@
             "line": 52,
             "additionalContext": "const ikmKey = await crypto.subtle.importKey('raw', asBuf(ikm), 'HKDF', false, ['deriveKey']);",
             "symbol": "crypto.subtle.importKey"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 56,
+            "additionalContext": "master: hkdfExtract(sha256, zeros, deriveSecret(handshake, 'derived', sha256(new Uint8Array()))),",
+            "symbol": "@noble/hashes/hkdf.js.extract"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 51,
+            "additionalContext": "const handshake = hkdfExtract(sha256, sharedSecret, derived);",
+            "symbol": "@noble/hashes/hkdf.js.extract"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 49,
+            "additionalContext": "const early = hkdfExtract(sha256, zeros, zeros);",
+            "symbol": "@noble/hashes/hkdf.js.extract"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 42,
+            "additionalContext": "return hkdfExpand(sha256, secret, info, length);",
+            "symbol": "@noble/hashes/hkdf.js.expand"
           }
         ]
       },
@@ -593,6 +665,10 @@
         {
           "name": "crypto:rationale",
           "value": "HMAC-based key derivation (RFC 5869); sound for deriving keys from high-entropy input."
+        },
+        {
+          "name": "crypto:library",
+          "value": "@noble/hashes"
         },
         {
           "name": "crypto:library",
@@ -625,6 +701,12 @@
             "line": 30,
             "additionalContext": "return crypto",
             "symbol": "node:crypto.createHmac"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 63,
+            "additionalContext": "return hmac(sha256, expandLabel(baseSecret, 'finished', new Uint8Array(), H), transcriptHash);",
+            "symbol": "@noble/hashes/hmac.js.hmac"
           }
         ]
       },
@@ -652,6 +734,10 @@
         {
           "name": "crypto:rationale",
           "value": "Security depends on the underlying hash; safe with SHA-2/SHA-3."
+        },
+        {
+          "name": "crypto:library",
+          "value": "@noble/hashes"
         },
         {
           "name": "crypto:library",
@@ -989,6 +1075,82 @@
     },
     {
       "type": "cryptographic-asset",
+      "bom-ref": "crypto/ml-kem-768",
+      "name": "ML-KEM-768",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "kem",
+          "algorithmFamily": "ML-KEM",
+          "parameterSetIdentifier": "768",
+          "nistQuantumSecurityLevel": 3,
+          "cryptoFunctions": [
+            "decapsulate",
+            "encapsulate",
+            "keygen"
+          ]
+        },
+        "oid": "2.16.840.1.101.3.4.4.2"
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 221,
+            "additionalContext": "const cSs = concat(ml_kem768.decapsulate(sShare.subarray(0, 1088), ch.mlkemDk), x25519.getSharedSecret(ch.x25519Sk, sShare.subarray(1088)));",
+            "symbol": "@noble/post-quantum/ml-kem.js.ml_kem768.decapsulate"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 178,
+            "additionalContext": "const { cipherText, sharedSecret: kemSs } = ml_kem768.encapsulate(clientShare.subarray(0, 1184));",
+            "symbol": "@noble/post-quantum/ml-kem.js.ml_kem768.encapsulate"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 124,
+            "additionalContext": "const kem = ml_kem768.keygen();",
+            "symbol": "@noble/post-quantum/ml-kem.js.ml_kem768.keygen"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "crypto:quantumStatus",
+          "value": "safe"
+        },
+        {
+          "name": "crypto:classicalStatus",
+          "value": "secure"
+        },
+        {
+          "name": "crypto:family",
+          "value": "pqc"
+        },
+        {
+          "name": "crypto:name",
+          "value": "ML-KEM"
+        },
+        {
+          "name": "crypto:confidence",
+          "value": "resolved"
+        },
+        {
+          "name": "crypto:rationale",
+          "value": "NIST FIPS 203 post-quantum KEM (CRYSTALS-Kyber)."
+        },
+        {
+          "name": "crypto:library",
+          "value": "@noble/post-quantum"
+        },
+        {
+          "name": "crypto:source",
+          "value": "beyond-shor"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
       "bom-ref": "crypto/sha-256",
       "name": "SHA-256",
       "cryptoProperties": {
@@ -1038,12 +1200,6 @@
             "symbol": "@noble/hashes/sha2.js.sha256"
           },
           {
-            "location": "beyond-shor::frontend/lib/pki/tls.ts",
-            "line": 16,
-            "additionalContext": "const transcriptHash = sha256(transcript);",
-            "symbol": "@noble/hashes/sha2.js.sha256"
-          },
-          {
             "location": "beyond-shor::frontend/lib/pki/ct.ts",
             "line": 92,
             "additionalContext": "const data = signedData(sct.timestamp, sha256(issuerSpkiDer), precertTbsOf(cert));",
@@ -1077,6 +1233,72 @@
             "location": "beyond-shor::frontend/lib/pki/merkle.ts",
             "line": 8,
             "additionalContext": "export const leafHash = (entry: Bytes) => sha256(concat(Uint8Array.of(0x00), entry));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/acme.ts",
+            "line": 60,
+            "additionalContext": "export const dns01Value = (keyAuth: string) => base64url(sha256(utf8Bytes(keyAuth)));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/acme.ts",
+            "line": 32,
+            "additionalContext": "return base64url(sha256(utf8Bytes(`{\"crv\":\"${jwk.crv}\",\"kty\":\"${jwk.kty}\",\"x\":\"${jwk.x}\",\"y\":\"${jwk.y}\"}`)));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 251,
+            "additionalContext": "const clientFin = msg(20, finishedVerifyData(cSec.clientHs, sha256(concat(ch.message, shMsg, protectedStream))));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 249,
+            "additionalContext": "serverFinished = equalBytes(fin.subarray(4), finishedVerifyData(cSec.serverHs, sha256(concat(ch.message, shMsg, ee, cert, cv))));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 240,
+            "additionalContext": "const th = sha256(concat(ch.message, shMsg, ee, cert));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 222,
+            "additionalContext": "const cSec = handshakeSecrets(cSs, sha256(concat(ch.message, shMsg)));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 196,
+            "additionalContext": "const finished = msg(20, finishedVerifyData(sec.serverHs, sha256(concat(ch.message, serverHello, encryptedExtensions, certificate, certificateVerify))));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 190,
+            "additionalContext": "const thCert = sha256(concat(ch.message, serverHello, encryptedExtensions, certificate));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 186,
+            "additionalContext": "const sec = handshakeSecrets(sharedSecret, sha256(concat(ch.message, serverHello)));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 56,
+            "additionalContext": "master: hkdfExtract(sha256, zeros, deriveSecret(handshake, 'derived', sha256(new Uint8Array()))),",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 50,
+            "additionalContext": "const derived = deriveSecret(early, 'derived', sha256(new Uint8Array()));",
             "symbol": "@noble/hashes/sha2.js.sha256"
           },
           {
@@ -1529,6 +1751,42 @@
             "line": 69,
             "additionalContext": "const clientX25519Priv = x25519.utils.randomSecretKey();",
             "symbol": "@noble/curves/ed25519.js.x25519.utils.randomSecretKey"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 221,
+            "additionalContext": "const cSs = concat(ml_kem768.decapsulate(sShare.subarray(0, 1088), ch.mlkemDk), x25519.getSharedSecret(ch.x25519Sk, sShare.subarray(1088)));",
+            "symbol": "@noble/curves/ed25519.js.x25519.getSharedSecret"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 181,
+            "additionalContext": "const sharedSecret = concat(kemSs, x25519.getSharedSecret(sx, clientShare.subarray(1184)));",
+            "symbol": "@noble/curves/ed25519.js.x25519.getSharedSecret"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 180,
+            "additionalContext": "const serverShare = concat(cipherText, x25519.getPublicKey(sx));        // 1088 + 32 = 1120 bytes",
+            "symbol": "@noble/curves/ed25519.js.x25519.getPublicKey"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 179,
+            "additionalContext": "const sx = x25519.utils.randomSecretKey();",
+            "symbol": "@noble/curves/ed25519.js.x25519.utils.randomSecretKey"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 126,
+            "additionalContext": "const share = concat(kem.publicKey, x25519.getPublicKey(xSk));       // 1184 + 32 = 1216 bytes",
+            "symbol": "@noble/curves/ed25519.js.x25519.getPublicKey"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls13.ts",
+            "line": 125,
+            "additionalContext": "const xSk = x25519.utils.randomSecretKey();",
+            "symbol": "@noble/curves/ed25519.js.x25519.utils.randomSecretKey"
           }
         ]
       },
@@ -1574,7 +1832,13 @@
       "evidence": {
         "occurrences": [
           {
+            "location": "frontend/lib/pki/acme.ts"
+          },
+          {
             "location": "frontend/lib/pki/algorithms.ts"
+          },
+          {
+            "location": "frontend/lib/pki/tls13.ts"
           },
           {
             "location": "frontend/workers/playground-worker.ts"
@@ -1608,6 +1872,9 @@
       "evidence": {
         "occurrences": [
           {
+            "location": "frontend/lib/pki/acme.ts"
+          },
+          {
             "location": "frontend/lib/pki/algorithms.ts"
           },
           {
@@ -1620,7 +1887,7 @@
             "location": "frontend/lib/pki/mtc.ts"
           },
           {
-            "location": "frontend/lib/pki/tls.ts"
+            "location": "frontend/lib/pki/tls13.ts"
           },
           {
             "location": "frontend/lib/pki/x509.ts"
@@ -1661,6 +1928,9 @@
           },
           {
             "location": "frontend/lib/pki/algorithms.ts"
+          },
+          {
+            "location": "frontend/lib/pki/tls13.ts"
           },
           {
             "location": "frontend/workers/playground-worker.ts"
@@ -1826,6 +2096,9 @@
       "ref": "crypto/ml-kem-1024"
     },
     {
+      "ref": "crypto/ml-kem-768"
+    },
+    {
       "ref": "crypto/sha-256"
     },
     {
@@ -1862,6 +2135,8 @@
     {
       "ref": "lib/noble-hashes",
       "provides": [
+        "crypto/hkdf",
+        "crypto/hmac",
         "crypto/sha-256",
         "crypto/sha-512",
         "crypto/shake256"
@@ -1873,6 +2148,7 @@
         "crypto/ml-dsa-44",
         "crypto/ml-dsa-65",
         "crypto/ml-kem-1024",
+        "crypto/ml-kem-768",
         "crypto/slh-dsa-sha2-128f",
         "crypto/slh-dsa-sha2-128s",
         "crypto/slh-dsa-sha2-192s"
