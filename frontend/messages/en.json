@@ -745,17 +745,20 @@
       "aes-256-gcm": "Authenticated encryption; the 256-bit key keeps at least 128-bit security under Grover.",
       "aes-gcm": "AES-GCM authenticated encryption; the key size (128/192/256) is not statically determinable.",
       "classic-mceliece": "Code-based post-quantum KEM with very large public keys. New structural attacks from 2026 put its estimated security below the claimed levels, and since October 2026 the BSI has advised against new deployments. It stays in the playground for comparison only.",
-      "ec-p256": "ECDSA over the NIST P-256 curve (signing and verification in the signature playground); broken by Shor’s algorithm.",
+      "ec-p256": "ECDSA over the NIST P-256 curve (signing and verification in the signature and PKI playgrounds); broken by Shor’s algorithm.",
       "frodokem-1344-aes": "Conservative lattice-based (LWE) post-quantum KEM, 1344 parameter set with AES as the internal PRF; NIST level 5.",
       "hkdf": "HMAC-based key derivation (RFC 5869); sound for deriving keys from high-entropy input.",
       "hmac": "Security depends on the underlying hash; safe with SHA-2 or SHA-3.",
+      "ml-dsa-44": "NIST FIPS 204 post-quantum signature, NIST level 2. Used in the PKI playground for certificates, CT logs and the cosignatures of Merkle Tree Certificates.",
       "ml-dsa-65": "NIST FIPS 204 post-quantum signature (CRYSTALS-Dilithium).",
       "ml-kem-1024": "NIST FIPS 203 post-quantum KEM (CRYSTALS-Kyber), security level 5.",
       "sha-256": "SHA-2; Grover only reduces preimage security to 2^128, which remains safe.",
+      "sha-512": "SHA-2; large margin against quantum search. The pre-hash of composite ML-DSA in the PKI playground.",
+      "shake256": "Keccak extendable-output function (SHA-3 family); Grover reduces the security level, which remains sufficient.",
       "slh-dsa-sha2-128f": "NIST FIPS 205 SLH-DSA-SHA2-128f (SPHINCS+): fast signing, larger signatures; NIST level 1.",
       "slh-dsa-sha2-128s": "NIST FIPS 205 SLH-DSA-SHA2-128s (SPHINCS+): small signatures, slow signing; NIST level 1.",
-      "x25519": "Curve25519 key agreement; broken by Shor.",
-      "shake256": "Keccak extendable-output function (SHA-3 family); Grover reduces the security level, which remains sufficient."
+      "slh-dsa-sha2-192s": "NIST FIPS 205 SLH-DSA-SHA2-192s (SPHINCS+): small signatures, slow signing; NIST level 3. Root CA in the PKI playground's by-role profile.",
+      "x25519": "Curve25519 key agreement; broken by Shor."
     },
     "treatmentNote": {
       "x25519": "Deliberate: X25519 is the classical half of the hybrid handshake and is paired with ML-KEM-1024.",

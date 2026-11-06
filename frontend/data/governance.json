@@ -11,7 +11,7 @@
     "buckets": {
       "acute": 1,
       "quantum": 2,
-      "none": 11
+      "none": 14
     },
     "items": [
       {
@@ -191,6 +191,28 @@
         "vendorDependency": false
       },
       {
+        "component": "ML-DSA-44",
+        "name": "ML-DSA",
+        "primitive": "signature",
+        "category": "none",
+        "role": "signature",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "not-started",
+        "vendorDependency": false
+      },
+      {
         "component": "ML-DSA-65",
         "name": "ML-DSA",
         "primitive": "signature",
@@ -237,6 +259,28 @@
       {
         "component": "SHA-256",
         "name": "SHA-256",
+        "primitive": "hash",
+        "category": "none",
+        "role": "confidentiality",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "not-started",
+        "vendorDependency": false
+      },
+      {
+        "component": "SHA-512",
+        "name": "SHA-512",
         "primitive": "hash",
         "category": "none",
         "role": "confidentiality",
@@ -321,6 +365,28 @@
         "startByYear": null,
         "migrationStatus": "pqc-only",
         "vendorDependency": false
+      },
+      {
+        "component": "SLH-DSA-SHA2-192s",
+        "name": "SLH-DSA",
+        "primitive": "signature",
+        "category": "none",
+        "role": "signature",
+        "quantum": "safe",
+        "classical": "secure",
+        "sources": [
+          "beyond-shor"
+        ],
+        "cves": [],
+        "cwes": [],
+        "urgent": false,
+        "priority": 3,
+        "summary": "Quantum-safe and secure today — no action needed.",
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "not-started",
+        "vendorDependency": false
       }
     ],
     "assets": [
@@ -334,7 +400,7 @@
         "dataClassification": "public",
         "acute": 1,
         "quantum": 2,
-        "none": 11,
+        "none": 14,
         "urgent": false,
         "verdicts": [
           "AES-256-GCM [none]",
@@ -344,12 +410,15 @@
           "FrodoKEM-1344-AES [none]",
           "HKDF [none]",
           "HMAC [none]",
+          "ML-DSA-44 [none]",
           "ML-DSA-65 [none]",
           "ML-KEM-1024 [none]",
           "SHA-256 [none]",
+          "SHA-512 [none]",
           "SHAKE256 [none]",
           "SLH-DSA-SHA2-128f [none]",
           "SLH-DSA-SHA2-128s [none]",
+          "SLH-DSA-SHA2-192s [none]",
           "X25519 [quantum]"
         ],
         "deadlineYear": 2026,

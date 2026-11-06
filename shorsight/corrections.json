@@ -8,7 +8,7 @@
     "crypto/ec-p256": {
       "set": {
         "cryptoProperties.algorithmProperties.primitive": "signature",
-        "properties.crypto:rationale": "ECDSA over NIST P-256 (sign/verify in the signature playground); broken by Shor's algorithm."
+        "properties.crypto:rationale": "ECDSA over NIST P-256 (sign/verify in the signature and PKI playgrounds); broken by Shor's algorithm."
       },
       "reason": "Only sign and verify are used (ECDSA), so the primitive is signature, not key-agree."
     },

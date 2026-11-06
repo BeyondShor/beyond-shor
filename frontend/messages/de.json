@@ -749,13 +749,16 @@
       "frodokem-1344-aes": "Konservativer gitterbasierter Post-Quantum-KEM auf LWE, Parametersatz 1344 mit AES als interner PRF; NIST-Level 5.",
       "hkdf": "HMAC-basierte Schlüsselableitung (RFC 5869); für Eingaben mit hoher Entropie solide.",
       "hmac": "Die Sicherheit hängt am zugrunde liegenden Hash; mit SHA-2 oder SHA-3 unbedenklich.",
+      "ml-dsa-44": "Post-Quanten-Signatur nach NIST FIPS 204, NIST-Level 2. Im PKI-Playground für Zertifikate, CT-Logs und die Cosignaturen der Merkle Tree Certificates.",
       "ml-dsa-65": "Post-Quantum-Signatur nach NIST FIPS 204 (CRYSTALS-Dilithium).",
       "ml-kem-1024": "Post-Quantum-KEM nach NIST FIPS 203 (CRYSTALS-Kyber), Sicherheitslevel 5.",
       "sha-256": "SHA-2; Grover senkt die Urbildsicherheit nur auf 2^128 und damit auf ein weiterhin sicheres Niveau.",
+      "sha-512": "SHA-2; großer Abstand zur Quantensuche. Im PKI-Playground der Vorab-Hash von Composite ML-DSA.",
+      "shake256": "Keccak-basierte Extendable-Output-Function (SHA-3-Familie); Grover senkt das Sicherheitsniveau, es bleibt aber ausreichend.",
       "slh-dsa-sha2-128f": "NIST FIPS 205, SLH-DSA-SHA2-128f (SPHINCS+): schnelles Signieren, größere Signaturen; NIST-Level 1.",
       "slh-dsa-sha2-128s": "NIST FIPS 205, SLH-DSA-SHA2-128s (SPHINCS+): kleine Signaturen, langsames Signieren; NIST-Level 1.",
-      "x25519": "Curve25519-Schlüsseleinigung; durch Shor gebrochen.",
-      "shake256": "Keccak-basierte Extendable-Output-Function (SHA-3-Familie); Grover senkt das Sicherheitsniveau, es bleibt aber ausreichend."
+      "slh-dsa-sha2-192s": "NIST FIPS 205, SLH-DSA-SHA2-192s (SPHINCS+): kleine Signaturen, langsames Signieren; NIST-Level 3. Root-CA im Rollenmix-Profil des PKI-Playgrounds.",
+      "x25519": "Curve25519-Schlüsseleinigung; durch Shor gebrochen."
     },
     "treatmentNote": {
       "x25519": "Bewusste Entscheidung: X25519 ist die klassische Hälfte des Hybrid-Handshakes und wird immer zusammen mit ML-KEM-1024 eingesetzt.",

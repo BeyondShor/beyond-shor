@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:50d883a2-85e5-433f-bf03-9821c75bf3d4",
+  "serialNumber": "urn:uuid:5d54d914-6b76-4819-8740-22a3472aab7d",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-10-25T18:13:58.431005+00:00",
+    "timestamp": "2026-11-06T15:00:17.633587+00:00",
     "tools": {
       "components": [
         {
@@ -30,7 +30,7 @@
       },
       {
         "name": "crypto:provenance",
-        "value": "{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"c235ba96212274e878d410ee79cdae2477b7c8e8\", \"pathPrefix\": \"\"}"
+        "value": "{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"6877ad51faa612edd7c96f502370dacd05a15015\", \"pathPrefix\": \"\"}"
       },
       {
         "name": "crypto:sink",
@@ -66,7 +66,7 @@
       },
       {
         "name": "crypto:sink",
-        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/lib/strapi.ts\", \"line\": 30}"
+        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/lib/strapi.ts\", \"line\": 31}"
       },
       {
         "name": "crypto:sink",
@@ -362,27 +362,75 @@
         "occurrences": [
           {
             "location": "beyond-shor::frontend/workers/signature-worker.ts",
-            "line": 93,
-            "additionalContext": "signature = p256.sign(messageHash, secretKey); // signs H(msg), not msg",
+            "line": 95,
+            "additionalContext": "signature = p256.sign(messageHash, secretKey, { prehash: false });",
             "symbol": "@noble/curves/nist.js.p256.sign"
           },
           {
             "location": "beyond-shor::frontend/workers/signature-worker.ts",
-            "line": 65,
+            "line": 66,
             "additionalContext": "publicKey = p256.getPublicKey(secretKey, true); // compressed 33 B",
             "symbol": "@noble/curves/nist.js.p256.getPublicKey"
           },
           {
             "location": "beyond-shor::frontend/workers/signature-worker.ts",
-            "line": 64,
+            "line": 65,
             "additionalContext": "secretKey = p256.utils.randomSecretKey();",
             "symbol": "@noble/curves/nist.js.p256.utils.randomSecretKey"
           },
           {
             "location": "beyond-shor::frontend/workers/signature-worker.ts",
-            "line": 49,
-            "additionalContext": "return p256.verify(sig, msgHash, pub);",
+            "line": 50,
+            "additionalContext": "return p256.verify(sig, msgHash, pub, { prehash: false });",
             "symbol": "@noble/curves/nist.js.p256.verify"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 119,
+            "additionalContext": "return p256.verify(sig.subarray(MLDSA65_SIG), m, publicKey.subarray(MLDSA65_PK), { format: 'der', lowS: false });",
+            "symbol": "@noble/curves/nist.js.p256.verify"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 109,
+            "additionalContext": "case 'ecdsa-p256': return p256.verify(sig, msg, publicKey, { format: 'der', lowS: false });",
+            "symbol": "@noble/curves/nist.js.p256.verify"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 99,
+            "additionalContext": "const ecSig = p256.sign(m, ecSk, { format: 'der' });",
+            "symbol": "@noble/curves/nist.js.p256.sign"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 90,
+            "additionalContext": "case 'ecdsa-p256': return p256.sign(msg, key.secretKey, { format: 'der' });",
+            "symbol": "@noble/curves/nist.js.p256.sign"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 80,
+            "additionalContext": "publicKey: concat(ml.publicKey, p256.getPublicKey(ecSk, false)),",
+            "symbol": "@noble/curves/nist.js.p256.getPublicKey"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 77,
+            "additionalContext": "const ecSk = p256.utils.randomSecretKey();",
+            "symbol": "@noble/curves/nist.js.p256.utils.randomSecretKey"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 68,
+            "additionalContext": "return { alg, secretKey: sk, publicKey: p256.getPublicKey(sk, false) };",
+            "symbol": "@noble/curves/nist.js.p256.getPublicKey"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 67,
+            "additionalContext": "const sk = p256.utils.randomSecretKey();",
+            "symbol": "@noble/curves/nist.js.p256.utils.randomSecretKey"
           }
         ]
       },
@@ -409,7 +457,7 @@
         },
         {
           "name": "crypto:rationale",
-          "value": "ECDSA over NIST P-256 (sign/verify in the signature playground); broken by Shor's algorithm."
+          "value": "ECDSA over NIST P-256 (sign/verify in the signature and PKI playgrounds); broken by Shor's algorithm."
         },
         {
           "name": "crypto:library",
@@ -421,7 +469,7 @@
         },
         {
           "name": "beyond-shor:correction",
-          "value": "Only sign and verify are used (ECDSA), so the primitive is signature, not key-agree. (cryptoProperties.algorithmProperties.primitive: \"key-agree\" → \"signature\"; crypto:rationale: \"NIST P-256 elliptic curve (use not inferred from a bare curve constant); broken by Shor's algorithm.\" → \"ECDSA over NIST P-256 (sign/verify in the signature playground); broken by Shor's algorithm.\")"
+          "value": "Only sign and verify are used (ECDSA), so the primitive is signature, not key-agree. (cryptoProperties.algorithmProperties.primitive: \"key-agree\" → \"signature\"; crypto:rationale: \"NIST P-256 elliptic curve (use not inferred from a bare curve constant); broken by Shor's algorithm.\" → \"ECDSA over NIST P-256 (sign/verify in the signature and PKI playgrounds); broken by Shor's algorithm.\")"
         }
       ]
     },
@@ -629,6 +677,88 @@
     },
     {
       "type": "cryptographic-asset",
+      "bom-ref": "crypto/ml-dsa-44",
+      "name": "ML-DSA-44",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "algorithmFamily": "ML-DSA",
+          "parameterSetIdentifier": "44",
+          "nistQuantumSecurityLevel": 2,
+          "cryptoFunctions": [
+            "keygen",
+            "sign",
+            "verify"
+          ]
+        },
+        "oid": "2.16.840.1.101.3.4.3.17"
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "beyond-shor::frontend/lib/pki/meta.ts",
+            "line": 28,
+            "additionalContext": "id: 'mldsa44', name: 'ML-DSA-44', oid: OID.mlDsa44,",
+            "symbol": "JWA:ML-DSA-44"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 110,
+            "additionalContext": "case 'mldsa44': return ml_dsa44.verify(sig, msg, publicKey);",
+            "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa44.verify"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 92,
+            "additionalContext": "case 'mldsa44': return ml_dsa44.sign(msg, key.secretKey);",
+            "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa44.sign"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 70,
+            "additionalContext": "case 'mldsa44': { const k = ml_dsa44.keygen(); return { alg, ...k }; }",
+            "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa44.keygen"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "crypto:quantumStatus",
+          "value": "safe"
+        },
+        {
+          "name": "crypto:classicalStatus",
+          "value": "secure"
+        },
+        {
+          "name": "crypto:family",
+          "value": "pqc"
+        },
+        {
+          "name": "crypto:name",
+          "value": "ML-DSA"
+        },
+        {
+          "name": "crypto:confidence",
+          "value": "resolved"
+        },
+        {
+          "name": "crypto:rationale",
+          "value": "NIST FIPS 204 post-quantum signature (CRYSTALS-Dilithium), level 2."
+        },
+        {
+          "name": "crypto:library",
+          "value": "@noble/post-quantum"
+        },
+        {
+          "name": "crypto:source",
+          "value": "beyond-shor"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
       "bom-ref": "crypto/ml-dsa-65",
       "name": "ML-DSA-65",
       "cryptoProperties": {
@@ -650,19 +780,19 @@
         "occurrences": [
           {
             "location": "beyond-shor::frontend/workers/signature-worker.ts",
-            "line": 95,
+            "line": 97,
             "additionalContext": "signature = ml_dsa65.sign(msgBytes, secretKey);",
             "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.sign"
           },
           {
             "location": "beyond-shor::frontend/workers/signature-worker.ts",
-            "line": 67,
+            "line": 68,
             "additionalContext": "const kp = ml_dsa65.keygen();",
             "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.keygen"
           },
           {
             "location": "beyond-shor::frontend/workers/signature-worker.ts",
-            "line": 51,
+            "line": 52,
             "additionalContext": "if (dsa === 'mldsa65') return ml_dsa65.verify(sig, msg, pub);",
             "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.verify"
           },
@@ -679,6 +809,48 @@
             "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.verify"
           },
           {
+            "location": "beyond-shor::frontend/lib/pki/meta.ts",
+            "line": 32,
+            "additionalContext": "id: 'mldsa65', name: 'ML-DSA-65', oid: OID.mlDsa65,",
+            "symbol": "JWA:ML-DSA-65"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 117,
+            "additionalContext": "const mlOk = ml_dsa65.verify(sig.subarray(0, MLDSA65_SIG), m, publicKey.subarray(0, MLDSA65_PK), { context: COMPOSITE_LABEL });",
+            "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.verify"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 111,
+            "additionalContext": "case 'mldsa65': return ml_dsa65.verify(sig, msg, publicKey);",
+            "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.verify"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 98,
+            "additionalContext": "const mlSig = ml_dsa65.sign(m, mldsaSk, { context: COMPOSITE_LABEL });",
+            "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.sign"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 93,
+            "additionalContext": "case 'mldsa65': return ml_dsa65.sign(msg, key.secretKey);",
+            "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.sign"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 76,
+            "additionalContext": "const ml = ml_dsa65.keygen(seed);",
+            "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.keygen"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 71,
+            "additionalContext": "case 'mldsa65': { const k = ml_dsa65.keygen(); return { alg, ...k }; }",
+            "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.keygen"
+          },
+          {
             "location": "beyond-shor::scripts/sign-articles.mjs",
             "line": 172,
             "additionalContext": "const sig = ml_dsa65.sign(msg, privateKey);",
@@ -692,13 +864,13 @@
           },
           {
             "location": "beyond-shor::scripts/sign-cbom.mjs",
-            "line": 88,
+            "line": 138,
             "additionalContext": "if (pubKey && !ml_dsa65.verify(sig, msgBytes, pubKey)) {",
             "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.verify"
           },
           {
             "location": "beyond-shor::scripts/sign-cbom.mjs",
-            "line": 77,
+            "line": 127,
             "additionalContext": "const sig      = ml_dsa65.sign(msgBytes, privKey);",
             "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.sign"
           },
@@ -872,6 +1044,72 @@
             "symbol": "node:crypto.createHmac"
           },
           {
+            "location": "beyond-shor::frontend/lib/pki/mtc.ts",
+            "line": 52,
+            "additionalContext": "return concat(versionDer, issuerDer, validityDer, subjectDer, spkiAlgDer, octets(sha256(spkiDer)), extensionsDer ?? new Uint8Array());",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/tls.ts",
+            "line": 16,
+            "additionalContext": "const transcriptHash = sha256(transcript);",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/ct.ts",
+            "line": 92,
+            "additionalContext": "const data = signedData(sct.timestamp, sha256(issuerSpkiDer), precertTbsOf(cert));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/ct.ts",
+            "line": 46,
+            "additionalContext": "const issuerKeyHash = sha256(issuerSpkiDer);",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/ct.ts",
+            "line": 20,
+            "additionalContext": "return { name, key, logId: sha256(spki(alg, key.publicKey)), entries: [] };",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/merkle.ts",
+            "line": 29,
+            "additionalContext": "if (n === 0) return sha256(new Uint8Array());",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/merkle.ts",
+            "line": 9,
+            "additionalContext": "const nodeHash = (l: Bytes, r: Bytes) => sha256(concat(Uint8Array.of(0x01), l, r));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/merkle.ts",
+            "line": 8,
+            "additionalContext": "export const leafHash = (entry: Bytes) => sha256(concat(Uint8Array.of(0x00), entry));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/x509.ts",
+            "line": 436,
+            "additionalContext": "export const fingerprint = (der: Bytes) => sha256(der);",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/x509.ts",
+            "line": 166,
+            "additionalContext": "return sha256(publicKey).slice(0, 20);",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/x509.ts",
+            "line": 137,
+            "additionalContext": "return extension(OID.relatedCertificate, false, seq(seq(oid(OID.sha256)), octets(sha256(e.certDer))));",
+            "symbol": "@noble/hashes/sha2.js.sha256"
+          },
+          {
             "location": "beyond-shor::scripts/sign-articles.mjs",
             "line": 67,
             "additionalContext": "return createHash('sha256').update(Buffer.from(buffer)).digest('hex');",
@@ -912,7 +1150,72 @@
         },
         {
           "name": "crypto:library",
+          "value": "@noble/hashes"
+        },
+        {
+          "name": "crypto:library",
           "value": "Node.js crypto"
+        },
+        {
+          "name": "crypto:source",
+          "value": "beyond-shor"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/sha-512",
+      "name": "SHA-512",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "algorithmFamily": "SHA-2",
+          "parameterSetIdentifier": "512",
+          "cryptoFunctions": [
+            "digest"
+          ]
+        },
+        "oid": "2.16.840.1.101.3.4.2.3"
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 61,
+            "additionalContext": "return concat(COMPOSITE_PREFIX, COMPOSITE_LABEL, Uint8Array.of(ctx.length), ctx, sha512(msg));",
+            "symbol": "@noble/hashes/sha2.js.sha512"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "crypto:quantumStatus",
+          "value": "safe"
+        },
+        {
+          "name": "crypto:classicalStatus",
+          "value": "secure"
+        },
+        {
+          "name": "crypto:family",
+          "value": "hash"
+        },
+        {
+          "name": "crypto:name",
+          "value": "SHA-512"
+        },
+        {
+          "name": "crypto:confidence",
+          "value": "resolved"
+        },
+        {
+          "name": "crypto:rationale",
+          "value": "SHA-2; large margin against quantum search."
+        },
+        {
+          "name": "crypto:library",
+          "value": "@noble/hashes"
         },
         {
           "name": "crypto:source",
@@ -1111,6 +1414,81 @@
     },
     {
       "type": "cryptographic-asset",
+      "bom-ref": "crypto/slh-dsa-sha2-192s",
+      "name": "SLH-DSA-SHA2-192s",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "parameterSetIdentifier": "SHA2-192s",
+          "nistQuantumSecurityLevel": 3,
+          "cryptoFunctions": [
+            "keygen",
+            "sign",
+            "verify"
+          ]
+        },
+        "oid": "2.16.840.1.101.3.4.3.22"
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 112,
+            "additionalContext": "case 'slhdsa192s': return slh_dsa_sha2_192s.verify(sig, msg, publicKey);",
+            "symbol": "@noble/post-quantum/slh-dsa.js.slh_dsa_sha2_192s.verify"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 94,
+            "additionalContext": "case 'slhdsa192s': return slh_dsa_sha2_192s.sign(msg, key.secretKey);",
+            "symbol": "@noble/post-quantum/slh-dsa.js.slh_dsa_sha2_192s.sign"
+          },
+          {
+            "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
+            "line": 72,
+            "additionalContext": "case 'slhdsa192s': { const k = slh_dsa_sha2_192s.keygen(); return { alg, ...k }; }",
+            "symbol": "@noble/post-quantum/slh-dsa.js.slh_dsa_sha2_192s.keygen"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "crypto:quantumStatus",
+          "value": "safe"
+        },
+        {
+          "name": "crypto:classicalStatus",
+          "value": "secure"
+        },
+        {
+          "name": "crypto:family",
+          "value": "pqc"
+        },
+        {
+          "name": "crypto:name",
+          "value": "SLH-DSA"
+        },
+        {
+          "name": "crypto:confidence",
+          "value": "resolved"
+        },
+        {
+          "name": "crypto:rationale",
+          "value": "NIST FIPS 205 SLH-DSA-SHA2-192s (SPHINCS+): small signatures, slow signing; NIST level 3."
+        },
+        {
+          "name": "crypto:library",
+          "value": "@noble/post-quantum"
+        },
+        {
+          "name": "crypto:source",
+          "value": "beyond-shor"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
       "bom-ref": "crypto/x25519",
       "name": "X25519",
       "cryptoProperties": {
@@ -1208,6 +1586,9 @@
       "evidence": {
         "occurrences": [
           {
+            "location": "frontend/lib/pki/algorithms.ts"
+          },
+          {
             "location": "frontend/workers/playground-worker.ts"
           },
           {
@@ -1238,6 +1619,24 @@
       "name": "@noble/hashes",
       "evidence": {
         "occurrences": [
+          {
+            "location": "frontend/lib/pki/algorithms.ts"
+          },
+          {
+            "location": "frontend/lib/pki/ct.ts"
+          },
+          {
+            "location": "frontend/lib/pki/merkle.ts"
+          },
+          {
+            "location": "frontend/lib/pki/mtc.ts"
+          },
+          {
+            "location": "frontend/lib/pki/tls.ts"
+          },
+          {
+            "location": "frontend/lib/pki/x509.ts"
+          },
           {
             "location": "frontend/lib/rbe/sample.ts"
           },
@@ -1271,6 +1670,9 @@
         "occurrences": [
           {
             "location": "frontend/components/SignatureVerifier.tsx"
+          },
+          {
+            "location": "frontend/lib/pki/algorithms.ts"
           },
           {
             "location": "frontend/workers/playground-worker.ts"
@@ -1427,6 +1829,9 @@
       "ref": "crypto/hmac"
     },
     {
+      "ref": "crypto/ml-dsa-44"
+    },
+    {
       "ref": "crypto/ml-dsa-65"
     },
     {
@@ -1436,6 +1841,9 @@
       "ref": "crypto/sha-256"
     },
     {
+      "ref": "crypto/sha-512"
+    },
+    {
       "ref": "crypto/shake256"
     },
     {
@@ -1443,6 +1851,9 @@
     },
     {
       "ref": "crypto/slh-dsa-sha2-128s"
+    },
+    {
+      "ref": "crypto/slh-dsa-sha2-192s"
     },
     {
       "ref": "crypto/x25519"
@@ -1463,16 +1874,20 @@
     {
       "ref": "lib/noble-hashes",
       "provides": [
+        "crypto/sha-256",
+        "crypto/sha-512",
         "crypto/shake256"
       ]
     },
     {
       "ref": "lib/noble-post-quantum",
       "provides": [
+        "crypto/ml-dsa-44",
         "crypto/ml-dsa-65",
         "crypto/ml-kem-1024",
         "crypto/slh-dsa-sha2-128f",
-        "crypto/slh-dsa-sha2-128s"
+        "crypto/slh-dsa-sha2-128s",
+        "crypto/slh-dsa-sha2-192s"
       ]
     },
     {
