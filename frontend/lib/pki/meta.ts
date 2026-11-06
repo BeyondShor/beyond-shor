@@ -8,6 +8,8 @@ export type AlgId = 'ecdsa-p256' | 'mldsa44' | 'mldsa65' | 'slhdsa192s' | 'compo
 export interface AlgInfo {
   id:          AlgId;
   name:        string;
+  /** compact name for tight spaces such as the overview diagram */
+  short:       string;
   oid:         string;
   /** Resists an attacker with a cryptographically relevant quantum computer. */
   quantumSafe: boolean;
@@ -21,23 +23,23 @@ export interface AlgInfo {
 
 export const ALGS: Record<AlgId, AlgInfo> = {
   'ecdsa-p256': {
-    id: 'ecdsa-p256', name: 'ECDSA P-256', oid: OID.ecdsaWithSha256,
+    id: 'ecdsa-p256', name: 'ECDSA P-256', short: 'ECDSA P-256', oid: OID.ecdsaWithSha256,
     quantumSafe: false, classical: true, standard: 'RFC 5480 / RFC 5758', pkBytes: 65, sigBytes: 72,
   },
   mldsa44: {
-    id: 'mldsa44', name: 'ML-DSA-44', oid: OID.mlDsa44,
+    id: 'mldsa44', name: 'ML-DSA-44', short: 'ML-DSA-44', oid: OID.mlDsa44,
     quantumSafe: true, classical: false, standard: 'FIPS 204 / RFC 9881', pkBytes: 1312, sigBytes: 2420,
   },
   mldsa65: {
-    id: 'mldsa65', name: 'ML-DSA-65', oid: OID.mlDsa65,
+    id: 'mldsa65', name: 'ML-DSA-65', short: 'ML-DSA-65', oid: OID.mlDsa65,
     quantumSafe: true, classical: false, standard: 'FIPS 204 / RFC 9881', pkBytes: 1952, sigBytes: 3309,
   },
   slhdsa192s: {
-    id: 'slhdsa192s', name: 'SLH-DSA-SHA2-192s', oid: OID.slhDsaSha2_192s,
+    id: 'slhdsa192s', name: 'SLH-DSA-SHA2-192s', short: 'SLH-DSA-SHA2-192s', oid: OID.slhDsaSha2_192s,
     quantumSafe: true, classical: false, standard: 'FIPS 205 / RFC 9909', pkBytes: 48, sigBytes: 16224,
   },
   'composite-mldsa65-p256': {
-    id: 'composite-mldsa65-p256', name: 'Composite ML-DSA-65 + ECDSA P-256', oid: OID.compMlDsa65EcdsaP256,
+    id: 'composite-mldsa65-p256', name: 'Composite ML-DSA-65 + ECDSA P-256', short: 'Composite ML-DSA-65/P-256', oid: OID.compMlDsa65EcdsaP256,
     // EUF-CMA holds while either component holds (draft §9), so a CRQC alone does not break it
     quantumSafe: true, classical: true, standard: 'draft-ietf-lamps-pq-composite-sigs-19',
     pkBytes: 1952 + 65, sigBytes: 3309 + 72,

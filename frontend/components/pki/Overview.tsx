@@ -3,7 +3,7 @@
 // Step-by-step overview: the lab's steps as packets moving between the parties.
 // Each step runs the real work (key ceremony, request, ACME, issuance, handshake)
 // and shows its actual values; the details below are filled by the same run.
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { ALGS, PRIVATE_CLIENTS, PROFILES, WEB_CLIENTS, type ProfileId } from '@/lib/pki/meta';
 import type { HandshakeView, LeafView, PkiView } from '@/lib/pki/worker-types';
@@ -21,49 +21,82 @@ interface Layout { w: number; h: number; nodes: Record<NodeId, Box>; routes: Rec
 // Orthogonal routes through the gaps between boxes, so no line runs through a party
 // it doesn't concern. Pairs not listed are drawn as straight lines.
 const WIDE: Layout = {
-  w: 640, h: 468,
+  w: 640, h: 492,
   nodes: {
-    root: [16, 16, 184, 58], dns: [228, 16, 184, 58], aux: [440, 16, 184, 58],
-    issuing: [16, 122, 184, 58], ra: [228, 122, 184, 58], crl: [440, 122, 184, 58],
-    server: [228, 228, 184, 58], mallory: [228, 310, 184, 46],
-    c0: [16, 398, 184, 58], c1: [228, 398, 184, 58], c2: [440, 398, 184, 58],
+    root: [16, 16, 184, 66], dns: [228, 16, 184, 66], aux: [440, 16, 184, 66],
+    issuing: [16, 128, 184, 66], ra: [228, 128, 184, 66], crl: [440, 128, 184, 66],
+    server: [228, 240, 184, 66], mallory: [228, 326, 184, 46],
+    c0: [16, 410, 184, 66], c1: [228, 410, 184, 66], c2: [440, 410, 184, 66],
   },
   routes: {
-    'server>dns': [[320, 257], [426, 257], [426, 45], [320, 45]],
-    'issuing>aux': [[108, 151], [108, 98], [532, 98], [532, 45]],
-    'root>server': [[108, 45], [214, 45], [214, 257], [320, 257]],
-    'server>c0': [[320, 257], [320, 378], [108, 378], [108, 427]],
-    'server>c1': [[320, 257], [320, 427]],
-    'server>c2': [[320, 257], [320, 378], [532, 378], [532, 427]],
-    'crl>c0': [[532, 151], [632, 151], [632, 388], [92, 388], [92, 427]],
-    'crl>c1': [[532, 151], [632, 151], [632, 388], [336, 388], [336, 427]],
-    'crl>c2': [[532, 151], [632, 151], [632, 388], [548, 388], [548, 427]],
-    'aux>c1': [[532, 45], [632, 45], [632, 388], [336, 388], [336, 427]],
+    'server>dns': [[320, 273], [426, 273], [426, 49], [320, 49]],
+    'issuing>aux': [[108, 161], [108, 105], [532, 105], [532, 49]],
+    'root>server': [[108, 49], [214, 49], [214, 273], [320, 273]],
+    'server>c0': [[320, 273], [320, 392], [108, 392], [108, 443]],
+    'server>c1': [[320, 273], [320, 443]],
+    'server>c2': [[320, 273], [320, 392], [532, 392], [532, 443]],
+    'crl>c0': [[532, 161], [632, 161], [632, 402], [92, 402], [92, 443]],
+    'crl>c1': [[532, 161], [632, 161], [632, 402], [336, 402], [336, 443]],
+    'crl>c2': [[532, 161], [632, 161], [632, 402], [548, 402], [548, 443]],
+    'aux>c1': [[532, 49], [632, 49], [632, 402], [336, 402], [336, 443]],
   },
 };
 const NARROW: Layout = {
-  w: 360, h: 556,
+  w: 360, h: 522,
   nodes: {
-    root: [8, 8, 168, 56], dns: [184, 8, 168, 56],
-    issuing: [8, 96, 168, 56], ra: [184, 96, 168, 56],
-    aux: [8, 184, 168, 56], crl: [184, 184, 168, 56],
-    server: [96, 282, 168, 56], mallory: [96, 362, 168, 46],
-    c0: [8, 466, 110, 76], c1: [125, 466, 110, 76], c2: [242, 466, 110, 76],
+    root: [8, 8, 168, 66], dns: [184, 8, 168, 66],
+    issuing: [8, 96, 168, 66], ra: [184, 96, 168, 66],
+    aux: [8, 184, 168, 66], crl: [184, 184, 168, 66],
+    server: [96, 276, 168, 66], mallory: [96, 362, 168, 46],
+    c0: [8, 430, 110, 84], c1: [125, 430, 110, 84], c2: [242, 430, 110, 84],
   },
   routes: {
-    'server>ra': [[180, 310], [180, 168], [268, 168], [268, 124]],
-    'server>dns': [[180, 310], [180, 80], [268, 80], [268, 36]],
-    'issuing>server': [[92, 124], [180, 124], [180, 310]],
-    'root>server': [[92, 36], [180, 36], [180, 310]],
-    'server>c0': [[180, 310], [180, 448], [63, 448], [63, 504]],
-    'server>c1': [[180, 310], [180, 504]],
-    'server>c2': [[180, 310], [180, 448], [297, 448], [297, 504]],
-    'crl>c0': [[268, 212], [356, 212], [356, 458], [50, 458], [50, 504]],
-    'crl>c1': [[268, 212], [356, 212], [356, 458], [194, 458], [194, 504]],
-    'crl>c2': [[268, 212], [356, 212], [356, 458], [311, 458], [311, 504]],
-    'aux>c1': [[92, 212], [4, 212], [4, 458], [166, 458], [166, 504]],
+    'server>ra': [[180, 309], [180, 173], [268, 173], [268, 129]],
+    'server>dns': [[180, 309], [180, 85], [268, 85], [268, 41]],
+    'issuing>server': [[92, 129], [180, 129], [180, 309]],
+    'root>server': [[92, 41], [180, 41], [180, 309]],
+    'server>c0': [[180, 309], [180, 416], [63, 416], [63, 472]],
+    'server>c1': [[180, 309], [180, 472]],
+    'server>c2': [[180, 309], [180, 416], [297, 416], [297, 472]],
+    'crl>c0': [[268, 217], [356, 217], [356, 423], [50, 423], [50, 472]],
+    'crl>c1': [[268, 217], [356, 217], [356, 423], [194, 423], [194, 472]],
+    'crl>c2': [[268, 217], [356, 217], [356, 423], [311, 423], [311, 472]],
+    'aux>c1': [[92, 217], [4, 217], [4, 423], [166, 423], [166, 472]],
   },
 };
+
+/**
+ * Text that never gets cut off: measured in the browser, the font shrinks until the
+ * text fits on one line; below the minimum size it wraps at word boundaries instead.
+ * Runs again once the web fonts have loaded, since the fallback font has other widths.
+ */
+function FitText({ text, base, min, className, refitKey }: { text: string; base: number; min: number; className: string; refitKey?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [fontsReady, setFontsReady] = useState(false);
+  useEffect(() => { let alive = true; document.fonts?.ready.then(() => { if (alive) setFontsReady(true); }); return () => { alive = false; }; }, []);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      el.style.whiteSpace = 'nowrap';
+      let size = base;
+      el.style.fontSize = `${size}px`;
+      while (el.scrollWidth > el.clientWidth + 0.5 && size > min) {
+        size = Math.max(min, size - 0.25);
+        el.style.fontSize = `${size}px`;
+      }
+      if (el.scrollWidth > el.clientWidth + 0.5) el.style.whiteSpace = 'normal';
+    };
+    fit();
+    // fit again when the available width changes, e.g. when a verdict mark appears next to the title
+    let lastWidth = el.clientWidth;
+    const ro = new ResizeObserver(() => { if (el.clientWidth !== lastWidth) { lastWidth = el.clientWidth; fit(); } });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [text, base, min, fontsReady, refitKey]);
+  // non-breaking hyphens: wrap only between words ("Werkzeug ohne" / "Update-Kanal", never "ML-" / "DSA")
+  return <span ref={ref} className={`min-w-0 flex-1 break-words ${className}`}>{text.replace(/-/g, '\u2011')}</span>;
+}
 
 const center = (b: Box): Pt => [b[0] + b[2] / 2, b[1] + b[3] / 2];
 
@@ -166,13 +199,13 @@ export default function Overview({ profileId, step, attacker, data, busy, onStar
 
   const label = (id: NodeId): { title: string; sub: string; alg?: string } => {
     switch (id) {
-      case 'root': return p.mtc ? { title: t('arch.mtcCa'), sub: t('overview.sub.mtcCa'), alg: ALGS.mldsa44.name } : { title: t(priv ? 'arch.rootPrivate' : 'arch.rootWeb'), sub: t('arch.rootSub'), alg: ALGS[p.root].name };
-      case 'issuing': return p.mtc ? { title: t('arch.mirror'), sub: t('arch.mirrorSub'), alg: ALGS.mldsa44.name } : { title: t(priv ? 'arch.issuingPrivate' : 'arch.issuingWeb'), sub: t('overview.sub.issuing'), alg: ALGS[p.intermediate].name };
+      case 'root': return p.mtc ? { title: t('arch.mtcCa'), sub: t('overview.sub.mtcCa'), alg: ALGS.mldsa44.short } : { title: t(priv ? 'arch.rootPrivate' : 'arch.rootWeb'), sub: t('arch.rootSub'), alg: ALGS[p.root].short };
+      case 'issuing': return p.mtc ? { title: t('arch.mirror'), sub: t('arch.mirrorSub'), alg: ALGS.mldsa44.short } : { title: t(priv ? 'arch.issuingPrivate' : 'arch.issuingWeb'), sub: t('overview.sub.issuing'), alg: ALGS[p.intermediate].short };
       case 'ra': return { title: t('overview.node.ra'), sub: t(priv ? 'overview.sub.raPrivate' : 'overview.sub.raWeb') };
       case 'dns': return { title: t('overview.node.dns'), sub: priv ? 'muster.example' : 'example.com' };
       case 'aux': return p.mtc ? { title: t('arch.updateChannel'), sub: t('arch.updateChannelSub') } : priv ? { title: t('arch.issuanceLog'), sub: t('arch.issuanceLogSub') } : { title: t('arch.ct'), sub: t('arch.ctSub') };
       case 'crl': return p.mtc ? { title: t('overview.node.noCrl'), sub: t('overview.sub.noCrl') } : { title: t('arch.crl'), sub: t('overview.sub.crl') };
-      case 'server': return { title: t('arch.server'), sub: priv ? 'portal.muster.example' : 'shop.example.com', alg: ALGS[p.leaf].name };
+      case 'server': return { title: t('arch.server'), sub: priv ? 'portal.muster.example' : 'shop.example.com', alg: ALGS[p.leaf].short };
       case 'mallory': return { title: t('arch.mallory'), sub: t('overview.sub.mallory') };
       default: {
         const c = clients[Number(id[1])];
@@ -212,7 +245,7 @@ export default function Overview({ profileId, step, attacker, data, busy, onStar
       case 'issue':
         if (!leaf) return null;
         if (leaf.mtc) return t('overview.fact.issueMtc', { lr: f.n(leaf.mtc.landmark.der.length), sa: f.n(leaf.mtc.standalone.der.length), hashes: leaf.mtc.proofHashes, size: f.n(leaf.mtc.logSize) });
-        return t(priv ? 'overview.fact.issuePrivate' : 'overview.fact.issueWeb', { bytes: f.n(leaf.leaf.der.length), alg: ALGS[p.intermediate].name });
+        return t(priv ? 'overview.fact.issuePrivate' : 'overview.fact.issueWeb', { bytes: f.n(leaf.leaf.der.length), alg: ALGS[p.intermediate].short });
       case 'handshake': {
         // the client that supports the profile best (current client / browser with MTC landmark)
         const h = handshakes?.find((x) => x.client === 'modern' || x.client === 'browserMtc') ?? handshakes?.find((x) => x.validation.path.length > 0);
@@ -246,15 +279,15 @@ export default function Overview({ profileId, step, attacker, data, busy, onStar
             <g key={id}>
               <rect x={x} y={y} width={w} height={h} rx={8} fill={id === 'mallory' ? '#1a0b10' : '#060b16'}
                 stroke={stroke} strokeWidth={active || v !== undefined ? 1.8 : 1} />
-              {/* HTML inside the box: long titles are cut with an ellipsis, subtitles wrap */}
+              {/* HTML inside the box: titles shrink to fit (or wrap), subtitles wrap — nothing is cut off */}
               <foreignObject x={x + 1} y={y + 1} width={w - 2} height={h - 2}>
-                <div className="flex h-full flex-col overflow-hidden px-2 py-1.5 leading-tight">
+                <div className="flex h-full flex-col px-2 py-1.5 leading-tight">
                   <div className="flex items-start gap-1">
-                    <span className={`min-w-0 flex-1 font-mono font-semibold text-[#e2e8f0] ${small ? 'text-[10px] line-clamp-2 break-words' : 'text-[12px] truncate'}`}>{title}</span>
-                    {v !== undefined && <span className={`font-bold ${v ? 'text-emerald-400' : 'text-red-400'}`}>{v ? '✓' : '✗'}</span>}
+                    <FitText text={title} base={small ? 10.5 : 12} min={9} refitKey={String(v)} className="font-mono font-semibold text-[#e2e8f0]" />
+                    {v !== undefined && <span className={`shrink-0 font-bold ${v ? 'text-emerald-400' : 'text-red-400'}`}>{v ? '✓' : '✗'}</span>}
                   </div>
-                  <span className={`mt-0.5 text-[#94a3b8] ${small ? 'text-[9px] line-clamp-2' : `text-[10.5px] ${alg ? 'line-clamp-1' : 'line-clamp-2'}`}`}>{sub}</span>
-                  {alg && <span className="mt-auto truncate font-mono text-[10.5px] text-[var(--color-primary)]">{alg}</span>}
+                  <span className={`mt-0.5 text-[#94a3b8] ${small ? 'text-[9px]' : narrow ? 'text-[10px]' : 'text-[10.5px]'}`}>{sub}</span>
+                  {alg && <span className="mt-auto flex"><FitText text={alg} base={10.5} min={8.5} className="font-mono text-[var(--color-primary)]" /></span>}
                 </div>
               </foreignObject>
             </g>
