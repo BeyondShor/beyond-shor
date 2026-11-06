@@ -926,7 +926,7 @@ export interface ApiTimelineEventTimelineEvent
   };
   attributes: {
     category: Schema.Attribute.Enumeration<
-      ['HISTORY', 'STANDARD', 'HARDWARE', 'REGULATION', 'ESTIMATE']
+      ['HISTORY', 'STANDARD', 'HARDWARE', 'REGULATION', 'ESTIMATE', 'INDUSTRY']
     > &
       Schema.Attribute.Required &
       Schema.Attribute.SetPluginOptions<{

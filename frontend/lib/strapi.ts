@@ -7,6 +7,7 @@ import type {
   StrapiSingleResponse,
 } from './types';
 import type { TimelineEvent, TimelineCategory } from './parseTimeline';
+import { routing } from '@/i18n/routing';
 
 const STRAPI_URL = process.env.STRAPI_URL ?? 'http://localhost:1337';
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
@@ -94,6 +95,27 @@ export async function getCategories(locale = 'de'): Promise<Category[]> {
     console.error('[strapi] getCategories:', err);
     return [];
   }
+}
+
+/**
+ * The same category's slug in every locale, or null if `slug` matches no
+ * category in any locale. Category slugs differ per language in the content
+ * (de: kryptografische-algorithmen, en: cryptographic-algorithms), so links that
+ * switch language have to translate the ?category filter. Locales match up via
+ * the shared documentId; a locale without that category is left out.
+ */
+export async function getCategorySlugs(slug: string): Promise<Partial<Record<string, string>> | null> {
+  const lists = await Promise.all(
+    routing.locales.map(async (l) => [l, await getCategories(l)] as const),
+  );
+  const documentId = lists.flatMap(([, cats]) => cats).find((c) => c.slug === slug)?.documentId;
+  if (!documentId) return null;
+  const slugs: Partial<Record<string, string>> = {};
+  for (const [l, cats] of lists) {
+    const match = cats.find((c) => c.documentId === documentId);
+    if (match) slugs[l] = match.slug;
+  }
+  return slugs;
 }
 
 export async function getArticleBySlug(slug: string, locale = 'de'): Promise<Article | null> {

@@ -46,7 +46,9 @@
     "categoryAll": "All",
     "articleList": "Article list",
     "pagination": "Page navigation",
-    "paginationPage": "Page"
+    "paginationPage": "Page",
+    "paginationPrev": "Previous page",
+    "paginationNext": "Next page"
   },
   "article": {
     "breadcrumbHome": "home",
