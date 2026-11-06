@@ -16,6 +16,7 @@ import {
   encodeShareState,
   type KemRunShareState, type KemBenchmarkShareState,
 } from '@/lib/share-state';
+import { computeFullStats, type FullStats } from '@/lib/stats';
 
 // ── Timing constants ────────────────────────────────────────────────────────
 
@@ -530,74 +531,6 @@ function runOnce(kem: KemAlgorithm, input: string): Promise<BenchmarkRun> {
 
 // ── Full statistical engine (no external deps) ──────────────────────────────
 
-interface FullStats {
-  mean:         number;
-  median:       number;
-  std:          number;   // sample std dev (df = n-1)
-  cv:           number;   // coefficient of variation (%)
-  min:          number;
-  max:          number;
-  ci95Half:     number;   // half-width of 95% CI (t-distribution)
-  ci95Lo:       number;
-  ci95Hi:       number;
-  q1:           number;
-  q3:           number;
-  iqr:          number;
-  fenceLo:      number;   // Q1 - 1.5 * IQR
-  fenceHi:      number;   // Q3 + 1.5 * IQR
-  whiskerLo:    number;   // farthest inlier ≥ fenceLo
-  whiskerHi:    number;   // farthest inlier ≤ fenceHi
-  outlierCount: number;
-  trimmedMean:  number;   // mean of inliers only
-  n:            number;
-}
-
-// Two-tailed t(0.025, df=n-1) critical values for 95% CI
-const T95_TABLE: Record<number, number> = {
-  4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262,
-  10: 2.228, 11: 2.201, 12: 2.179, 13: 2.160, 14: 2.145,
-  15: 2.131, 16: 2.120, 17: 2.110, 18: 2.101, 19: 2.093,
-  24: 2.064, 29: 2.045,
-};
-
-function computeFullStats(vals: number[]): FullStats | null {
-  const n = vals.length;
-  if (n < 2) return null;
-  const sorted = [...vals].sort((a, b) => a - b);
-  const lerp = (t: number) => {
-    const i = Math.floor(t), f = t - i;
-    return f === 0 ? sorted[i] : sorted[i] + f * (sorted[Math.min(i + 1, n - 1)] - sorted[i]);
-  };
-
-  const mean     = vals.reduce((s, v) => s + v, 0) / n;
-  const variance = vals.reduce((s, v) => s + (v - mean) ** 2, 0) / (n - 1);
-  const std      = Math.sqrt(variance);
-  const cv       = mean > 0 ? (std / mean) * 100 : 0;
-  const median   = lerp((n - 1) * 0.50);
-  const q1       = lerp((n - 1) * 0.25);
-  const q3       = lerp((n - 1) * 0.75);
-  const iqr      = q3 - q1;
-  const fenceLo  = q1 - 1.5 * iqr;
-  const fenceHi  = q3 + 1.5 * iqr;
-  const inliers  = sorted.filter(v => v >= fenceLo && v <= fenceHi);
-  const whiskerLo    = inliers[0]                    ?? sorted[0];
-  const whiskerHi    = inliers[inliers.length - 1]   ?? sorted[n - 1];
-  const outlierCount = n - inliers.length;
-  const trimmedMean  = inliers.length > 0
-    ? inliers.reduce((s, v) => s + v, 0) / inliers.length : mean;
-
-  const tVal    = T95_TABLE[n - 1] ?? 2.093;
-  const se      = std / Math.sqrt(n);
-  const ci95Half = tVal * se;
-
-  return {
-    mean, median, std, cv,
-    min: sorted[0], max: sorted[n - 1],
-    ci95Half, ci95Lo: mean - ci95Half, ci95Hi: mean + ci95Half,
-    q1, q3, iqr, fenceLo, fenceHi,
-    whiskerLo, whiskerHi, outlierCount, trimmedMean, n,
-  };
-}
 
 // ── Chart constants ─────────────────────────────────────────────────────────
 

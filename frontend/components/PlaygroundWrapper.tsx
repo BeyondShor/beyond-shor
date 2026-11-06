@@ -41,10 +41,12 @@ export interface PlaygroundWrapperProps {
   dsaSnippetHtmls:    Record<DsaAlgorithm, string>;
   realWorldItems?:    RealWorldItem[];
   sigRealWorldItems?: RealWorldItem[];
+  /** article slugs that are live, so demo cards only link existing articles */
+  publishedSlugs?:    string[];
 }
 
 export default function PlaygroundWrapper({
-  kemSnippetHtmls, dsaSnippetHtmls, realWorldItems, sigRealWorldItems,
+  kemSnippetHtmls, dsaSnippetHtmls, realWorldItems, sigRealWorldItems, publishedSlugs = [],
 }: PlaygroundWrapperProps) {
   const t = useTranslations('playground');
   // the server renders the default view; the client then applies the hash
@@ -98,7 +100,7 @@ export default function PlaygroundWrapper({
 
       {track === 'pki' && (
         <div role="tabpanel" id="track-panel-pki" aria-labelledby="track-pki">
-          <PkiPlayground />
+          <PkiPlayground publishedSlugs={publishedSlugs} />
         </div>
       )}
 

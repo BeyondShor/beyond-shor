@@ -415,7 +415,7 @@
     "sigStep2DescMlDsa65": "ML-DSA hasht die Nachricht intern mit SHAKE-256 und berechnet die Signatur über Modul-Gittern (Module-LWE und Module-SIS). Rejection Sampling verhindert, dass die Signaturen etwas über den privaten Schlüssel verraten.",
     "sigStep2DescSlhDsa": "SLH-DSA hasht intern mit SHA-256 und baut die Signatur aus einem mehrstufigen Hypertree auf, der aus Einmal-Signaturen (WOTS+) und einem Few-Time-Signaturverfahren (FORS) besteht. Algebraische Strukturen gibt es keine, die Sicherheit hängt allein an der Hashfunktion.",
     "sigStep3Title": "Verifikation",
-    "sigStep3DescEcdsa": "Der Verifier berechnet SHA-256(Nachricht) selbst und ruft dann p256.verify(sig, SHA-256(msg), pk) auf. Gültig ist das Ergebnis nur, wenn Nachricht, Signatur und Public Key zusammenpassen.",
+    "sigStep3DescEcdsa": "Der Verifier berechnet SHA-256(Nachricht) selbst und ruft dann p256.verify(sig, SHA-256(msg), pk, { prehash: false }) auf. Gültig ist das Ergebnis nur, wenn Nachricht, Signatur und Public Key zusammenpassen.",
     "sigStep3Desc": "Der Verifier übergibt Signatur, Nachricht und Public Key an verify(). Die Bibliothek hasht die Nachricht intern und prüft, ob die Signatur zum Public Key passt. Ist sie gültig, stammt die Nachricht vom Signer und wurde nicht verändert.",
     "sigMessageHash": "SHA-256(Nachricht)",
     "sigMessageHashVerifierNote": "→ Verifier berechnet SHA-256(Nachricht) selbst neu",
@@ -437,7 +437,7 @@
     "sigStep1QuantumBadgeEcdsa": "⚡ Shor kann SK\naus PK berechnen",
     "sigStep1QuantumSafe": "Post-Quanten-\nsicher ✓",
     "sigStep3QuantumWarningEcdsa": "⚡ Mit Quantencomputer ist ECDSA gebrochen: Shors Algorithmus berechnet den Secret Key aus dem Public Key. Damit kann jeder gültige Signaturen fälschen.",
-    "ecdsaImplProse": "Reines JavaScript ohne WASM. @noble/curves ist eine kleine, von unabhängigen Firmen auditierte Bibliothek ohne externe Abhängigkeiten. Unter @noble/curves/nist.js liegen P-256, P-384 und P-521. Aufpassen muss man bei p256.sign(): Standardmäßig erwartet die Funktion einen bereits berechneten Hash. Mit '{prehash: true}' hasht sie die Nachricht selbst mit SHA-256.",
+    "ecdsaImplProse": "Reines JavaScript ohne WASM. @noble/curves ist eine kleine, von unabhängigen Firmen auditierte Bibliothek ohne externe Abhängigkeiten. Unter @noble/curves/nist.js liegen P-256, P-384 und P-521. Aufpassen muss man bei p256.sign(): Seit Version 2 hasht die Funktion die Nachricht standardmäßig selbst mit SHA-256 (prehash: true). Wer den Hash vorher selbst berechnet, wie dieser Playground, muss '{prehash: false}' übergeben, sonst wird doppelt gehasht.",
     "mldsa65ImplProse": "Reines TypeScript ohne WASM. ML-DSA-65 ist in NIST FIPS 204 standardisiert und geht auf CRYSTALS-Dilithium zurück. Die Bibliothek hasht die Nachricht intern mit SHAKE-256 (FIPS 204, Abschnitt 5.2), selbst hashen muss man nicht. Auch hier braucht der Import-Pfad die Endung .js, selbst in TypeScript-Projekten.",
     "slhdsa128sImplProse": "SLH-DSA-SHA2-128s (NIST FIPS 205) ist ein hash-basiertes Signaturverfahren. Es braucht weder Gitter noch elliptische Kurven, angenommen wird nur die Sicherheit von SHA-2. Das „s“ steht für „small“: winzige Schlüssel (32 bzw. 64 Byte), aber sehr langsames Signieren (rund 85 ms). Gegenüber SLH-DSA-SHA2-128f ist die Signatur nur etwa halb so groß (7.856 statt 17.088 Byte), das Signieren dauert dafür ungefähr zehnmal so lange. Das Paket wird erst bei Bedarf aus @noble/post-quantum nachgeladen.",
     "slhdsa128fImplProse": "SLH-DSA-SHA2-128f (NIST FIPS 205) ist ein hash-basiertes Signaturverfahren. Das „f“ steht für „fast“: Signieren geht schneller (rund 8 ms), dafür ist die Signatur mit 17.088 Byte gut doppelt so groß wie bei SLH-DSA-SHA2-128s, bei identischen Schlüsseln. Am Vergleich der beiden Varianten sieht man gut, wie man innerhalb eines Verfahrens Geschwindigkeit gegen Größe tauscht. Das Paket wird erst bei Bedarf aus @noble/post-quantum nachgeladen.",
@@ -491,8 +491,14 @@
   "pkiPlayground": {
     "label": "// pki playground",
     "title": "Wie sieht eine quantensichere PKI aus?",
-    "intro": "Neue Algorithmen allein machen noch keine quantensichere Infrastruktur. Zertifikate, Vertrauensketten und die Verteilung von Schlüsseln müssen mitziehen, und manche Schwächen heutiger PKI lassen sich mit gitterbasierten Verfahren grundsätzlich anders lösen. Zu jeder Demo gibt es einen Artikel, der die Hintergründe erklärt.",
+    "intro": "Neue Algorithmen allein machen noch keine quantensichere Infrastruktur. Zertifikate, Vertrauensketten und die Verteilung von Schlüsseln müssen mitziehen, und manche Schwächen heutiger PKI lassen sich mit gitterbasierten Verfahren grundsätzlich anders lösen. Die Hintergründe erklären Artikel auf Beyond Shor.",
     "demos": {
+      "pki": {
+        "badge": "neu",
+        "meta": "X.509 · ML-DSA · Composite · MTC",
+        "title": "Eine quantensichere PKI im Browser",
+        "desc": "Bauen Sie eine interne oder öffentliche PKI auf, stellen Sie klassische und quantensichere Zertifikate aus und schicken Sie sie an Clients mit unterschiedlichen Fähigkeiten. Mit Störfällen, Angreifersicht, Q-Day, Merkle Tree Certificates und Statistik."
+      },
       "rbe": {
         "badge": "experimentell",
         "meta": "ePrint 2026/628 · gitterbasiert",
@@ -893,5 +899,588 @@
     "aliceReadsLabel": "// Alice liest (Versuch)",
     "emptyOutput": "(nichts Lesbares)",
     "step6Done": "<b>Die Identitätsbindung hält.</b> Alice kann ihre eigenen Nachrichten lesen, Bobs aber nicht. Ihr Rauschen liegt bei fast 100 % der Toleranz: Die Koeffizienten sind praktisch gleichverteilt, und beim Runden entsteht nur Zufall."
+  },
+  "pkiLab": {
+    "pageTitle": "Eine quantensichere PKI im Browser",
+    "metaDescription": "Interaktiver PKI-Playground: echte X.509-Zertifikate mit ECDSA, ML-DSA, SLH-DSA und Composite, Kettenprüfung, Angriffe, Q-Day und Merkle Tree Certificates.",
+    "back": "← PKI-Playground",
+    "label": "// pki playground",
+    "intro": "In diesem Playground läuft eine echte Public-Key-Infrastruktur in Ihrem Browser: Schlüsselzeremonie, Zertifikatsantrag, Ausstellung, Kettenprüfung und Sperrung. Sie können klassische und quantensichere Zertifikate ausstellen, ansehen, herunterladen und an Clients mit unterschiedlichen Fähigkeiten schicken. Dazu kommen Störfälle und die Sicht einer Angreiferin, auch für den Tag, an dem ein Quantencomputer klassische Signaturen bricht.",
+    "basics": {
+      "title": "Was eine PKI leistet",
+      "text": "Wer einen öffentlichen Schlüssel erhält, weiß nicht, wem er gehört. Eine Public-Key-Infrastruktur löst das: Eine Zertifizierungsstelle bestätigt mit ihrer Signatur, dass ein Schlüssel zu einem Namen gehört. Prüfende Seiten müssen dann nur noch wenigen Vertrauensankern vertrauen, den Root-Zertifikaten.",
+      "ca": {
+        "name": "Zertifizierungsstelle (CA)",
+        "desc": "Signiert Zertifikate. Die Root bleibt offline, eine Zwischen-CA stellt im Alltag aus."
+      },
+      "ra": {
+        "name": "Registrierungsstelle (RA)",
+        "desc": "Prüft Anträge, etwa ob jemand die Domain tatsächlich kontrolliert."
+      },
+      "subscriber": {
+        "name": "Antragsteller",
+        "desc": "Hier ein Server: Er erzeugt sein Schlüsselpaar selbst und beantragt ein Zertifikat für seinen Namen."
+      },
+      "relyingParty": {
+        "name": "Prüfende Seite",
+        "desc": "Browser, App oder Gerät: prüft die Kette bis zu einer Root aus dem eigenen Trust Store und entscheidet über die Verbindung."
+      },
+      "quantum": "Mit Post-Quanten-Kryptografie ändern sich die Verfahren im Schlüssel und in der Signatur, nicht die Logik der Prüfung. Die neuen Signaturen sind aber deutlich größer, und Schutz entsteht erst, wenn prüfende Seiten klassische Ketten ablehnen. Beides können Sie unten ausprobieren."
+    },
+    "compare": {
+      "title": "Interne und öffentliche Zertifikate",
+      "text": "Der Playground unterscheidet zwei Welten, die sich bei der Umstellung auf quantensichere Verfahren unterschiedlich schnell bewegen. Jedes Profil ist entsprechend gekennzeichnet.",
+      "trust": {
+        "label": "Wer über Vertrauen entscheidet",
+        "private": "Die Organisation selbst. Sie verteilt ihre Root etwa über die Geräteverwaltung.",
+        "web": "Die Root-Programme der Browser- und Betriebssystemhersteller mit ihren Root Stores."
+      },
+      "algorithms": {
+        "label": "Erlaubte Verfahren heute",
+        "private": "Freie Wahl. ML-DSA in X.509 ist mit RFC 9881 standardisiert, Chrome prüft es ab Version 150 in privaten Hierarchien.",
+        "web": "Nach den Baseline Requirements des CA/Browser Forums nur RSA und ECDSA."
+      },
+      "transparency": {
+        "label": "Transparenz",
+        "private": "Keine öffentlichen Logs. Ein eigenes, nicht nachträglich änderbares Ausstellungsprotokoll übernimmt die Rolle.",
+        "web": "Certificate Transparency ist Pflicht: Chrome verlangt SCTs aus mindestens zwei Logs."
+      },
+      "lifetime": {
+        "label": "Laufzeit von Serverzertifikaten",
+        "private": "Legt der Betreiber fest.",
+        "web": "Höchstens 200 Tage seit dem 15. März 2026, 100 Tage ab dem 15. März 2027, 47 Tage ab dem 15. März 2029."
+      },
+      "pq": {
+        "label": "Weg zu quantensicheren Zertifikaten",
+        "private": "Direkt: ML-DSA, SLH-DSA oder Composite in X.509, sobald alle prüfenden Systeme mitziehen.",
+        "web": "Über Merkle Tree Certificates. Chrome plant ab dem dritten Quartal 2027 einen eigenen Root Store nur dafür."
+      }
+    },
+    "labTitle": "Das Labor",
+    "labIntro": "Wählen Sie, ob Sie eine interne oder eine öffentliche PKI aufbauen, und ein Profil. Die Schritte 01 bis 05 bauen aufeinander auf, ab Schritt 06 folgen Vertiefungen, die für sich funktionieren. Alle Zertifikate sind echt und lassen sich als PEM herunterladen.",
+    "impl": {
+      "title": "Wie der Playground gebaut ist",
+      "real": "Zertifikate, Anträge nach PKCS #10 und Sperrlisten entstehen im Browser nach RFC 5280 in DER-Kodierung und werden mit echten Schlüsseln signiert (@noble/curves und @noble/post-quantum, in einem Web Worker). Kein Server ist beteiligt.",
+      "interop": "Gegengeprüft mit OpenSSL 3.5: Die Ketten mit ECDSA, ML-DSA-44, ML-DSA-65 und SLH-DSA-Root bestehen eine strenge Prüfung samt Servername, Zweck und Sperrliste. Anträge und Sperrlisten verifizieren, gesperrte Zertifikate werden abgelehnt.",
+      "composite": "Composite ML-DSA folgt draft-ietf-lamps-pq-composite-sigs-19 und ist gegen die Testvektoren des Entwurfs geprüft. Bis zum RFC können sich Details noch ändern.",
+      "catalyst": "Die ITU-T-Erweiterungen folgen X.509 (10/2019), Abschnitt 9.8. Die Spezifikation lässt einige Punkte offen, die Demo folgt hier der Umsetzung in Bouncy Castle.",
+      "mtc": "Merkle Tree Certificates folgen draft-ietf-plants-merkle-tree-certs-08: Log-Einträge, Inklusionsbeweise, Cosignaturen und die Prüfung nach Abschnitt 7.2. Für Post-Quanten-SCTs gibt es noch keinen festgelegten Codepoint, die Demo verwendet den TLS-Codepoint von ML-DSA-44.",
+      "simplified": "Vereinfacht sind die Domainprüfung, die Sperrprüfung (nur für das Serverzertifikat) und die Größe des TLS-Handshakes, die aus den Nachrichtenformaten von RFC 8446 berechnet wird.",
+      "shor": "Shors Algorithmus ist simuliert: Kein heutiger Quantencomputer kann ECDSA brechen. Fälschungen und Prüfungen sind dagegen echt."
+    },
+    "series": {
+      "title": "Die Artikelreihe dazu"
+    },
+    "moreInArticle": "Mehr dazu im Artikel:",
+    "accepted": "akzeptiert",
+    "rejected": "abgelehnt",
+    "error": "Fehler: {message}",
+    "scope": {
+      "label": "Art der PKI",
+      "private": "Private PKI (intern)",
+      "web": "Web-PKI (öffentlich)",
+      "privateDesc": "Eigene Root, eigene Regeln: Hier sind quantensichere X.509-Zertifikate schon heute möglich.",
+      "webDesc": "Root Stores der Browser, Certificate Transparency, kurze Laufzeiten: Der Weg zu PQC führt über Merkle Tree Certificates."
+    },
+    "profiles": {
+      "label": "Profil",
+      "roles": "Root {root} · Zwischen-CA {intermediate} · Server {leaf}",
+      "mtcRoles": "Cosigner ML-DSA-44 · Server ML-DSA-44 · keine CA-Signatur im Zertifikat",
+      "classical": {
+        "name": "Klassisch (ECDSA P-256)",
+        "short": "ECDSA",
+        "desc": "Heute in vielen internen PKIs üblich. Kompakt und überall unterstützt, aber ein Quantencomputer mit Shors Algorithmus könnte jeden dieser Schlüssel brechen."
+      },
+      "mldsa44": {
+        "name": "Rein ML-DSA-44",
+        "short": "ML-DSA-44",
+        "desc": "Der kleinste ML-DSA-Parametersatz, mit dem Chrome und Cloudflare planen. Die TR-02102-1 des BSI empfiehlt nur ML-DSA-65 und ML-DSA-87."
+      },
+      "mldsa65": {
+        "name": "Rein ML-DSA-65",
+        "short": "ML-DSA-65",
+        "desc": "Ein Parametersatz aus der TR-02102-1, hier allein eingesetzt. Das BSI empfiehlt ML-DSA grundsätzlich nur in Kombination mit einem klassischen Verfahren."
+      },
+      "composite": {
+        "name": "Composite ML-DSA-65 + ECDSA P-256",
+        "short": "Composite",
+        "desc": "Ein Schlüssel, eine Signatur, gültig nur, wenn beide Teile stimmen. Das entspricht der hybriden Kombination, die die TR-02102-1 beschreibt. Ältere Software kann solche Zertifikate nicht prüfen."
+      },
+      "mixed": {
+        "name": "Rollenmix: SLH-DSA-Root, ML-DSA darunter",
+        "short": "SLH + ML-DSA",
+        "desc": "Verfahren nach Rolle: Die selten signierende Root nutzt das hashbasierte SLH-DSA-SHA2-192s, das nach der TR-02102-1 auch allein eingesetzt werden darf. Darunter signiert ML-DSA-65, hier nicht hybrid."
+      },
+      "web-classical": {
+        "name": "Heute: ECDSA mit Certificate Transparency",
+        "short": "Web ECDSA",
+        "desc": "So sieht eine Kette im öffentlichen Web heute aus: Root, Zwischen-CA und Serverzertifikat mit ECDSA, dazu zwei Signed Certificate Timestamps aus CT-Logs. In der Praxis sind Root und Zwischen-CA oft noch RSA-Schlüssel."
+      },
+      "web-mldsa44": {
+        "name": "Gedankenexperiment: ML-DSA-44 in X.509",
+        "short": "Web ML-DSA-44",
+        "desc": "Dieselbe Kette mit ML-DSA-44, auch für die SCTs. Die Baseline Requirements erlauben derzeit nur RSA und ECDSA, kein Browser hat eine solche Root. Das Profil zeigt, wie groß der Handshake würde."
+      },
+      "web-mtc": {
+        "name": "Geplant: Merkle Tree Certificates",
+        "short": "Web MTC",
+        "desc": "Die CA signiert keine einzelnen Zertifikate mehr, sondern trägt sie in ein Log ein. CA und ein Spiegel cosignieren Teilbäume mit ML-DSA-44, das Zertifikat trägt einen Inklusionsbeweis statt einer CA-Signatur."
+      }
+    },
+    "badges": {
+      "notQuantumSafe": "nicht quantensicher",
+      "quantumSafe": "quantensicher",
+      "notInTr": "nicht in TR-02102-1",
+      "notHybrid": "nicht hybrid",
+      "trConform": "TR-02102-1-konform",
+      "draft": "IETF-Entwurf",
+      "notHybridBelow": "ML-DSA nicht hybrid",
+      "today": "heute üblich",
+      "hypothetical": "hypothetisch",
+      "planned": "geplant"
+    },
+    "roles": {
+      "root": "Root-CA",
+      "issuing": "Ausstellende CA",
+      "leaf": "Serverzertifikat",
+      "mtcLandmark": "MTC, landmark-relativ",
+      "mtcStandalone": "MTC, standalone"
+    },
+    "clients": {
+      "legacy": {
+        "name": "Altgerät",
+        "short": "nur klassische Verfahren",
+        "desc": "Etwa ein Drucker, eine Industriesteuerung oder ein älterer TLS-Stack. Prüft Sperrungen weich."
+      },
+      "modern": {
+        "name": "Aktueller Client",
+        "short": "klassisch und PQC",
+        "desc": "Kennt ML-DSA, SLH-DSA, Composite und die ITU-T-Erweiterungen und akzeptiert weiterhin klassische Ketten. Prüft Sperrungen weich."
+      },
+      "strict": {
+        "name": "Strikter Client",
+        "short": "nur quantensicher",
+        "desc": "Akzeptiert nur quantensichere CA-Signaturen, verlangt bei ITU-T-Zertifikaten die alternative Signatur und lehnt ab, wenn die Sperrauskunft fehlt."
+      },
+      "browserToday": {
+        "name": "Browser heute",
+        "short": "klassischer Root Store",
+        "desc": "Root Store mit klassischen Roots, verlangt zwei gültige SCTs und prüft Sperrungen mit vorab verteilten Daten wie CRLite."
+      },
+      "browserMtc": {
+        "name": "Browser mit MTC",
+        "short": "Plan ab 2027",
+        "desc": "Erhält Landmarks über den Update-Kanal und akzeptiert zusätzlich Merkle Tree Certificates, wie es Chrome für seinen quantenresistenten Root Store plant."
+      },
+      "cliTool": {
+        "name": "Werkzeug ohne Update-Kanal",
+        "short": "etwa auf der Kommandozeile",
+        "desc": "Kennt MTC und die vertrauenswürdigen Cosigner, aber keine aktuellen Landmarks. Prüft keine Sperrungen."
+      }
+    },
+    "arch": {
+      "title": "// architektur",
+      "mtcCa": "MTC-CA mit Issuance Log",
+      "mtcCaSub": "trägt Zertifikate ins Log ein und cosigniert Teilbäume",
+      "cosignature": "Cosignatur",
+      "rootPrivate": "Root-CA der Muster GmbH",
+      "rootWeb": "Root-CA (im Root Store)",
+      "rootSub": "offline, Schlüssel im HSM",
+      "signs": "signiert",
+      "issuingPrivate": "Ausstellende CA",
+      "issuingWeb": "Zwischen-CA",
+      "issuingSubPrivate": "nur serverAuth, nur Namen unter muster.example",
+      "issuingSubWeb": "nur serverAuth",
+      "logs": "Log-Eintrag und Inklusionsbeweis",
+      "issues": "stellt aus",
+      "server": "Server",
+      "handshake": "TLS-Handshake",
+      "mallory": "Mallory",
+      "mallorySub": "sitzt im Netz und sieht alles, was übertragen wird",
+      "ra": "Registrierungsstelle",
+      "raSubPrivate": "Freigaberegeln je Zertifikatsvorlage",
+      "raSubWeb": "ACME, Domainprüfung, CAA",
+      "crl": "Sperrliste (CRL)",
+      "crlSub": "von der ausstellenden CA signiert",
+      "ct": "CT-Logs",
+      "ctSub": "zwei Logs signieren SCTs",
+      "mirror": "Spiegel (Cosigner)",
+      "mirrorSub": "prüft, dass das Log nur wächst",
+      "updateChannel": "Update-Kanal",
+      "updateChannelSub": "verteilt Landmarks an Browser",
+      "issuanceLog": "Ausstellungsprotokoll",
+      "issuanceLogSub": "ersetzt öffentliche Logs",
+      "trustStore": "Trust Store",
+      "trustStorePrivate": "Root über die Geräteverwaltung verteilt",
+      "trustStoreWeb": "Root Store des Browsers"
+    },
+    "step1": {
+      "title": "Schlüsselzeremonie",
+      "intro": "Die Root-CA erzeugt ihr Schlüsselpaar und signiert ihr eigenes Zertifikat. Danach stellt sie das Zertifikat der ausstellenden Zwischen-CA aus, die im Alltag arbeitet. Die Root bleibt offline.",
+      "introMtc": "Eine MTC-CA bringt kein Root-Zertifikat in den Browser. Sie erzeugt einen Cosigner-Schlüssel, ein unabhängiger Spiegel einen zweiten. Beide signieren später Teilbäume des Logs.",
+      "run": "Schlüsselzeremonie durchführen",
+      "again": "Neu durchführen",
+      "slowNote": "SLH-DSA-SHA2-192s signiert in JavaScript langsam, rechnen Sie mit etwa zehn Sekunden.",
+      "root": "Root-CA",
+      "issuing": "Ausstellende CA",
+      "logs": "CT-Logs: {names}, signieren mit {alg}.",
+      "cosigners": "CA-Cosigner und Spiegel signieren mit {alg}, je {bytes} Byte öffentlicher Schlüssel.",
+      "hsmPrivate": "In der Praxis entsteht der Root-Schlüssel in einem HSM nach FIPS 140-3 Stufe 3 oder Common Criteria EAL 4+, unter Mehrpersonenkontrolle. Klassische Roots enden in dieser Demo Ende 2035, quantensichere nach 20 Jahren. Warum, zeigen die drei Uhren in Schritt 08.",
+      "hsmWeb": "Öffentliche Roots entstehen in einer protokollierten Schlüsselzeremonie und kommen erst nach Audits in die Root Stores. Die Demo-Root steht in keinem echten Root Store."
+    },
+    "step2": {
+      "title": "Zertifikat beantragen und ausstellen",
+      "intro": "Der Server erzeugt sein Schlüsselpaar selbst und schickt nur einen Antrag mit dem öffentlichen Schlüssel. Die Selbstsignatur im Antrag beweist, dass er den passenden privaten Schlüssel besitzt.",
+      "run": "Zertifikat beantragen",
+      "again": "Neues Zertifikat beantragen",
+      "needPki": "Führen Sie zuerst die Schlüsselzeremonie durch.",
+      "keygen": "Der Server erzeugt ein {alg}-Schlüsselpaar ({ms}). Der private Schlüssel verlässt den Server nicht.",
+      "csr": "Antrag nach PKCS #10, {bytes} Byte, signiert mit dem neuen privaten Schlüssel:",
+      "pop": "Besitznachweis geprüft",
+      "raPrivate": "Die Registrierungsstelle prüft den Antrag gegen die Freigaberegeln der Vorlage: Der Name liegt unter muster.example, der Zweck ist serverAuth. In der Demo vereinfacht.",
+      "raWeb": "Die CA lässt sich per ACME aus mehreren Netzwerkstandorten bestätigen, dass der Antragsteller die Domain kontrolliert, und fragt den CAA-Eintrag ab. In der Demo vereinfacht.",
+      "issuePrivate": "Die ausstellende CA signiert das Serverzertifikat ({ms}). Laufzeit: 90 Tage.",
+      "issueWeb": "Die CA legt ein Vorzertifikat zwei CT-Logs vor, bettet deren SCTs ein und signiert das endgültige Zertifikat ({ms}). Laufzeit: 90 Tage.",
+      "issueMtc": "Die CA trägt das Zertifikat in ein Log mit {size} Einträgen ein, CA und Spiegel cosignieren den Teilbaum ({ms}). Es entstehen zwei Formen: landmark-relativ und standalone.",
+      "leaf": "Serverzertifikat",
+      "csrPem": "Antrag (PEM)"
+    },
+    "step3": {
+      "title": "Verbindungsaufbau",
+      "introPrivate": "Der Server schickt im TLS-1.3-Handshake sein Zertifikat und das der Zwischen-CA, die Root kennt der Client aus seinem Trust Store. Zusätzlich signiert der Server den Handshake (CertificateVerify). Drei Clients mit unterschiedlichen Fähigkeiten prüfen dieselbe Kette.",
+      "introWeb": "Der Server schickt im TLS-1.3-Handshake sein Zertifikat und das der Zwischen-CA und signiert den Handshake (CertificateVerify). Im öffentlichen Web entscheiden die Root Stores und Certificate Transparency. Drei Clients prüfen.",
+      "introMtc": "Der Server schickt im TLS-1.3-Handshake ein Merkle Tree Certificate ohne Zwischen-CA und signiert den Handshake (CertificateVerify). Welche Form er schickt, hängt vom Client ab: Wer den passenden Landmark kennt, bekommt die kleine landmark-relative Form, alle anderen die Standalone-Form mit Cosignaturen.",
+      "run": "Handshake mit drei Clients",
+      "needLeaf": "Stellen Sie zuerst ein Serverzertifikat aus.",
+      "checks": "Prüfschritte",
+      "cv": {
+        "pass": "Signatur des Servers gültig",
+        "fail": "Signatur ungültig",
+        "skip": "nicht prüfbar, Verfahren unbekannt"
+      },
+      "summary": {
+        "classical": "Altgerät und aktueller Client akzeptieren, der strikte Client lehnt ab: Jede Signatur dieser Kette ließe sich mit einem Quantencomputer fälschen.",
+        "mldsa44": "Das Altgerät scheitert schon am unbekannten Verfahren. Der Preis der Quantensicherheit ist die Größe, vergleichen Sie das Byte-Budget mit dem klassischen Profil.",
+        "mldsa65": "Das Altgerät scheitert schon am unbekannten Verfahren. Der Preis der Quantensicherheit ist die Größe, vergleichen Sie das Byte-Budget mit dem klassischen Profil.",
+        "composite": "Composite ist nicht abwärtskompatibel: Das Altgerät kann auch die klassische Hälfte nicht prüfen. Wer Altgeräte versorgen muss, betreibt daneben weiter eine klassische Hierarchie.",
+        "mixed": "Das Altgerät scheitert am unbekannten Verfahren. Die SLH-DSA-Signatur der Root steckt im Zertifikat der Zwischen-CA und reist bei jedem Handshake mit.",
+        "web-classical": "Alle drei akzeptieren. Die Kette ist klein, aber nicht quantensicher.",
+        "web-mldsa44": "Niemand akzeptiert, weil kein Root Store eine solche Root enthält. Aufschlussreich ist das Byte-Budget.",
+        "web-mtc": "Der heutige Browser kennt MTC nicht. Der Browser mit Landmark bekommt das kleine landmark-relative Zertifikat, das Werkzeug ohne Update-Kanal das größere Standalone-Zertifikat mit zwei Cosignaturen."
+      }
+    },
+    "presented": {
+      "chain": "Zertifikatskette",
+      "landmark": "Landmark-relatives Zertifikat",
+      "standalone": "Standalone-Zertifikat"
+    },
+    "budget": {
+      "title": "Was die Kette im Handshake kostet",
+      "cvSig": "Signatur in CertificateVerify",
+      "leaf": "Server",
+      "intermediate": "Zwischen-CA",
+      "pk": "Öffentlicher Schlüssel",
+      "sig": "Signatur des Ausstellers",
+      "mtcProof": "MTC-Beweis (Hashes und gegebenenfalls Cosignaturen)",
+      "altPk": "Alternativer Schlüssel",
+      "altSig": "Alternative Signatur",
+      "scts": "SCT-Liste (zwei Log-Signaturen)",
+      "chain": "Zertifikate (DER)",
+      "cryptoLoad": "Schlüssel und Signaturen",
+      "flight": "Erster Server-Flug (TCP)",
+      "tcp": "TCP: erstes Staufenster (RFC 6928)",
+      "quic": "QUIC: Verstärkungsgrenze (RFC 9000)",
+      "eap": "EAP-TLS mit Fragmenten von {size} Byte: {fragments} Umläufe für den Server-Flug, bei gegenseitiger Authentisierung rund {mtls}. Manche Access Points brechen nach 40 bis 50 Umläufen ab.",
+      "details": "Aufschlüsselung",
+      "loadTitle": "Schlüssel und Signaturen",
+      "flightTitle": "Handshake-Nachrichten",
+      "method": "Zertifikate, Schlüssel und Signaturen sind gemessen. Die Handshake-Nachrichten sind nach RFC 8446 mit minimalen Erweiterungen und der hybriden Schlüsseleinigung X25519MLKEM768 (1.120 Byte Server-Anteil) gerechnet, einschließlich TLS-Record-Overhead. Der QUIC-Wert ist eine Schätzung mit 60 Byte Overhead pro Paket.",
+      "overTcp": "Der erste Server-Flug passt nicht mehr ins erste TCP-Fenster. Der Server muss auf Bestätigungen warten, das kostet eine zusätzliche Umlaufzeit.",
+      "explain": "Der erste Server-Flug passt ins erste TCP-Fenster. Bei QUIC entscheidet die Dreifach-Regel, ob der Server ohne zusätzliche Umlaufzeit antworten kann."
+    },
+    "cert": {
+      "subject": "Inhaber (subject)",
+      "issuer": "Aussteller (issuer)",
+      "serial": "Seriennummer",
+      "validity": "Gültigkeit",
+      "keyAlg": "Öffentlicher Schlüssel",
+      "sigAlg": "Signatur",
+      "san": "subjectAltName",
+      "tab": {
+        "fields": "Felder",
+        "extensions": "Erweiterungen",
+        "anatomy": "Anatomie",
+        "pem": "PEM"
+      },
+      "critical": "kritisch",
+      "criticalHint": "Eine kritische Erweiterung, die eine prüfende Seite nicht kennt, führt nach RFC 5280 zur Ablehnung. Unbekannte unkritische Erweiterungen darf sie übergehen, darauf beruhen die ITU-T-Hybridzertifikate.",
+      "anatomyAria": "Anteile des Zertifikats in Byte",
+      "part": {
+        "publicKey": "Öffentlicher Schlüssel",
+        "signature": "Signatur",
+        "altPublicKey": "Alternativer Schlüssel",
+        "altSignature": "Alternative Signatur",
+        "sct": "SCTs",
+        "names": "Namen (issuer, subject)",
+        "extensions": "Übrige Erweiterungen",
+        "structure": "Struktur und weitere Felder"
+      },
+      "anatomyHint": "Namen und Erweiterungen bleiben bei jedem Verfahren gleich groß. Mit Post-Quanten-Verfahren dominieren Schlüssel und Signatur das Zertifikat.",
+      "anatomyHintMtc": "Statt einer CA-Signatur trägt das Zertifikat einen MTCProof: Inklusionsbeweis aus SHA-256-Hashes, bei der Standalone-Form zusätzlich zwei Cosignaturen.",
+      "pemHint": "Lässt sich mit OpenSSL ab Version 3.5 lesen, etwa mit openssl x509 -text -in <Datei>.",
+      "pemHintMtc": "OpenSSL kann das Zertifikat lesen, kennt aber das Verfahren id-alg-mtcProof noch nicht."
+    },
+    "checks": {
+      "parse": "Zertifikate lesbar",
+      "path": "Pfad zu einem Vertrauensanker",
+      "algorithm": "Verfahren unterstützt",
+      "signature": "Signatur",
+      "altSignature": "Alternative Signatur (ITU-T)",
+      "mtcProof": "Inklusionsbeweis (MTC)",
+      "validity": "Gültigkeitszeitraum",
+      "criticalExtensions": "Kritische Erweiterungen bekannt",
+      "caFlags": "CA-Berechtigung (basicConstraints, keyUsage)",
+      "pathLen": "pathLenConstraint",
+      "nameConstraints": "Name Constraints",
+      "eku": "Zweck (extendedKeyUsage)",
+      "hostname": "Servername (subjectAltName)",
+      "revocation": "Sperrstatus",
+      "scts": "Certificate Transparency",
+      "pqPolicy": "Richtlinie: nur quantensichere CA-Signaturen"
+    },
+    "reasons": {
+      "parseError": "Zertifikat nicht lesbar ({error})",
+      "mtcUnsupported": "Merkle Tree Certificates sind diesem Client unbekannt",
+      "viaLandmark": "bestätigt über einen Landmark aus dem Update-Kanal",
+      "viaCosignatures": "{cosignatures} gültige Cosignaturen vertrauenswürdiger Cosigner",
+      "notMtc": "kein Merkle Tree Certificate",
+      "malformed": "MTC-Beweis fehlerhaft",
+      "proof": "der Beweis passt nicht zum Zertifikat",
+      "unknownLandmark": "Landmark unbekannt, und das Zertifikat trägt keine Cosignaturen",
+      "cosignatures": "nur {cosignatures} gültige Cosignaturen, verlangt sind zwei",
+      "mtc": "die Cosigner signieren mit ML-DSA-44",
+      "noIssuer": "kein Aussteller „{issuer}“ in der Kette oder im Trust Store",
+      "emptyTrustStore": "keine passende Root im Trust Store",
+      "tooLong": "Kette zu lang",
+      "unsupported": "{alg} ist diesem Client unbekannt",
+      "invalid": "passt nicht zum Schlüssel des Ausstellers",
+      "missing": "fehlt, obwohl der Aussteller einen alternativen Schlüssel hat",
+      "notYetValid": "erst gültig ab {notBefore}",
+      "expired": "abgelaufen am {notAfter}",
+      "unknown": "unbekannte kritische Erweiterung {oids}",
+      "notCa": "kein CA-Zertifikat",
+      "noKeyCertSign": "keyUsage erlaubt kein Signieren von Zertifikaten",
+      "outside": "{names} liegt außerhalb von {permitted}",
+      "noServerAuth": "Zweck serverAuth fehlt",
+      "mismatch": "erwartet {expected}, das Zertifikat gilt für {san}",
+      "notChecked": "nicht geprüft",
+      "noCrl": "keine Sperrliste angegeben",
+      "unavailableHard": "Sperrliste nicht erreichbar, daher abgelehnt",
+      "unavailableSoft": "Sperrliste nicht erreichbar, trotzdem akzeptiert (Soft-Fail)",
+      "crlMalformed": "Sperrliste nicht lesbar",
+      "crlSignature": "Signatur der Sperrliste ungültig",
+      "crlStale": "Sperrliste veraltet",
+      "revoked": "gesperrt (Schlüssel kompromittiert)",
+      "tooFew": "nur {valid} von {required} SCTs gültig",
+      "classicalInPath": "die Kette enthält klassische CA-Signaturen"
+    },
+    "passes": {
+      "path": "{length, plural, one {# Zertifikat} other {# Zertifikate}} bis {anchor}",
+      "signature": "{alg}, geprüft mit dem Schlüssel von {issuer}",
+      "validity": "gültig bis {notAfter}",
+      "nameConstraints": "{names} liegt unter {permitted}",
+      "revocation": "nicht gesperrt (Sperrliste: {crlBytes} Byte)",
+      "scts": "{valid} von {required} SCTs gültig",
+      "pathLen": "{below} CA-Ebenen darunter, erlaubt: {pathLen}",
+      "altSignature": "{alg} gültig",
+      "hostname": "{expected} gefunden"
+    },
+    "failures": {
+      "title": "Was die Prüfung abfängt",
+      "intro": "Hier stellt die CA absichtlich fehlerhafte Zertifikate aus, und die Clients prüfen sie wie zuvor. Jeder Fall scheitert an genau dem Prüfschritt, den RFC 5280 dafür vorsieht.",
+      "pick": "Störfall wählen",
+      "needPki": "Bauen Sie zuerst oben eine PKI auf.",
+      "noFailure": "Keine Prüfung schlägt fehl.",
+      "mtcNote": "Für Merkle Tree Certificates gibt es diese klassischen Störfälle so nicht. Was eine Manipulation bewirkt, zeigt Schritt 05.",
+      "expired": {
+        "label": "Abgelaufen",
+        "what": "Die CA stellt ein Zertifikat aus, dessen Gültigkeit vor 30 Tagen endete.",
+        "why": "Jede prüfende Seite vergleicht die Prüfzeit mit notBefore und notAfter. Ein abgelaufenes Zertifikat legte 2018 Mobilfunkdienste in mehreren Ländern lahm."
+      },
+      "wrongHost": {
+        "label": "Falscher Name",
+        "what": "Das Zertifikat gilt für einen anderen Namen als den, den der Client aufruft.",
+        "why": "Nach RFC 9525 zählt nur subjectAltName, der Common Name wird ignoriert."
+      },
+      "missingIntermediate": {
+        "label": "Zwischen-CA fehlt",
+        "what": "Der Server schickt nur sein eigenes Zertifikat.",
+        "why": "Der Client kennt nur die Root. Ohne Zwischenzertifikat findet er keinen Pfad, ein häufiger Konfigurationsfehler."
+      },
+      "nameConstraints": {
+        "label": "Name Constraints verletzt",
+        "what": "Die ausstellende CA darf nur Namen unter muster.example zertifizieren, stellt aber eines für portal.fremd.example aus.",
+        "why": "Die Signatur ist gültig, doch die Einschränkung im Zertifikat der Zwischen-CA greift bei jeder prüfenden Seite, die RFC 5280 umsetzt."
+      },
+      "wrongEku": {
+        "label": "Falscher Zweck",
+        "what": "Das Zertifikat trägt nur den Zweck clientAuth.",
+        "why": "Ein Client-Zertifikat taugt nicht als Ausweis eines Servers. Chrome verlangt die Trennung nach Zweck inzwischen auch für Zwischen-CAs."
+      },
+      "revoked": {
+        "label": "Gesperrt",
+        "what": "Die CA nimmt die Seriennummer mit dem Grund keyCompromise in ihre Sperrliste auf.",
+        "why": "Clients mit Sperrprüfung lehnen ab. Wer gar nicht prüft, merkt nichts."
+      },
+      "tampered": {
+        "label": "Manipuliert",
+        "what": "16 Byte des öffentlichen Schlüssels im fertigen Zertifikat werden verändert, als hätte jemand den Schlüssel ausgetauscht.",
+        "why": "Die Signatur der CA deckt jedes Byte des signierten Teils ab. Schon ein geändertes Bit lässt die Prüfung scheitern."
+      }
+    },
+    "attack": {
+      "title": "Angreifersicht",
+      "intro": "Mallory sitzt zwischen Server und Clients. Sie sieht alles, was übertragen wird, auch die Zertifikate, denn die sind öffentlich. Was ihr fehlt, sind die privaten Schlüssel. Hier sehen Sie, womit sie es trotzdem versucht und wann ihr ein Quantencomputer hilft.",
+      "toggle": "👁 Angreifer-Ansicht",
+      "quantumToggle": "⚡ Quantencomputer (Shor)",
+      "sees": "Mallory sieht die komplette Zertifikatskette, die Signatur in CertificateVerify und die Sperrlisten. Die privaten Schlüssel von CA und Server sieht sie nicht. Wählen Sie einen Angriff:",
+      "run": "Angriff ausführen",
+      "fooled": "getäuscht",
+      "blocked": "abgewehrt",
+      "ownCa": {
+        "title": "Eigene CA",
+        "desc": "Mallory erzeugt eine eigene Root und Zwischen-CA mit denselben Namen und stellt sich ein Zertifikat für den Server aus.",
+        "lesson": "Namen beweisen nichts. Entscheidend ist, dass die Kette bei einem Vertrauensanker endet, den der Client selbst kennt, und Mallorys Root steht in keinem Trust Store."
+      },
+      "swapKey": {
+        "title": "Schlüssel ausgetauscht",
+        "desc": "Mallory nimmt das echte Serverzertifikat und ersetzt den öffentlichen Schlüssel durch ihren eigenen.",
+        "lesson": "Die Signatur der CA passt nicht mehr. Ohne den privaten Schlüssel der CA lässt sich ein Zertifikat nicht unbemerkt verändern."
+      },
+      "stolenKey": {
+        "title": "Gestohlener Serverschlüssel",
+        "desc": "Mallory hat den privaten Schlüssel des Servers erbeutet. Der Betreiber hat das Zertifikat gesperrt, Mallory präsentiert es trotzdem.",
+        "block": "Mallory blockiert den Abruf der Sperrliste",
+        "lesson": "Wer weich scheitert, akzeptiert, sobald die Sperrauskunft ausbleibt. Adam Langley verglich das mit einem Sicherheitsgurt, der beim Aufprall reißt. Schutz bieten eine harte Prüfung, vorab verteilte Sperrdaten oder kurze Laufzeiten."
+      },
+      "misissuance": {
+        "title": "Fehlausstellung",
+        "desc": "Eine vertrauenswürdige CA stellt Mallory ein Zertifikat für den fremden Namen aus, wie es Fina zwischen 2024 und 2025 für 1.1.1.1 tat.",
+        "lesson": "Die Kette ist echt, jede Prüfung besteht. Gegen Fehlausstellung hilft keine Signaturprüfung, nur Kontrolle über die Ausstellung.",
+        "ct": "Im öffentlichen Web steht das Zertifikat in Certificate-Transparency-Logs. Wer die Logs für die eigenen Namen überwacht, findet es. Die Fina-Zertifikate fielen erst nach rund eineinhalb Jahren auf.",
+        "noCt": "Private PKIs haben keine öffentlichen Logs. Ein eigenes, nicht nachträglich änderbares Ausstellungsprotokoll mit Alarmen übernimmt diese Rolle."
+      }
+    },
+    "qday": {
+      "intro": "Angenommen, ein kryptografisch relevanter Quantencomputer existiert. Mallory berechnet mit Shors Algorithmus aus jedem klassischen öffentlichen Schlüssel den privaten und fälscht damit eine Kette für portal.muster.example. Die Demo simuliert diesen Schritt, indem sie Mallory die echten privaten ECDSA-Schlüssel übergibt. Fälschung und Prüfungen sind echt. Szenario: eine private PKI im Übergang, fünf Arten, sie zu betreiben.",
+      "run": "Q-Day durchspielen",
+      "deployment": "Betriebsart",
+      "classical": {
+        "name": "Nur klassisch",
+        "desc": "Eine ECDSA-Hierarchie, wie heute üblich."
+      },
+      "pqParallel": {
+        "name": "ML-DSA, klassisch parallel",
+        "desc": "Neue ML-DSA-65-Hierarchie. Für Altgeräte läuft die klassische weiter, aktuelle Clients vertrauen beiden Roots."
+      },
+      "compositeParallel": {
+        "name": "Composite, klassisch parallel",
+        "desc": "Composite-Hierarchie. Weil Composite nicht abwärtskompatibel ist, bleibt die klassische für Altgeräte."
+      },
+      "catalyst": {
+        "name": "ITU-T-Erweiterungen",
+        "desc": "Eine Hierarchie: klassische Zertifikate mit zusätzlichem ML-DSA-65-Schlüssel und alternativer Signatur in nicht kritischen Erweiterungen."
+      },
+      "dual": {
+        "name": "Doppelte Zertifikate (RFC 9763)",
+        "desc": "Zwei vollständige Ketten, klassisch und ML-DSA-65, verknüpft über die Erweiterung RelatedCertificate."
+      },
+      "legit": "echte Kette",
+      "forgedAccepted": "Fälschung akzeptiert",
+      "forgedRejected": "Fälschung abgelehnt",
+      "compositeAttempt": "Zusätzlich hat Mallory versucht, eine Composite-Signatur zu fälschen. Den ECDSA-Teil kann sie berechnen, den ML-DSA-Teil nicht, und die Composite-Prüfung verlangt beide.",
+      "lesson": "Kein Format schützt für sich allein. Bei ML-DSA, Composite und doppelten Zertifikaten legt Mallory einfach eine rein klassische Kette vor, bei den ITU-T-Erweiterungen lässt sie die alternative Signatur weg. Sicher ist nur der Client, der klassische Ketten ablehnt und die alternative Signatur verlangt. Erst dieser Schritt bringt den Sicherheitsgewinn.",
+      "brokenKeys": "Welche Schlüssel Mallory berechnet hat",
+      "simulated": "Simuliert: Einen Quantencomputer dieser Größe gibt es nicht. Die Demo übergibt die privaten Schlüssel, die er aus den öffentlichen berechnen könnte.",
+      "whyStrict": "Warum der strikte Client die ITU-T-Fälschung ablehnt"
+    },
+    "revocation": {
+      "title": "Sperrung und Laufzeit",
+      "intro": "Ein gestohlener Schlüssel ist missbrauchbar, bis das Zertifikat abläuft oder die Sperrung bei der prüfenden Seite ankommt, je nachdem, was früher eintritt. Wie lange das dauert, hängt von der Laufzeit und vom Verhalten des Clients ab.",
+      "lifetime": "Laufzeit des Zertifikats",
+      "life": {
+        "d398": "398 Tage (öffentlich bis 14. März 2026)",
+        "d200": "200 Tage (öffentlich seit 15. März 2026)",
+        "d100": "100 Tage (ab 15. März 2027)",
+        "d47": "47 Tage (ab 15. März 2029)",
+        "h160": "160 Stunden (kurzlebig, Let's Encrypt)"
+      },
+      "compromise": "Kompromittierung nach {when} ({pct} % der Laufzeit)",
+      "behaviour": {
+        "local": "Vorab verteilte Sperrdaten (etwa CRLite)",
+        "online": "Online-Abfrage, die Antwort kommt an",
+        "softBlocked": "Soft-Fail, Angreifer blockiert die Abfrage",
+        "none": "Keine Sperrprüfung"
+      },
+      "formula": "Expositionsfenster = min(notAfter, wirksame Sperrung) − Kompromittierung. Annahme: Die Sperrung wirkt 24 Stunden nach der Kompromittierung, das ist die Frist der Baseline Requirements bei kompromittierten Schlüsseln. Kommt sie nie an, zählt die gesamte Restlaufzeit.",
+      "shortLived": "Kurzlebige Zertifikate mit höchstens sieben Tagen Laufzeit müssen nach den Baseline Requirements nicht gesperrt werden. Die kurze Laufzeit ersetzt die Sperrung.",
+      "crlSize": "Die aktuelle Sperrliste der ausstellenden CA ist {bytes} Byte groß, davon {sig} Byte Signatur, mit {revoked, plural, one {# gesperrten Eintrag} other {# gesperrten Einträgen}}. Auch Sperrlisten wachsen mit Post-Quanten-Signaturen.",
+      "hours": "{n} Stunden",
+      "days": "{n} Tage"
+    },
+    "mtc": {
+      "title": "Merkle Tree Certificates",
+      "intro": "Für das öffentliche Web plant Chrome einen anderen Weg: Statt jedes Zertifikat einzeln zu signieren, trägt die CA es in ein Log ein, das nur wachsen darf. Signiert wird der Zustand des Logs.",
+      "s1": "Die CA hängt das Zertifikat als Eintrag an ihr Issuance Log an. Der Eintrag enthält nur einen Hash des öffentlichen Schlüssels.",
+      "s2": "CA und ein unabhängiger Spiegel cosignieren Teilbäume des Logs mit ML-DSA-44.",
+      "s3": "Browser erhalten beglaubigte Teilbäume, die Landmarks, vorab über ihren Update-Kanal. Im Handshake genügt dann ein Inklusionsbeweis aus SHA-256-Hashes.",
+      "s4": "Clients ohne aktuelle Landmarks bekommen das Standalone-Zertifikat mit den Cosignaturen.",
+      "run": "MTCs für verschiedene Log-Größen ausstellen",
+      "logSize": "Einträge im Teilbaum",
+      "proof": "Inklusionsbeweis",
+      "landmarkLoad": "Krypto-Last mit Landmark",
+      "standaloneCert": "Standalone-Zertifikat",
+      "webScale": "Web-Maßstab (rund 5,4 Mio. pro Stunde)",
+      "compare": "Zum Vergleich: Eine herkömmliche X.509-Kette mit ML-DSA-44 überträgt im öffentlichen Web fünf Signaturen und zwei Schlüssel, zusammen {x509} Byte. Mit Landmark bleiben CertificateVerify, der Serverschlüssel und der Beweis, rund {landmark} Byte.",
+      "limits": "Grenzen: MTC setzt voraus, dass Clients aktuelle Landmarks haben, ohne Update-Kanal bleibt das größere Standalone-Zertifikat. Die Zertifikate gelten nur Tage, Ausstellung und Erneuerung müssen also vollständig automatisiert sein. Bis zum RFC kann sich das Format noch ändern."
+    },
+    "clocks": {
+      "title": "Die drei Uhren einer Root",
+      "intro": "Wie lange eine neue Root nutzbar ist, bestimmen drei Fristen: das Ablaufdatum im Zertifikat, die Höchstdauer der Root-Programme und das Ende klassischer Signaturverfahren. Es zählt die früheste.",
+      "keyYear": "Schlüssel erzeugt: {year}",
+      "validity": "Laufzeit im Zertifikat: {years} Jahre",
+      "delay": "Bis zur Aufnahme in die Trust Stores: {years, plural, one {# Jahr} other {# Jahre}}",
+      "alg": "Verfahren",
+      "algClassical": "klassisch (RSA/ECDSA)",
+      "algPq": "quantensicher (ML-DSA/SLH-DSA)",
+      "cert": "Zertifikat (notAfter)",
+      "store": "Root-Programme (15 Jahre)",
+      "deadline": "Ende klassischer Signaturen",
+      "aria": "Zeitleiste der Fristen, Planungshorizont {horizon}",
+      "result": "Planungshorizont: {horizon}. Nutzbar ab etwa {from}, also {years, plural, one {rund # Jahr} other {rund # Jahre}} echter Einsatz.",
+      "noteClassical": "Chrome entfernt Roots, deren Schlüssel vor mehr als 15 Jahren erzeugt wurde, Mozilla ebenso für Websites (für S/MIME nach 18 Jahren). Das BSI empfiehlt klassische Signaturverfahren nach der TR-02102-1 voraussichtlich nur bis Ende 2035, NIST IR 8547 untersagt sie nach 2035.",
+      "notePq": "Für quantensichere Roots gilt die Frist für klassische Verfahren nicht, es bleiben Zertifikatslaufzeit und Root-Programme. In Chromes geplantem quantenresistentem Root Store bleibt ein CA-Schlüssel laut Entwurf höchstens sechs Jahre nach der Aufnahme vertrauenswürdig."
+    },
+    "bench": {
+      "title": "Statistik",
+      "intro": "Alle Messungen laufen in Ihrem Browser mit echten Schlüsseln und Signaturen. Pro Profil wird einmal eine PKI aufgebaut, danach werden wiederholt Serverzertifikate beantragt, ausgestellt und geprüft. Die Rohdaten lassen sich als CSV oder JSON exportieren.",
+      "profiles": "Profile",
+      "runs": "Durchläufe je Profil",
+      "start": "Benchmark starten",
+      "stop": "Anhalten",
+      "mixedNote": "Das Rollenmix-Profil braucht für die SLH-DSA-Root einige Sekunden. Die Dauer der Schlüsselzeremonie steht im JSON-Export.",
+      "error": "Fehler",
+      "chain": "Kette",
+      "metric": {
+        "leafKeygen": "Schlüsselerzeugung (Server)",
+        "csrSign": "Antrag signieren",
+        "popCheck": "Besitznachweis prüfen",
+        "issue": "Ausstellen (CA)",
+        "validate": "Kette prüfen (Client)",
+        "cvSign": "CertificateVerify signieren",
+        "cvVerify": "CertificateVerify prüfen"
+      },
+      "note": "Die Zeiten hängen von Gerät, Browser und Auslastung ab und gelten für diese JavaScript-Implementierungen, nicht für optimierten nativen Code oder HSMs. Bei den Web-Profilen enthält „Ausstellen“ das Einholen der SCTs beziehungsweise den Aufbau des Logs. Browser runden die Zeitmessung auf etwa 0,1 Millisekunden, kurze Operationen erscheinen deshalb gerastert."
+    }
   }
 }

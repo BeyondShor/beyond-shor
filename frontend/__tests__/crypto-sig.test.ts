@@ -38,8 +38,17 @@ describe('ECDSA P-256', () => {
     const publicKey = p256.getPublicKey(secretKey, true);
     const msg = new TextEncoder().encode('test message');
     const msgHash = await sha256(msg);
-    const sig = p256.sign(msgHash, secretKey);
-    expect(p256.verify(sig, msgHash, publicKey)).toBe(true);
+    const sig = p256.sign(msgHash, secretKey, { prehash: false });
+    expect(p256.verify(sig, msgHash, publicKey, { prehash: false })).toBe(true);
+  });
+
+  it('is standard ECDSA with SHA-256 over the message (WebCrypto agrees)', async () => {
+    const secretKey = p256.utils.randomSecretKey();
+    const msg = new TextEncoder().encode('test message');
+    const sig = p256.sign(await sha256(msg), secretKey, { prehash: false });
+    const raw = p256.getPublicKey(secretKey, false);
+    const key = await crypto.subtle.importKey('raw', Uint8Array.from(raw), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+    expect(await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, key, Uint8Array.from(sig), msg)).toBe(true);
   });
 
   it('verification fails for tampered message', async () => {
@@ -47,11 +56,11 @@ describe('ECDSA P-256', () => {
     const publicKey = p256.getPublicKey(secretKey, true);
     const msg = new TextEncoder().encode('original message');
     const msgHash = await sha256(msg);
-    const sig = p256.sign(msgHash, secretKey);
+    const sig = p256.sign(msgHash, secretKey, { prehash: false });
 
     const tampered = new TextEncoder().encode('tampered message');
     const tamperedHash = await sha256(tampered);
-    expect(p256.verify(sig, tamperedHash, publicKey)).toBe(false);
+    expect(p256.verify(sig, tamperedHash, publicKey, { prehash: false })).toBe(false);
   });
 
   it('verification fails for tampered signature', async () => {
@@ -59,14 +68,14 @@ describe('ECDSA P-256', () => {
     const publicKey = p256.getPublicKey(secretKey, true);
     const msg = new TextEncoder().encode('test');
     const msgHash = await sha256(msg);
-    const sig = p256.sign(msgHash, secretKey);
+    const sig = p256.sign(msgHash, secretKey, { prehash: false });
 
     // p256.sign() in @noble/curves 2.x returns a 64-byte Uint8Array (compact r‖s)
     const tampered = new Uint8Array(sig);
     tampered[0] ^= 0xff;
 
     try {
-      expect(p256.verify(tampered, msgHash, publicKey)).toBe(false);
+      expect(p256.verify(tampered, msgHash, publicKey, { prehash: false })).toBe(false);
     } catch {
       // Some tampered bytes produce an invalid point → throwing also counts as rejection
     }
@@ -79,9 +88,9 @@ describe('ECDSA P-256', () => {
 
     const msg = new TextEncoder().encode('test');
     const msgHash = await sha256(msg);
-    const sig = p256.sign(msgHash, secretKey);
+    const sig = p256.sign(msgHash, secretKey, { prehash: false });
 
-    expect(p256.verify(sig, msgHash, publicKey)).toBe(true);        // control: the right key works
+    expect(p256.verify(sig, msgHash, publicKey, { prehash: false })).toBe(true);        // control: the right key works
     expect(p256.verify(sig, msgHash, wrongPublicKey)).toBe(false);
   });
 });

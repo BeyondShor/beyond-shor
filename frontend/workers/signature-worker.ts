@@ -46,7 +46,8 @@ async function doVerify(
       // ECDSA signs the hash, not the message directly.
       // The verifier must independently compute SHA-256(msg) before verifying.
       const msgHash = await sha256(msg);
-      return p256.verify(sig, msgHash, pub);
+      // The hash is computed explicitly (and shown in the UI), so noble must not hash again
+      return p256.verify(sig, msgHash, pub, { prehash: false });
     }
     if (dsa === 'mldsa65') return ml_dsa65.verify(sig, msg, pub);
     const algo = await getSlhDsa(dsa as 'slhdsa128s' | 'slhdsa128f');
@@ -90,7 +91,8 @@ async function run(message: string, dsa: DsaAlgorithm) {
   const t1 = now();
   if (dsa === 'ecdsa') {
     messageHash = await sha256(msgBytes);
-    signature = p256.sign(messageHash, secretKey); // signs H(msg), not msg
+    // ECDSA with SHA-256: e = SHA-256(msg). noble would hash again by default, hence prehash: false
+    signature = p256.sign(messageHash, secretKey, { prehash: false });
   } else if (dsa === 'mldsa65') {
     signature = ml_dsa65.sign(msgBytes, secretKey);
   } else {

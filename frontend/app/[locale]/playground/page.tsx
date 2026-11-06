@@ -4,7 +4,7 @@ import { createHighlighter } from 'shiki';
 import PlaygroundWrapper from '@/components/PlaygroundWrapper';
 import type { KemAlgorithm } from '@/lib/playground-types';
 import type { DsaAlgorithm } from '@/lib/signature-types';
-import { getPlaygroundPage } from '@/lib/strapi';
+import { getArticleBySlug, getPlaygroundPage } from '@/lib/strapi';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -176,6 +176,11 @@ export default async function PlaygroundPage({ params }: PageProps) {
 
   const howToSchema = buildHowToSchema(locale, t);
 
+  // PKI demo cards link their article only once it is published
+  const publishedSlugs = (await Promise.all(['rbe', 'pki'].map(async (slug) => {
+    try { return (await getArticleBySlug(slug, locale)) ? slug : null; } catch { return null; }
+  }))).filter((s): s is string => s !== null);
+
   const realWorldItems = page?.realWorldItems && page.realWorldItems.length > 0
     ? page.realWorldItems.map(item => ({
         name:        item.name,
@@ -206,6 +211,7 @@ export default async function PlaygroundPage({ params }: PageProps) {
           dsaSnippetHtmls={dsaSnippetHtmls}
           realWorldItems={realWorldItems}
           sigRealWorldItems={sigRealWorldItems}
+          publishedSlugs={publishedSlugs}
         />
       </div>
     </div>

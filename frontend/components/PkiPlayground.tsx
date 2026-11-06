@@ -6,10 +6,11 @@ import { Link } from '@/i18n/navigation';
 // Each PKI demo is a page of its own plus the article that explains it.
 // New demos get an entry here and their texts under `pkiPlayground.demos.<key>`.
 const DEMOS = [
-  { key: 'rbe', demo: { pathname: '/rbe' }, article: { pathname: '/blog/[slug]', params: { slug: 'rbe' } } },
+  { key: 'pki', demo: { pathname: '/pki' }, slug: 'pki', badge: 'primary' },
+  { key: 'rbe', demo: { pathname: '/rbe' }, slug: 'rbe', badge: 'amber' },
 ] as const;
 
-export default function PkiPlayground() {
+export default function PkiPlayground({ publishedSlugs }: { publishedSlugs: string[] }) {
   const t = useTranslations('pkiPlayground');
 
   return (
@@ -21,11 +22,11 @@ export default function PkiPlayground() {
       </header>
 
       <ul className="grid gap-4 list-none m-0 p-0">
-        {DEMOS.map(({ key, demo, article }) => (
+        {DEMOS.map(({ key, demo, slug, badge }) => (
           <li key={key}>
             <article className="glass-panel card-glass-hover rounded-xl p-5 sm:p-6">
               <div className="flex flex-wrap items-center gap-2 mb-3 font-mono text-xs">
-                <span className="rounded border border-amber-500/40 px-1.5 py-0.5 text-amber-400">
+                <span className={`rounded border px-1.5 py-0.5 ${badge === 'amber' ? 'border-amber-500/40 text-amber-400' : 'border-[var(--color-primary)]/40 text-[var(--color-primary)]'}`}>
                   {t(`demos.${key}.badge`)}
                 </span>
                 <span className="text-[var(--color-text-muted)]">{t(`demos.${key}.meta`)}</span>
@@ -44,12 +45,14 @@ export default function PkiPlayground() {
                   {t('openDemo')}
                   <span aria-hidden="true" className="inline-block transition-transform group-hover:translate-x-0.5">→</span>
                 </Link>
-                <Link
-                  href={article}
-                  className="font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
-                >
-                  {t('readArticle')}
-                </Link>
+                {publishedSlugs.includes(slug) && (
+                  <Link
+                    href={{ pathname: '/blog/[slug]', params: { slug } }}
+                    className="font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
+                  >
+                    {t('readArticle')}
+                  </Link>
+                )}
               </div>
             </article>
           </li>

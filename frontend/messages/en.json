@@ -415,7 +415,7 @@
     "sigStep2DescMlDsa65": "ML-DSA hashes the message internally with SHAKE-256 and computes the signature over module lattices (Module-LWE and Module-SIS). Rejection sampling ensures the signatures reveal nothing about the private key.",
     "sigStep2DescSlhDsa": "SLH-DSA hashes internally with SHA-256 and builds the signature from a multi-layer hypertree made of one-time signatures (WOTS+) and a few-time signature scheme (FORS). There is no algebraic structure involved; security depends on the hash function alone.",
     "sigStep3Title": "Verification",
-    "sigStep3DescEcdsa": "The verifier computes SHA-256(message) on its own and then calls p256.verify(sig, SHA-256(msg), pk). The result is only valid if message, signature and public key all fit together.",
+    "sigStep3DescEcdsa": "The verifier computes SHA-256(message) on its own and then calls p256.verify(sig, SHA-256(msg), pk, { prehash: false }). The result is only valid if message, signature and public key all fit together.",
     "sigStep3Desc": "The verifier passes signature, message and public key to verify(). The library hashes the message internally and checks whether the signature matches the public key. If it is valid, the message came from the signer and has not been changed.",
     "sigMessageHash": "SHA-256(Message)",
     "sigMessageHashVerifierNote": "→ Verifier recomputes SHA-256(message) independently",
@@ -437,7 +437,7 @@
     "sigStep1QuantumBadgeEcdsa": "⚡ Shor can compute\nSK from PK",
     "sigStep1QuantumSafe": "Post-Quantum\nsecure ✓",
     "sigStep3QuantumWarningEcdsa": "⚡ With a quantum computer, ECDSA is broken: Shor's algorithm computes the secret key from the public key, and anyone can forge valid signatures.",
-    "ecdsaImplProse": "Pure JavaScript, no WASM. @noble/curves is a small library without external dependencies, audited by independent security firms. @noble/curves/nist.js contains P-256, P-384 and P-521. Watch out with p256.sign(): by default it expects a precomputed hash. With '{prehash: true}' it hashes the message with SHA-256 itself.",
+    "ecdsaImplProse": "Pure JavaScript, no WASM. @noble/curves is a small library without external dependencies, audited by independent security firms. @noble/curves/nist.js contains P-256, P-384 and P-521. Watch out with p256.sign(): since version 2 it hashes the message with SHA-256 itself by default (prehash: true). If you compute the hash yourself, as this playground does, you have to pass '{prehash: false}', or the message gets hashed twice.",
     "mldsa65ImplProse": "Pure TypeScript, no WASM. ML-DSA-65 is standardized in NIST FIPS 204 and derives from CRYSTALS-Dilithium. The library hashes the message internally with SHAKE-256 (FIPS 204, section 5.2), so you do not hash it yourself. Here too the import path needs the .js suffix, even in TypeScript projects.",
     "slhdsa128sImplProse": "SLH-DSA-SHA2-128s (NIST FIPS 205) is a hash-based signature scheme. It needs neither lattices nor elliptic curves; the only assumption is that SHA-2 is secure. The 's' stands for 'small': tiny keys (32 and 64 bytes), but very slow signing (around 85 ms). Compared to SLH-DSA-SHA2-128f the signature is only about half the size (7,856 instead of 17,088 bytes), while signing takes roughly ten times as long. The package is loaded from @noble/post-quantum only when needed.",
     "slhdsa128fImplProse": "SLH-DSA-SHA2-128f (NIST FIPS 205) is a hash-based signature scheme. The 'f' stands for 'fast': signing is quicker (around 8 ms), but at 17,088 bytes the signature is more than twice as large as with SLH-DSA-SHA2-128s, with identical keys. Comparing the two variants shows nicely how one scheme trades speed for size. The package is loaded from @noble/post-quantum only when needed.",
@@ -491,8 +491,14 @@
   "pkiPlayground": {
     "label": "// pki playground",
     "title": "What does a post-quantum PKI look like?",
-    "intro": "New algorithms alone do not make a post-quantum infrastructure. Certificates, chains of trust and key distribution have to follow, and some weaknesses of today's PKI can be solved in a fundamentally different way with lattice-based schemes. Every demo comes with an article that explains the background.",
+    "intro": "New algorithms alone do not make a post-quantum infrastructure. Certificates, chains of trust and key distribution have to follow, and some weaknesses of today's PKI can be solved in a fundamentally different way with lattice-based schemes. Articles on Beyond Shor explain the background.",
     "demos": {
+      "pki": {
+        "badge": "new",
+        "meta": "X.509 · ML-DSA · composite · MTC",
+        "title": "A quantum-safe PKI in your browser",
+        "desc": "Build an internal or public PKI, issue classical and quantum-safe certificates and send them to clients with different capabilities. With failure cases, an attacker's view, Q-Day, Merkle Tree Certificates and statistics."
+      },
       "rbe": {
         "badge": "experimental",
         "meta": "ePrint 2026/628 · lattice-based",
@@ -893,5 +899,588 @@
     "aliceReadsLabel": "// Alice reads (attempt)",
     "emptyOutput": "(nothing readable)",
     "step6Done": "<b>The identity binding holds.</b> Alice can read her own messages but not Bob's. Her noise is close to 100 % of the tolerance: the coefficients are practically uniform, and rounding produces only randomness."
+  },
+  "pkiLab": {
+    "pageTitle": "A Quantum-Safe PKI in Your Browser",
+    "metaDescription": "Interactive PKI playground: real X.509 certificates with ECDSA, ML-DSA, SLH-DSA and composite signatures, path validation, attacks, Q-Day and Merkle Tree Certificates.",
+    "back": "← PKI playground",
+    "label": "// pki playground",
+    "intro": "This playground runs a real public key infrastructure in your browser: key ceremony, certificate request, issuance, path validation and revocation. You can issue classical and quantum-safe certificates, inspect and download them, and send them to clients with different capabilities. Add failure cases and an attacker's view, including the day a quantum computer breaks classical signatures.",
+    "basics": {
+      "title": "What a PKI does",
+      "text": "If you receive a public key, you don't know whom it belongs to. A public key infrastructure solves this: a certification authority confirms with its signature that a key belongs to a name. Relying parties then only need to trust a few trust anchors, the root certificates.",
+      "ca": {
+        "name": "Certification authority (CA)",
+        "desc": "Signs certificates. The root stays offline, an intermediate CA does the day-to-day issuing."
+      },
+      "ra": {
+        "name": "Registration authority (RA)",
+        "desc": "Checks requests, for example whether someone really controls the domain."
+      },
+      "subscriber": {
+        "name": "Subscriber",
+        "desc": "Here a server: it generates its own key pair and requests a certificate for its name."
+      },
+      "relyingParty": {
+        "name": "Relying party",
+        "desc": "Browser, app or device: validates the chain up to a root in its own trust store and decides on the connection."
+      },
+      "quantum": "Post-quantum cryptography changes the algorithms in the key and the signature, not the logic of validation. The new signatures are much larger, though, and protection only begins once relying parties reject classical chains. You can try both below."
+    },
+    "compare": {
+      "title": "Internal and public certificates",
+      "text": "The playground distinguishes two worlds that move toward quantum-safe algorithms at different speeds. Every profile is labeled accordingly.",
+      "trust": {
+        "label": "Who decides on trust",
+        "private": "The organization itself. It distributes its root, for example through device management.",
+        "web": "The root programs of browser and operating system vendors with their root stores."
+      },
+      "algorithms": {
+        "label": "Algorithms allowed today",
+        "private": "Free choice. ML-DSA in X.509 is standardized in RFC 9881, and Chrome validates it in private hierarchies starting with version 150.",
+        "web": "Only RSA and ECDSA under the CA/Browser Forum's Baseline Requirements."
+      },
+      "transparency": {
+        "label": "Transparency",
+        "private": "No public logs. An internal issuance log that cannot be altered after the fact takes on that role.",
+        "web": "Certificate Transparency is mandatory: Chrome requires SCTs from at least two logs."
+      },
+      "lifetime": {
+        "label": "Server certificate lifetime",
+        "private": "Set by the operator.",
+        "web": "At most 200 days since March 15, 2026, 100 days from March 15, 2027, 47 days from March 15, 2029."
+      },
+      "pq": {
+        "label": "Path to quantum-safe certificates",
+        "private": "Direct: ML-DSA, SLH-DSA or composite signatures in X.509, once every relying system supports them.",
+        "web": "Via Merkle Tree Certificates. Chrome plans a separate root store just for them starting in the third quarter of 2027."
+      }
+    },
+    "labTitle": "The lab",
+    "labIntro": "Choose whether to build an internal or a public PKI, and pick a profile. Steps 01 to 05 build on each other; from step 06 on, deep dives work on their own. All certificates are real and can be downloaded as PEM.",
+    "impl": {
+      "title": "How the playground is built",
+      "real": "Certificates, PKCS #10 requests and CRLs are DER-encoded in the browser following RFC 5280 and signed with real keys (@noble/curves and @noble/post-quantum, in a web worker). No server is involved.",
+      "interop": "Cross-checked with OpenSSL 3.5: the chains with ECDSA, ML-DSA-44, ML-DSA-65 and an SLH-DSA root pass strict validation including host name, purpose and CRL. Requests and CRLs verify, and revoked certificates are rejected.",
+      "composite": "Composite ML-DSA follows draft-ietf-lamps-pq-composite-sigs-19 and is checked against the draft's test vectors. Details may still change before the RFC.",
+      "catalyst": "The ITU-T extensions follow X.509 (10/2019), section 9.8. The specification leaves some points open; here the demo follows the Bouncy Castle implementation.",
+      "mtc": "Merkle Tree Certificates follow draft-ietf-plants-merkle-tree-certs-08: log entries, inclusion proofs, cosignatures and verification as in section 7.2. There is no assigned code point for post-quantum SCTs yet; the demo uses the TLS code point of ML-DSA-44.",
+      "simplified": "Simplified are domain validation, revocation checking (server certificate only) and the TLS handshake size, which is computed from the message formats in RFC 8446.",
+      "shor": "Shor's algorithm is simulated: no quantum computer today can break ECDSA. The forgeries and validations, however, are real."
+    },
+    "series": {
+      "title": "The article series"
+    },
+    "moreInArticle": "More in the article:",
+    "accepted": "accepted",
+    "rejected": "rejected",
+    "error": "Error: {message}",
+    "scope": {
+      "label": "Kind of PKI",
+      "private": "Private PKI (internal)",
+      "web": "Web PKI (public)",
+      "privateDesc": "Your own root, your own rules: quantum-safe X.509 certificates are possible today.",
+      "webDesc": "Browser root stores, Certificate Transparency, short lifetimes: the path to PQC runs through Merkle Tree Certificates."
+    },
+    "profiles": {
+      "label": "Profile",
+      "roles": "Root {root} · Intermediate {intermediate} · Server {leaf}",
+      "mtcRoles": "Cosigners ML-DSA-44 · Server ML-DSA-44 · no CA signature in the certificate",
+      "classical": {
+        "name": "Classical (ECDSA P-256)",
+        "short": "ECDSA",
+        "desc": "Common in many internal PKIs today. Compact and supported everywhere, but a quantum computer running Shor's algorithm could break every one of these keys."
+      },
+      "mldsa44": {
+        "name": "Pure ML-DSA-44",
+        "short": "ML-DSA-44",
+        "desc": "The smallest ML-DSA parameter set, the one Chrome and Cloudflare are planning with. The German BSI's TR-02102-1 recommends only ML-DSA-65 and ML-DSA-87."
+      },
+      "mldsa65": {
+        "name": "Pure ML-DSA-65",
+        "short": "ML-DSA-65",
+        "desc": "A parameter set from TR-02102-1, used on its own here. The BSI generally recommends ML-DSA only in combination with a classical algorithm."
+      },
+      "composite": {
+        "name": "Composite ML-DSA-65 + ECDSA P-256",
+        "short": "Composite",
+        "desc": "One key, one signature, valid only if both parts check out. This matches the hybrid combination TR-02102-1 describes. Older software cannot validate such certificates."
+      },
+      "mixed": {
+        "name": "By role: SLH-DSA root, ML-DSA below",
+        "short": "SLH + ML-DSA",
+        "desc": "Algorithms by role: the rarely signing root uses hash-based SLH-DSA-SHA2-192s, which TR-02102-1 allows on its own. Below it, ML-DSA-65 signs, not hybrid here."
+      },
+      "web-classical": {
+        "name": "Today: ECDSA with Certificate Transparency",
+        "short": "Web ECDSA",
+        "desc": "What a chain on the public web looks like today: root, intermediate and server certificate with ECDSA, plus two signed certificate timestamps from CT logs. In practice, roots and intermediates often still use RSA keys."
+      },
+      "web-mldsa44": {
+        "name": "Thought experiment: ML-DSA-44 in X.509",
+        "short": "Web ML-DSA-44",
+        "desc": "The same chain with ML-DSA-44, SCTs included. The Baseline Requirements currently allow only RSA and ECDSA, and no browser has such a root. The profile shows how large the handshake would get."
+      },
+      "web-mtc": {
+        "name": "Planned: Merkle Tree Certificates",
+        "short": "Web MTC",
+        "desc": "The CA no longer signs individual certificates; it adds them to a log. The CA and a mirror cosign subtrees with ML-DSA-44, and the certificate carries an inclusion proof instead of a CA signature."
+      }
+    },
+    "badges": {
+      "notQuantumSafe": "not quantum-safe",
+      "quantumSafe": "quantum-safe",
+      "notInTr": "not in TR-02102-1",
+      "notHybrid": "not hybrid",
+      "trConform": "TR-02102-1 compliant",
+      "draft": "IETF draft",
+      "notHybridBelow": "ML-DSA not hybrid",
+      "today": "common today",
+      "hypothetical": "hypothetical",
+      "planned": "planned"
+    },
+    "roles": {
+      "root": "Root CA",
+      "issuing": "Issuing CA",
+      "leaf": "Server certificate",
+      "mtcLandmark": "MTC, landmark-relative",
+      "mtcStandalone": "MTC, standalone"
+    },
+    "clients": {
+      "legacy": {
+        "name": "Legacy device",
+        "short": "classical only",
+        "desc": "Say a printer, an industrial controller or an older TLS stack. Soft-fails on revocation."
+      },
+      "modern": {
+        "name": "Current client",
+        "short": "classical and PQC",
+        "desc": "Knows ML-DSA, SLH-DSA, composite signatures and the ITU-T extensions, and still accepts classical chains. Soft-fails on revocation."
+      },
+      "strict": {
+        "name": "Strict client",
+        "short": "quantum-safe only",
+        "desc": "Accepts only quantum-safe CA signatures, requires the alternative signature on ITU-T certificates and rejects when revocation status is missing."
+      },
+      "browserToday": {
+        "name": "Browser today",
+        "short": "classical root store",
+        "desc": "Root store with classical roots, requires two valid SCTs and checks revocation with pre-distributed data such as CRLite."
+      },
+      "browserMtc": {
+        "name": "Browser with MTC",
+        "short": "planned from 2027",
+        "desc": "Receives landmarks over its update channel and also accepts Merkle Tree Certificates, as Chrome plans for its quantum-resistant root store."
+      },
+      "cliTool": {
+        "name": "Tool without update channel",
+        "short": "e.g., on the command line",
+        "desc": "Knows MTC and the trusted cosigners, but has no current landmarks. Does not check revocation."
+      }
+    },
+    "arch": {
+      "title": "// architecture",
+      "mtcCa": "MTC CA with issuance log",
+      "mtcCaSub": "adds certificates to the log and cosigns subtrees",
+      "cosignature": "cosignature",
+      "rootPrivate": "Muster GmbH root CA",
+      "rootWeb": "Root CA (in the root store)",
+      "rootSub": "offline, key in an HSM",
+      "signs": "signs",
+      "issuingPrivate": "Issuing CA",
+      "issuingWeb": "Intermediate CA",
+      "issuingSubPrivate": "serverAuth only, names under muster.example only",
+      "issuingSubWeb": "serverAuth only",
+      "logs": "log entry and inclusion proof",
+      "issues": "issues",
+      "server": "Server",
+      "handshake": "TLS handshake",
+      "mallory": "Mallory",
+      "mallorySub": "sits on the network and sees everything in transit",
+      "ra": "Registration authority",
+      "raSubPrivate": "approval rules per certificate template",
+      "raSubWeb": "ACME, domain validation, CAA",
+      "crl": "Revocation list (CRL)",
+      "crlSub": "signed by the issuing CA",
+      "ct": "CT logs",
+      "ctSub": "two logs sign SCTs",
+      "mirror": "Mirror (cosigner)",
+      "mirrorSub": "checks that the log only grows",
+      "updateChannel": "Update channel",
+      "updateChannelSub": "distributes landmarks to browsers",
+      "issuanceLog": "Issuance log",
+      "issuanceLogSub": "replaces public logs",
+      "trustStore": "Trust store",
+      "trustStorePrivate": "root distributed via device management",
+      "trustStoreWeb": "the browser's root store"
+    },
+    "step1": {
+      "title": "Key ceremony",
+      "intro": "The root CA generates its key pair and signs its own certificate. It then issues the certificate of the intermediate CA that does the day-to-day work. The root stays offline.",
+      "introMtc": "An MTC CA doesn't put a root certificate into the browser. It generates a cosigner key, and an independent mirror generates a second one. Both later sign subtrees of the log.",
+      "run": "Run the key ceremony",
+      "again": "Run again",
+      "slowNote": "SLH-DSA-SHA2-192s signs slowly in JavaScript; expect about ten seconds.",
+      "root": "Root CA",
+      "issuing": "Issuing CA",
+      "logs": "CT logs: {names}, signing with {alg}.",
+      "cosigners": "CA cosigner and mirror sign with {alg}, each with a {bytes}-byte public key.",
+      "hsmPrivate": "In practice, the root key is generated in an HSM certified to FIPS 140-3 level 3 or Common Criteria EAL 4+, under multi-person control. In this demo, classical roots expire at the end of 2035 and quantum-safe ones after 20 years. Step 08's three clocks show why.",
+      "hsmWeb": "Public roots are created in a recorded key ceremony and only enter root stores after audits. The demo root is not in any real root store."
+    },
+    "step2": {
+      "title": "Request and issue a certificate",
+      "intro": "The server generates its own key pair and sends only a request containing the public key. The self-signature on the request proves it holds the matching private key.",
+      "run": "Request a certificate",
+      "again": "Request a new certificate",
+      "needPki": "Run the key ceremony first.",
+      "keygen": "The server generates an {alg} key pair ({ms}). The private key never leaves the server.",
+      "csr": "PKCS #10 request, {bytes} bytes, signed with the new private key:",
+      "pop": "proof of possession checked",
+      "raPrivate": "The registration authority checks the request against the template's approval rules: the name is under muster.example and the purpose is serverAuth. Simplified in the demo.",
+      "raWeb": "The CA uses ACME, from multiple network perspectives, to confirm the applicant controls the domain, and checks the CAA record. Simplified in the demo.",
+      "issuePrivate": "The issuing CA signs the server certificate ({ms}). Lifetime: 90 days.",
+      "issueWeb": "The CA submits a precertificate to two CT logs, embeds their SCTs and signs the final certificate ({ms}). Lifetime: 90 days.",
+      "issueMtc": "The CA adds the certificate to a log of {size} entries, and the CA and mirror cosign the subtree ({ms}). Two forms result: landmark-relative and standalone.",
+      "leaf": "Server certificate",
+      "csrPem": "Request (PEM)"
+    },
+    "step3": {
+      "title": "Connection setup",
+      "introPrivate": "In the TLS 1.3 handshake, the server sends its certificate and the intermediate's; the client knows the root from its trust store. The server also signs the handshake (CertificateVerify). Three clients with different capabilities validate the same chain.",
+      "introWeb": "In the TLS 1.3 handshake, the server sends its certificate and the intermediate's and signs the handshake (CertificateVerify). On the public web, root stores and Certificate Transparency decide. Three clients validate.",
+      "introMtc": "In the TLS 1.3 handshake, the server sends a Merkle Tree Certificate without an intermediate and signs the handshake (CertificateVerify). Which form it sends depends on the client: one that knows the matching landmark gets the small landmark-relative form, all others the standalone form with cosignatures.",
+      "run": "Handshake with three clients",
+      "needLeaf": "Issue a server certificate first.",
+      "checks": "Validation steps",
+      "cv": {
+        "pass": "server signature valid",
+        "fail": "signature invalid",
+        "skip": "cannot be checked, unknown algorithm"
+      },
+      "summary": {
+        "classical": "The legacy device and the current client accept, the strict client rejects: every signature in this chain could be forged with a quantum computer.",
+        "mldsa44": "The legacy device fails right at the unknown algorithm. The price of quantum safety is size; compare the byte budget with the classical profile.",
+        "mldsa65": "The legacy device fails right at the unknown algorithm. The price of quantum safety is size; compare the byte budget with the classical profile.",
+        "composite": "Composite signatures are not backward compatible: the legacy device cannot even check the classical half. Anyone serving legacy devices keeps running a classical hierarchy alongside.",
+        "mixed": "The legacy device fails at the unknown algorithm. The root's SLH-DSA signature sits in the intermediate certificate and travels with every handshake.",
+        "web-classical": "All three accept. The chain is small, but not quantum-safe.",
+        "web-mldsa44": "Nobody accepts, because no root store contains such a root. The byte budget is what's instructive here.",
+        "web-mtc": "Today's browser doesn't know MTC. The browser with a landmark gets the small landmark-relative certificate, the tool without an update channel the larger standalone certificate with two cosignatures."
+      }
+    },
+    "presented": {
+      "chain": "certificate chain",
+      "landmark": "landmark-relative certificate",
+      "standalone": "standalone certificate"
+    },
+    "budget": {
+      "title": "What the chain costs in the handshake",
+      "cvSig": "Signature in CertificateVerify",
+      "leaf": "server",
+      "intermediate": "intermediate",
+      "pk": "Public key",
+      "sig": "Issuer's signature",
+      "mtcProof": "MTC proof (hashes and cosignatures if any)",
+      "altPk": "Alternative key",
+      "altSig": "Alternative signature",
+      "scts": "SCT list (two log signatures)",
+      "chain": "Certificates (DER)",
+      "cryptoLoad": "Keys and signatures",
+      "flight": "First server flight (TCP)",
+      "tcp": "TCP: initial congestion window (RFC 6928)",
+      "quic": "QUIC: amplification limit (RFC 9000)",
+      "eap": "EAP-TLS with {size}-byte fragments: {fragments} round trips for the server flight, about {mtls} with mutual authentication. Some access points give up after 40 to 50 round trips.",
+      "details": "Breakdown",
+      "loadTitle": "Keys and signatures",
+      "flightTitle": "Handshake messages",
+      "method": "Certificates, keys and signatures are measured. The handshake messages are computed per RFC 8446 with minimal extensions and the hybrid key exchange X25519MLKEM768 (1,120-byte server share), including TLS record overhead. The QUIC figure is an estimate assuming 60 bytes of overhead per packet.",
+      "overTcp": "The first server flight no longer fits into the initial TCP window. The server has to wait for acknowledgments, which costs an extra round trip.",
+      "explain": "The first server flight fits into the initial TCP window. With QUIC, the three-times rule decides whether the server can answer without an extra round trip."
+    },
+    "cert": {
+      "subject": "Subject",
+      "issuer": "Issuer",
+      "serial": "Serial number",
+      "validity": "Validity",
+      "keyAlg": "Public key",
+      "sigAlg": "Signature",
+      "san": "subjectAltName",
+      "tab": {
+        "fields": "Fields",
+        "extensions": "Extensions",
+        "anatomy": "Anatomy",
+        "pem": "PEM"
+      },
+      "critical": "critical",
+      "criticalHint": "Under RFC 5280, a critical extension the relying party doesn't recognize leads to rejection. Unknown non-critical extensions may be skipped, which is what ITU-T hybrid certificates rely on.",
+      "anatomyAria": "Parts of the certificate in bytes",
+      "part": {
+        "publicKey": "Public key",
+        "signature": "Signature",
+        "altPublicKey": "Alternative key",
+        "altSignature": "Alternative signature",
+        "sct": "SCTs",
+        "names": "Names (issuer, subject)",
+        "extensions": "Other extensions",
+        "structure": "Structure and other fields"
+      },
+      "anatomyHint": "Names and extensions stay the same size for every algorithm. With post-quantum algorithms, key and signature dominate the certificate.",
+      "anatomyHintMtc": "Instead of a CA signature, the certificate carries an MTCProof: an inclusion proof made of SHA-256 hashes, plus two cosignatures in the standalone form.",
+      "pemHint": "Readable with OpenSSL 3.5 or later, e.g., openssl x509 -text -in <file>.",
+      "pemHintMtc": "OpenSSL can read the certificate but doesn't know the id-alg-mtcProof algorithm yet."
+    },
+    "checks": {
+      "parse": "Certificates readable",
+      "path": "Path to a trust anchor",
+      "algorithm": "Algorithm supported",
+      "signature": "Signature",
+      "altSignature": "Alternative signature (ITU-T)",
+      "mtcProof": "Inclusion proof (MTC)",
+      "validity": "Validity period",
+      "criticalExtensions": "Critical extensions recognized",
+      "caFlags": "CA authority (basicConstraints, keyUsage)",
+      "pathLen": "pathLenConstraint",
+      "nameConstraints": "Name constraints",
+      "eku": "Purpose (extendedKeyUsage)",
+      "hostname": "Server name (subjectAltName)",
+      "revocation": "Revocation status",
+      "scts": "Certificate Transparency",
+      "pqPolicy": "Policy: quantum-safe CA signatures only"
+    },
+    "reasons": {
+      "parseError": "certificate not readable ({error})",
+      "mtcUnsupported": "this client doesn't know Merkle Tree Certificates",
+      "viaLandmark": "confirmed via a landmark from the update channel",
+      "viaCosignatures": "{cosignatures} valid cosignatures from trusted cosigners",
+      "notMtc": "not a Merkle Tree Certificate",
+      "malformed": "malformed MTC proof",
+      "proof": "the proof doesn't match the certificate",
+      "unknownLandmark": "unknown landmark, and the certificate carries no cosignatures",
+      "cosignatures": "only {cosignatures} valid cosignatures, two required",
+      "mtc": "the cosigners sign with ML-DSA-44",
+      "noIssuer": "no issuer “{issuer}” in the chain or the trust store",
+      "emptyTrustStore": "no matching root in the trust store",
+      "tooLong": "chain too long",
+      "unsupported": "{alg} is unknown to this client",
+      "invalid": "does not match the issuer's key",
+      "missing": "missing although the issuer has an alternative key",
+      "notYetValid": "not valid before {notBefore}",
+      "expired": "expired on {notAfter}",
+      "unknown": "unknown critical extension {oids}",
+      "notCa": "not a CA certificate",
+      "noKeyCertSign": "keyUsage doesn't allow signing certificates",
+      "outside": "{names} is outside {permitted}",
+      "noServerAuth": "serverAuth purpose missing",
+      "mismatch": "expected {expected}, the certificate is for {san}",
+      "notChecked": "not checked",
+      "noCrl": "no CRL given",
+      "unavailableHard": "CRL unreachable, so rejected",
+      "unavailableSoft": "CRL unreachable, accepted anyway (soft-fail)",
+      "crlMalformed": "CRL not readable",
+      "crlSignature": "invalid CRL signature",
+      "crlStale": "CRL out of date",
+      "revoked": "revoked (key compromise)",
+      "tooFew": "only {valid} of {required} SCTs valid",
+      "classicalInPath": "the chain contains classical CA signatures"
+    },
+    "passes": {
+      "path": "{length, plural, one {# certificate} other {# certificates}} up to {anchor}",
+      "signature": "{alg}, checked with the key of {issuer}",
+      "validity": "valid until {notAfter}",
+      "nameConstraints": "{names} is under {permitted}",
+      "revocation": "not revoked (CRL: {crlBytes} bytes)",
+      "scts": "{valid} of {required} SCTs valid",
+      "pathLen": "{below} CA levels below, allowed: {pathLen}",
+      "altSignature": "{alg} valid",
+      "hostname": "{expected} found"
+    },
+    "failures": {
+      "title": "What validation catches",
+      "intro": "Here the CA deliberately issues faulty certificates, and the clients validate them as before. Each case fails at exactly the step RFC 5280 provides for it.",
+      "pick": "Pick a failure case",
+      "needPki": "Build a PKI above first.",
+      "noFailure": "No check fails.",
+      "mtcNote": "These classical failure cases don't apply to Merkle Tree Certificates in this form. Step 05 shows what tampering does.",
+      "expired": {
+        "label": "Expired",
+        "what": "The CA issues a certificate whose validity ended 30 days ago.",
+        "why": "Every relying party compares the validation time with notBefore and notAfter. In 2018, an expired certificate took down mobile services in several countries."
+      },
+      "wrongHost": {
+        "label": "Wrong name",
+        "what": "The certificate is for a different name than the one the client connects to.",
+        "why": "Under RFC 9525, only subjectAltName counts; the common name is ignored."
+      },
+      "missingIntermediate": {
+        "label": "Missing intermediate",
+        "what": "The server sends only its own certificate.",
+        "why": "The client only knows the root. Without the intermediate certificate it finds no path, a common misconfiguration."
+      },
+      "nameConstraints": {
+        "label": "Name constraints violated",
+        "what": "The issuing CA may only certify names under muster.example but issues one for portal.fremd.example.",
+        "why": "The signature is valid, but the constraint in the intermediate certificate applies at every relying party that implements RFC 5280."
+      },
+      "wrongEku": {
+        "label": "Wrong purpose",
+        "what": "The certificate only carries the clientAuth purpose.",
+        "why": "A client certificate doesn't serve as a server's credential. Chrome now requires separation by purpose for intermediate CAs too."
+      },
+      "revoked": {
+        "label": "Revoked",
+        "what": "The CA adds the serial number to its CRL with the reason keyCompromise.",
+        "why": "Clients that check revocation reject. A client that doesn't check notices nothing."
+      },
+      "tampered": {
+        "label": "Tampered",
+        "what": "16 bytes of the public key in the finished certificate are changed, as if someone had swapped the key.",
+        "why": "The CA signature covers every byte of the signed part. A single changed bit makes validation fail."
+      }
+    },
+    "attack": {
+      "title": "Attacker's view",
+      "intro": "Mallory sits between the server and the clients. She sees everything in transit, including the certificates, which are public anyway. What she lacks are the private keys. Here you can see what she tries anyway and when a quantum computer would help her.",
+      "toggle": "👁 Attacker view",
+      "quantumToggle": "⚡ Quantum computer (Shor)",
+      "sees": "Mallory sees the complete certificate chain, the signature in CertificateVerify and the CRLs. She doesn't see the private keys of the CA or the server. Pick an attack:",
+      "run": "Run attack",
+      "fooled": "fooled",
+      "blocked": "blocked",
+      "ownCa": {
+        "title": "Her own CA",
+        "desc": "Mallory creates her own root and intermediate with the same names and issues herself a certificate for the server.",
+        "lesson": "Names prove nothing. What matters is that the chain ends at a trust anchor the client itself knows, and Mallory's root isn't in any trust store."
+      },
+      "swapKey": {
+        "title": "Swapped key",
+        "desc": "Mallory takes the real server certificate and replaces the public key with her own.",
+        "lesson": "The CA's signature no longer matches. Without the CA's private key, a certificate can't be altered unnoticed."
+      },
+      "stolenKey": {
+        "title": "Stolen server key",
+        "desc": "Mallory has stolen the server's private key. The operator revoked the certificate, but Mallory presents it anyway.",
+        "block": "Mallory blocks the CRL download",
+        "lesson": "A client that soft-fails accepts as soon as revocation information doesn't arrive. Adam Langley compared this to a seat belt that snaps in a crash. Protection comes from hard-fail checks, pre-distributed revocation data or short lifetimes."
+      },
+      "misissuance": {
+        "title": "Misissuance",
+        "desc": "A trusted CA issues Mallory a certificate for someone else's name, as Fina did for 1.1.1.1 between 2024 and 2025.",
+        "lesson": "The chain is genuine, and every check passes. No signature check helps against misissuance, only oversight of issuance.",
+        "ct": "On the public web, the certificate shows up in Certificate Transparency logs. Anyone monitoring the logs for their own names will find it. The Fina certificates went unnoticed for about a year and a half.",
+        "noCt": "Private PKIs have no public logs. An internal issuance log that cannot be altered after the fact, with alerts, takes on that role."
+      }
+    },
+    "qday": {
+      "intro": "Suppose a cryptographically relevant quantum computer exists. Using Shor's algorithm, Mallory derives the private key from every classical public key and forges a chain for portal.muster.example. The demo simulates this step by handing Mallory the real private ECDSA keys. The forgery and all validations are real. Scenario: a private PKI in transition, run in five different ways.",
+      "run": "Play out Q-Day",
+      "deployment": "Deployment",
+      "classical": {
+        "name": "Classical only",
+        "desc": "One ECDSA hierarchy, as is common today."
+      },
+      "pqParallel": {
+        "name": "ML-DSA, classical in parallel",
+        "desc": "A new ML-DSA-65 hierarchy. The classical one keeps running for legacy devices, and current clients trust both roots."
+      },
+      "compositeParallel": {
+        "name": "Composite, classical in parallel",
+        "desc": "A composite hierarchy. Since composite isn't backward compatible, the classical one stays for legacy devices."
+      },
+      "catalyst": {
+        "name": "ITU-T extensions",
+        "desc": "One hierarchy: classical certificates with an additional ML-DSA-65 key and an alternative signature in non-critical extensions."
+      },
+      "dual": {
+        "name": "Dual certificates (RFC 9763)",
+        "desc": "Two complete chains, classical and ML-DSA-65, linked by the RelatedCertificate extension."
+      },
+      "legit": "genuine chain",
+      "forgedAccepted": "forgery accepted",
+      "forgedRejected": "forgery rejected",
+      "compositeAttempt": "Mallory also tried to forge a composite signature. She can compute the ECDSA part but not the ML-DSA part, and composite validation requires both.",
+      "lesson": "No format protects on its own. With ML-DSA, composite and dual certificates, Mallory simply presents a purely classical chain; with the ITU-T extensions, she leaves out the alternative signature. Only the client that rejects classical chains and requires the alternative signature is safe. That step is what brings the security gain.",
+      "brokenKeys": "Which keys Mallory computed",
+      "simulated": "Simulated: no quantum computer of this size exists. The demo hands over the private keys it could compute from the public ones.",
+      "whyStrict": "Why the strict client rejects the ITU-T forgery"
+    },
+    "revocation": {
+      "title": "Revocation and lifetime",
+      "intro": "A stolen key can be misused until the certificate expires or the revocation reaches the relying party, whichever comes first. How long that takes depends on the lifetime and on the client's behavior.",
+      "lifetime": "Certificate lifetime",
+      "life": {
+        "d398": "398 days (public until March 14, 2026)",
+        "d200": "200 days (public since March 15, 2026)",
+        "d100": "100 days (from March 15, 2027)",
+        "d47": "47 days (from March 15, 2029)",
+        "h160": "160 hours (short-lived, Let's Encrypt)"
+      },
+      "compromise": "Compromise after {when} ({pct}% of the lifetime)",
+      "behaviour": {
+        "local": "Pre-distributed revocation data (e.g., CRLite)",
+        "online": "Online check, the answer arrives",
+        "softBlocked": "Soft-fail, attacker blocks the check",
+        "none": "No revocation check"
+      },
+      "formula": "Exposure window = min(notAfter, effective revocation) − compromise. Assumption: revocation takes effect 24 hours after the compromise, the Baseline Requirements deadline for compromised keys. If it never arrives, the entire remaining lifetime counts.",
+      "shortLived": "Under the Baseline Requirements, short-lived certificates valid for at most seven days don't need to be revoked. The short lifetime replaces revocation.",
+      "crlSize": "The issuing CA's current CRL is {bytes} bytes, {sig} of them signature, with {revoked, plural, one {# revoked entry} other {# revoked entries}}. CRLs grow with post-quantum signatures too.",
+      "hours": "{n} hours",
+      "days": "{n} days"
+    },
+    "mtc": {
+      "title": "Merkle Tree Certificates",
+      "intro": "For the public web, Chrome plans a different route: instead of signing every certificate individually, the CA adds it to an append-only log. What gets signed is the state of the log.",
+      "s1": "The CA appends the certificate as an entry to its issuance log. The entry only contains a hash of the public key.",
+      "s2": "The CA and an independent mirror cosign subtrees of the log with ML-DSA-44.",
+      "s3": "Browsers receive certified subtrees, the landmarks, ahead of time over their update channel. In the handshake, an inclusion proof of SHA-256 hashes is then enough.",
+      "s4": "Clients without current landmarks get the standalone certificate with the cosignatures.",
+      "run": "Issue MTCs for different log sizes",
+      "logSize": "Entries in the subtree",
+      "proof": "Inclusion proof",
+      "landmarkLoad": "Crypto load with landmark",
+      "standaloneCert": "Standalone certificate",
+      "webScale": "Web scale (about 5.4 million per hour)",
+      "compare": "For comparison: a conventional X.509 chain with ML-DSA-44 carries five signatures and two keys on the public web, {x509} bytes in total. With a landmark, CertificateVerify, the server key and the proof remain, about {landmark} bytes.",
+      "limits": "Limits: MTC requires clients to have current landmarks; without an update channel, only the larger standalone certificate remains. The certificates are valid for days only, so issuance and renewal must be fully automated. The format may still change before the RFC."
+    },
+    "clocks": {
+      "title": "The three clocks of a root",
+      "intro": "How long a new root is usable depends on three deadlines: the expiry date in the certificate, the root programs' maximum term and the end of classical signature algorithms. The earliest one counts.",
+      "keyYear": "Key generated: {year}",
+      "validity": "Certificate validity: {years} years",
+      "delay": "Until inclusion in trust stores: {years, plural, one {# year} other {# years}}",
+      "alg": "Algorithm",
+      "algClassical": "classical (RSA/ECDSA)",
+      "algPq": "quantum-safe (ML-DSA/SLH-DSA)",
+      "cert": "Certificate (notAfter)",
+      "store": "Root programs (15 years)",
+      "deadline": "End of classical signatures",
+      "aria": "Timeline of the deadlines, planning horizon {horizon}",
+      "result": "Planning horizon: {horizon}. Usable from about {from}, so {years, plural, one {about # year} other {about # years}} of actual use.",
+      "noteClassical": "Chrome removes roots whose key was generated more than 15 years ago, and so does Mozilla for websites (after 18 years for S/MIME). The BSI's TR-02102-1 expects to recommend classical signature algorithms only until the end of 2035, and NIST IR 8547 disallows them after 2035.",
+      "notePq": "The deadline for classical algorithms doesn't apply to quantum-safe roots; certificate validity and the root programs remain. In Chrome's planned quantum-resistant root store, a CA key stays trusted for at most six years after inclusion, according to the draft."
+    },
+    "bench": {
+      "title": "Statistics",
+      "intro": "All measurements run in your browser with real keys and signatures. For each profile, a PKI is built once; then server certificates are repeatedly requested, issued and validated. The raw data can be exported as CSV or JSON.",
+      "profiles": "Profiles",
+      "runs": "Runs per profile",
+      "start": "Start benchmark",
+      "stop": "Stop",
+      "mixedNote": "The by-role profile takes a few seconds for its SLH-DSA root. The key ceremony's duration is in the JSON export.",
+      "error": "Error",
+      "chain": "chain",
+      "metric": {
+        "leafKeygen": "Key generation (server)",
+        "csrSign": "Sign request",
+        "popCheck": "Check proof of possession",
+        "issue": "Issue (CA)",
+        "validate": "Validate chain (client)",
+        "cvSign": "Sign CertificateVerify",
+        "cvVerify": "Verify CertificateVerify"
+      },
+      "note": "Timings depend on device, browser and load, and apply to these JavaScript implementations, not to optimized native code or HSMs. For the web profiles, “Issue” includes obtaining the SCTs or building the log. Browsers round timer readings to about 0.1 milliseconds, so short operations appear quantized."
+    }
   }
 }
