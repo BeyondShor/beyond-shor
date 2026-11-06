@@ -1477,7 +1477,7 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
               snippetLabel={t('implSnippetLabel')} packageName="@noble/post-quantum"
               packageUrl="https://github.com/paulmillr/noble-post-quantum"
               snippetHtml={snippetHtmls.mlkem} prose={t('mlkemImplProse')}
-              articleIntro={t('implArticleIntro')} articleSlug="ML-KEM"
+              articleIntro={t('implArticleIntro')} articleSlug="ml-kem"
               articleLinkText={t('implArticleLink')} />
           )}
           {kem === 'mceliece' && (
@@ -1485,7 +1485,7 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
               snippetLabel={t('implSnippetLabel')} packageName="mceliece"
               packageUrl="https://github.com/cyph/pqcrypto.js/tree/master/packages/mceliece"
               snippetHtml={snippetHtmls.mceliece} prose={t('mcElieceImplProse')}
-              articleIntro={t('implArticleIntro')} articleSlug="mceliece"
+              articleIntro={t('implArticleIntro')} articleSlug="goppa-code"
               articleLinkText={t('implArticleLink')} />
           )}
           {kem === 'frodokem' && (

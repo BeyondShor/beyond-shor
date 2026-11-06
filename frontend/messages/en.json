@@ -12,7 +12,7 @@
   },
   "footer": {
     "contact": "Contact",
-    "impressum": "Imprint",
+    "impressum": "Legal Notice",
     "datenschutz": "Privacy Policy",
     "tagline": "Post-quantum cryptography, explained in depth",
     "rights": "All rights reserved"
@@ -147,9 +147,9 @@
     }
   },
   "impressum": {
-    "label": "// impressum",
-    "fallbackTitle": "Impressum",
-    "notConfiguredLabel": "// Impressum not yet configured",
+    "label": "// legal notice",
+    "fallbackTitle": "Legal Notice",
+    "notConfiguredLabel": "// Legal notice not yet configured",
     "notConfiguredDesc": "Edit the Impressum single type in Strapi.",
     "metaDescription": "Legal notice and provider identification under § 5 DDG (German Digital Services Act)."
   },

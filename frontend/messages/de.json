@@ -150,7 +150,7 @@
     "label": "// impressum",
     "fallbackTitle": "Impressum",
     "notConfiguredLabel": "// Impressum noch nicht konfiguriert",
-    "notConfiguredDesc": "Bearbeite den Impressum-Einzeltyp in Strapi.",
+    "notConfiguredDesc": "Bearbeiten Sie den Impressum-Einzeltyp in Strapi.",
     "metaDescription": "Impressum und Anbieterkennzeichnung nach § 5 DDG."
   },
   "datenschutz": {

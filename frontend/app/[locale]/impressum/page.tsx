@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'impressum' });
   return {
-    title: { absolute: `${t('fallbackTitle')} — Beyond Shor` },
+    title: t('fallbackTitle'),
     description: t('metaDescription'),
     robots: { index: false, follow: false },
   };

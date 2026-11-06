@@ -4,33 +4,39 @@ export interface AutoLink {
   path: string;
 }
 
+// ASCII spellings in slugs that stand for German letters in the text
+const UMLAUTS: Record<string, string> = { ae: '(?:ae|ä)', oe: '(?:oe|ö)', ue: '(?:ue|ü)', ss: '(?:ss|ß)' };
+
 /**
- * Converts a slug into a case-insensitive regex that also matches
- * space- or hyphen-separated variants and suffixed versions.
+ * Converts a slug into a case-insensitive regex for the term it names.
  *
- * Examples:
- *   "frodokem"       → /\bfrodokem/gi  → matches "FrodoKEM", "FrodoKEM-640-AES"
- *   "ml-kem"         → /\bml[-\s]?kem/gi → matches "ML-KEM", "ml kem", "ML-KEM-768"
+ * - "-" also matches a space or nothing: "classic-mceliece" → "Classic McEliece"
+ * - umlaut spellings match both forms: "krypto-agilitaet" → "Krypto-Agilität"
+ * - suffixes are fine ("FrodoKEM-640", "KEMs"), but the match must not start in
+ *   the middle of a word or right after a hyphen: "kem" must not hit the "KEM"
+ *   in "ML-KEM", "lwe" not the one in "Module-LWE"
  */
 export function slugToRegex(slug: string): RegExp {
-  const pattern =
-    '\\b' +
-    slug
-      .split('')
-      .map((c) =>
-        c === '-'
-          ? '[-\\s]?'
-          : c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-      )
-      .join('');
-  return new RegExp(pattern, 'gi');
+  let pattern = '';
+  for (let i = 0; i < slug.length; ) {
+    const pair = slug.slice(i, i + 2).toLowerCase();
+    if (UMLAUTS[pair]) {
+      pattern += UMLAUTS[pair];
+      i += 2;
+      continue;
+    }
+    const c = slug[i];
+    pattern += c === '-' ? '[-\\s]?' : c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    i += 1;
+  }
+  return new RegExp('(?<![\\p{L}\\p{N}_-])' + pattern, 'giu');
 }
 
 /**
  * Preprocesses a markdown string by inserting auto-links for known article slugs.
  *
  * Rules:
- * - Code blocks, inline code, and existing markdown links are never touched.
+ * - Code blocks, inline code, existing markdown links, headings and bare URLs are never touched.
  * - Each slug is linked at most once (first occurrence wins).
  * - Longer slugs are matched before shorter ones to avoid partial matches.
  * - The article's own slug is never linked (no self-links).
@@ -51,8 +57,9 @@ export function applyAutoLinksToMarkdown(
 
   // Split into protected segments (code blocks, inline code, existing links)
   // and plain-text segments that are safe to process.
+  // headings stay plain text, and bare URLs must not get a link spliced into them
   const protectedPattern =
-    /```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]+`|\[([^\]]*)\]\([^)]*\)|\[([^\]]*)\]\[[^\]]*\]/g;
+    /```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]+`|\[([^\]]*)\]\([^)]*\)|\[([^\]]*)\]\[[^\]]*\]|^#{1,6} .*$|https?:\/\/[^\s)]+/gm;
 
   const segments: Array<{ protected: boolean; content: string }> = [];
   let lastIndex = 0;

@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Image from 'next/image';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { Link } from '@/i18n/navigation';
+import { Link, getPathname } from '@/i18n/navigation';
+import { LEGACY_SLUGS } from '@/lib/legacy-slugs';
 import { getArticleBySlug, getAllArticleSlugs, getArticleSlugByDocumentId, getStrapiUrl, getAllArticleLinks, getRelatedArticles } from '@/lib/strapi';
 import BlockRenderer from '@/components/BlockRenderer';
 import JsonLd from '@/components/JsonLd';
@@ -79,7 +80,13 @@ export default async function ArticlePage({ params }: PageProps) {
     getArticleBySlug(slug, locale),
     getAllArticleLinks(locale),
   ]);
-  if (!article) notFound();
+  if (!article) {
+    const renamed = LEGACY_SLUGS[slug];
+    if (renamed) {
+      permanentRedirect(getPathname({ locale, href: { pathname: '/blog/[slug]', params: { slug: renamed } } }));
+    }
+    notFound();
+  }
 
   const relatedArticles = article.category?.slug
     ? await getRelatedArticles(article.category.slug, slug, locale)
