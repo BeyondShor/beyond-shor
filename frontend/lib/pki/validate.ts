@@ -29,7 +29,8 @@ export interface ClientPolicy {
 
 export interface TrustAnchor { label: string; cert: ParsedCert }
 
-export interface CrlOnNetwork { der: Bytes; reachable: boolean }
+/** A CRL as the client could fetch it from its distribution point. */
+export interface CrlOnNetwork { uri: string; der: Bytes; reachable: boolean }
 
 export type CheckId =
   | 'parse' | 'path' | 'algorithm' | 'signature' | 'altSignature' | 'mtcProof' | 'validity'
@@ -77,7 +78,7 @@ export function dnsWithin(name: string, constraint: string): boolean {
 function keyIsQuantumSafe(alg?: AlgId) { return !!alg && ALGS[alg].quantumSafe; }
 
 export function validateChain(
-  chainDer: Bytes[], hostname: string, now: Date, anchors: TrustAnchor[], policy: ClientPolicy, crl?: CrlOnNetwork,
+  chainDer: Bytes[], hostname: string, now: Date, anchors: TrustAnchor[], policy: ClientPolicy, crls: CrlOnNetwork[] = [],
 ): ValidationResult {
   const checks: Check[] = [];
   const add = (c: Check) => { checks.push(c); return c; };
@@ -202,8 +203,8 @@ export function validateChain(
 
   checkLeafCommon(leaf, hostname, now, policy, add);
 
-  // ── Revocation of the leaf ──
-  checkRevocation(leaf, issuerOf(0), now, policy.revocation, crl, add);
+  // ── Revocation of every certificate below the anchor (RFC 5280 §6.1.3 (a)(3)) ──
+  for (let i = path.length - 1; i >= 0; i--) checkRevocation(path[i], issuerOf(i), now, policy.revocation, crls, add);
 
   // ── Certificate Transparency (Web PKI) ──
   if (policy.requiredScts) {
@@ -241,21 +242,22 @@ function checkLeafCommon(leaf: ParsedCert, hostname: string, now: Date, policy: 
   void policy;
 }
 
-function checkRevocation(leaf: ParsedCert, issuer: ParsedCert, now: Date, mode: RevocationMode, crl: CrlOnNetwork | undefined, add: (c: Check) => Check) {
-  if (mode === 'none') { add({ id: 'revocation', status: 'warn', cert: label(leaf), reason: 'notChecked' }); return; }
-  if (!leaf.crlUri || !crl) { add({ id: 'revocation', status: 'skip', cert: label(leaf), reason: 'noCrl' }); return; }
-  // 'local': revocation data shipped to the client in advance (CRLite/CRLSets) — no lookup to block
-  if (!crl.reachable && mode !== 'local') {
-    add({ id: 'revocation', status: mode === 'hard' ? 'fail' : 'warn', cert: label(leaf), reason: mode === 'hard' ? 'unavailableHard' : 'unavailableSoft' });
+function checkRevocation(cert: ParsedCert, issuer: ParsedCert, now: Date, mode: RevocationMode, crls: CrlOnNetwork[], add: (c: Check) => Check) {
+  if (mode === 'none') { add({ id: 'revocation', status: 'warn', cert: label(cert), reason: 'notChecked' }); return; }
+  if (!cert.crlUri) { add({ id: 'revocation', status: 'skip', cert: label(cert), reason: 'noCrl' }); return; }
+  const crl = crls.find((c) => c.uri === cert.crlUri);
+  // 'local': revocation data shipped to the client in advance (CRLite) — no lookup to block
+  if (!crl || (!crl.reachable && mode !== 'local')) {
+    add({ id: 'revocation', status: mode === 'hard' ? 'fail' : 'warn', cert: label(cert), reason: mode === 'hard' ? 'unavailableHard' : 'unavailableSoft' });
     return;
   }
   let parsed;
-  try { parsed = parseCrl(crl.der); } catch { add({ id: 'revocation', status: 'fail', cert: label(leaf), reason: 'crlMalformed' }); return; }
+  try { parsed = parseCrl(crl.der); } catch { add({ id: 'revocation', status: 'fail', cert: label(cert), reason: 'crlMalformed' }); return; }
   if (!equalBytes(parsed.issuerDer, issuer.subjectDer) || !issuer.keyAlg || !verifyCrl(parsed, issuer.keyAlg, issuer.publicKey)) {
-    add({ id: 'revocation', status: 'fail', cert: label(leaf), reason: 'crlSignature' });
+    add({ id: 'revocation', status: 'fail', cert: label(cert), reason: 'crlSignature' });
     return;
   }
-  if (now > parsed.nextUpdate) { add({ id: 'revocation', status: mode === 'hard' ? 'fail' : 'warn', cert: label(leaf), reason: 'crlStale' }); return; }
-  const revoked = parsed.revokedSerials.includes(leaf.serial);
-  add({ id: 'revocation', status: revoked ? 'fail' : 'pass', cert: label(leaf), reason: revoked ? 'revoked' : undefined, params: { crlBytes: crl.der.length } });
+  if (now > parsed.nextUpdate) { add({ id: 'revocation', status: mode === 'hard' ? 'fail' : 'warn', cert: label(cert), reason: 'crlStale' }); return; }
+  const revoked = parsed.revokedSerials.includes(cert.serial);
+  add({ id: 'revocation', status: revoked ? 'fail' : 'pass', cert: label(cert), reason: revoked ? 'revoked' : undefined, params: { crlBytes: crl.der.length } });
 }

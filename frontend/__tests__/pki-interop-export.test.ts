@@ -4,7 +4,7 @@
 import { describe, it } from 'vitest';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { createPki, currentCrl, issueLeaf, type ProfileId } from '@/lib/pki/engine';
+import { caCrl, createPki, currentCrl, issueLeaf, type ProfileId } from '@/lib/pki/engine';
 import { toPem } from '@/lib/pki/der';
 import { keygen } from '@/lib/pki/algorithms';
 import { issueCatalystCertificate, randomSerial } from '@/lib/pki/x509';
@@ -28,6 +28,12 @@ describe.skipIf(!dir)('export for OpenSSL interop', () => {
         const revoked = issueLeaf(pki, 'revoked');
         writeFileSync(path.join(out, 'revoked.pem'), toPem(revoked.der, 'CERTIFICATE'));
         writeFileSync(path.join(out, 'crl.pem'), toPem(currentCrl(pki), 'X509 CRL'));
+        // a second issuing CA, revoked by the root, and the leaf it issued
+        const viaRevoked = issueLeaf(pki, 'intermediateRevoked');
+        writeFileSync(path.join(out, 'revoked-ca.pem'), toPem(pki.extraCas[0].der, 'CERTIFICATE'));
+        writeFileSync(path.join(out, 'revoked-ca-leaf.pem'), toPem(viaRevoked.der, 'CERTIFICATE'));
+        writeFileSync(path.join(out, 'revoked-ca.crl.pem'), toPem(caCrl(pki.extraCas[0], pki.now), 'X509 CRL'));
+        writeFileSync(path.join(out, 'arl.pem'), toPem(caCrl(pki.root, pki.now), 'X509 CRL'));
       }
       if (leaf.mtc) writeFileSync(path.join(out, 'standalone.pem'), toPem(leaf.mtc.standalone, 'CERTIFICATE'));
     }, 120_000);

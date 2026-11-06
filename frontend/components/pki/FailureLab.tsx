@@ -37,6 +37,9 @@ export default function FailureLab({ profileId, call, ready }: { profileId: Prof
         ))}
       </div>
       {!ready && <p className="text-xs text-[var(--color-text-muted)]">{t('failures.needPki')}</p>}
+      {variant === 'intermediateRevoked' && profileId === 'mixed' && busy && (
+        <p className="text-xs text-amber-300/90">{t('failures.slowRoot')}</p>
+      )}
       {variant && (
         <Note>
           <span className="block text-[var(--color-text-base)]">{t(`failures.${variant}.what`)}</span>

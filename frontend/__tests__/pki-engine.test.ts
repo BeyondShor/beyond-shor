@@ -7,39 +7,41 @@ import { parseCertificate } from '@/lib/pki/x509';
 import { parseMtcProof, verifyMtc } from '@/lib/pki/mtc';
 import { OID } from '@/lib/pki/oids';
 
-function acceptance(profile: ProfileId): Record<string, boolean> {
+async function acceptance(profile: ProfileId): Promise<Record<string, boolean>> {
   const pki = createPki(profile);
   const leaf = issueLeaf(pki);
   expect(leaf.csrValid).toBe(true);
-  const { clients, crl } = clientsFor(pki);
-  return Object.fromEntries(clients.map((c) => [c.id, handshake(pki, leaf, c, crl).accepted]));
+  const { clients, crls } = clientsFor(pki);
+  const out: Record<string, boolean> = {};
+  for (const c of clients) out[c.id] = (await handshake(pki, leaf, c, crls)).accepted;
+  return out;
 }
 
-function failingChecks(profile: ProfileId, variant: Variant, client: ClientId = 'modern'): string[] {
+async function failingChecks(profile: ProfileId, variant: Variant, client: ClientId = 'modern'): Promise<string[]> {
   const pki = createPki(profile);
   const leaf = issueLeaf(pki, variant);
-  const { clients, crl } = clientsFor(pki);
+  const { clients, crls } = clientsFor(pki);
   const c = clients.find((x) => x.id === client)!;
-  return handshake(pki, leaf, c, crl).validation.checks.filter((x) => x.status === 'fail').map((x) => x.id);
+  return (await handshake(pki, leaf, c, crls)).validation.checks.filter((x) => x.status === 'fail').map((x) => x.id);
 }
 
 describe('private PKI profiles: who accepts the legitimate chain', () => {
-  it('classical: everyone except the PQ-only client', () => {
-    expect(acceptance('classical')).toEqual({ legacy: true, modern: true, strict: false });
+  it('classical: everyone except the PQ-only client', async () => {
+    expect(await acceptance('classical')).toEqual({ legacy: true, modern: true, strict: false });
   });
   for (const p of ['mldsa44', 'mldsa65', 'composite'] as ProfileId[]) {
-    it(`${p}: the legacy device cannot verify the algorithm`, () => {
-      expect(acceptance(p)).toEqual({ legacy: false, modern: true, strict: true });
+    it(`${p}: the legacy device cannot verify the algorithm`, async () => {
+      expect(await acceptance(p)).toEqual({ legacy: false, modern: true, strict: true });
     });
   }
-  it('mixed (SLH-DSA root, ML-DSA below)', () => {
-    expect(acceptance('mixed')).toEqual({ legacy: false, modern: true, strict: true });
+  it('mixed (SLH-DSA root, ML-DSA below)', async () => {
+    expect(await acceptance('mixed')).toEqual({ legacy: false, modern: true, strict: true });
   }, 120_000);
 
-  it('the legacy device fails at the algorithm check, not elsewhere', () => {
+  it('the legacy device fails at the algorithm check, not elsewhere', async () => {
     const pki = createPki('mldsa65');
-    const { clients, crl } = clientsFor(pki);
-    const v = handshake(pki, issueLeaf(pki), clients[0], crl).validation;
+    const { clients, crls } = clientsFor(pki);
+    const v = (await handshake(pki, issueLeaf(pki), clients[0], crls)).validation;
     expect(v.checks.find((c) => c.id === 'algorithm' && c.status === 'fail')?.reason).toBe('unsupported');
   });
 });
@@ -47,36 +49,38 @@ describe('private PKI profiles: who accepts the legitimate chain', () => {
 describe('failure cases fail exactly where RFC 5280 says', () => {
   const expected: [Variant, string][] = [
     ['expired', 'validity'], ['wrongHost', 'hostname'], ['missingIntermediate', 'path'],
-    ['nameConstraints', 'nameConstraints'], ['wrongEku', 'eku'], ['revoked', 'revocation'], ['tampered', 'signature'],
+    ['nameConstraints', 'nameConstraints'], ['wrongEku', 'eku'], ['revoked', 'revocation'], ['intermediateRevoked', 'revocation'],
+    ['tampered', 'signature'],
   ];
   for (const [variant, check] of expected) {
-    it(`${variant} → ${check}`, () => {
-      expect(failingChecks('mldsa65', variant)).toEqual([check]);
+    it(`${variant} → ${check}`, async () => {
+      expect(await failingChecks('mldsa65', variant)).toEqual([check]);
     });
   }
 });
 
 describe('Web PKI profiles', () => {
-  it('classical: browsers verify two SCTs', () => {
+  it('classical: browsers verify two SCTs', async () => {
     const pki = createPki('web-classical');
     const leaf = issueLeaf(pki);
-    const { clients, crl } = clientsFor(pki);
-    const r = handshake(pki, leaf, clients[0], crl);
+    const { clients, crls } = clientsFor(pki);
+    const r = await handshake(pki, leaf, clients[0], crls);
     expect(r.accepted).toBe(true);
     expect(r.validation.checks.find((c) => c.id === 'scts')?.params).toEqual({ valid: 2, required: 2 });
     // empty subject → subjectAltName critical (RFC 5280 §4.2.1.6)
     expect(leaf.cert.extensions.find((e) => e.oid === OID.subjectAltName)?.critical).toBe(true);
   });
 
-  it('hypothetical ML-DSA-44 X.509: no public root store holds such a root', () => {
-    expect(acceptance('web-mldsa44')).toEqual({ browserToday: false, browserMtc: false, cliTool: false });
+  it('hypothetical ML-DSA-44 X.509: no public root store holds such a root', async () => {
+    expect(await acceptance('web-mldsa44')).toEqual({ browserToday: false, browserMtc: false, cliTool: false });
   });
 
-  it('MTC: landmark-relative for the updated browser, standalone for the tool, unknown to today’s browser', () => {
+  it('MTC: landmark-relative for the updated browser, standalone for the tool, unknown to today’s browser', async () => {
     const pki = createPki('web-mtc');
     const leaf = issueLeaf(pki);
     const { clients } = clientsFor(pki);
-    const res = Object.fromEntries(clients.map((c) => [c.id, handshake(pki, leaf, c)]));
+    const res: Record<string, Awaited<ReturnType<typeof handshake>>> = {};
+    for (const c of clients) res[c.id] = await handshake(pki, leaf, c);
     expect(res.browserToday.accepted).toBe(false);
     expect(res.browserMtc.accepted).toBe(true);
     expect(res.browserMtc.presented).toBe('landmark');
@@ -90,7 +94,7 @@ describe('Web PKI profiles', () => {
     expect(lr.proof).toHaveLength(12);
   });
 
-  it('MTC: a modified certificate no longer matches the proof; one cosignature is not a quorum', () => {
+  it('MTC: a modified certificate no longer matches the proof; one cosignature is not a quorum', async () => {
     const pki = createPki('web-mtc');
     const leaf = issueLeaf(pki);
     const der = leaf.mtc!.standalone.slice();
@@ -105,17 +109,17 @@ describe('Web PKI profiles', () => {
 });
 
 describe('attacks without a quantum computer', () => {
-  it('MTC: a swapped key breaks the inclusion proof for every client', () => {
+  it('MTC: a swapped key breaks the inclusion proof for every client', async () => {
     expect(runAttack(createPki('web-mtc'), 'swapKey').results.every((r) => !r.accepted)).toBe(true);
   });
 
-  it('own CA and swapped key are rejected by everyone', () => {
+  it('own CA and swapped key are rejected by everyone', async () => {
     const pki = createPki('mldsa65');
     expect(runAttack(pki, 'ownCa').results.every((r) => !r.accepted)).toBe(true);
     expect(runAttack(pki, 'swapKey').results.every((r) => !r.accepted)).toBe(true);
   });
 
-  it('stolen key + blocked CRL: soft-fail accepts, hard-fail rejects', () => {
+  it('stolen key + blocked CRL: soft-fail accepts, hard-fail rejects', async () => {
     const pki = createPki('mldsa65');
     const r = Object.fromEntries(runAttack(pki, 'stolenKey', true).results.map((x) => [x.client, x.accepted]));
     expect(r).toEqual({ legacy: false, modern: true, strict: false });
@@ -123,12 +127,12 @@ describe('attacks without a quantum computer', () => {
     expect(reachable).toEqual({ legacy: false, modern: false, strict: false });
   });
 
-  it('Web PKI: locally shipped revocation data cannot be blocked', () => {
+  it('Web PKI: locally shipped revocation data cannot be blocked', async () => {
     const r = Object.fromEntries(runAttack(createPki('web-classical'), 'stolenKey', true).results.map((x) => [x.client, x.accepted]));
     expect(r).toEqual({ browserToday: false, browserMtc: false, cliTool: true });
   });
 
-  it('misissuance by a trusted CA validates — CT makes it findable in the Web PKI', () => {
+  it('misissuance by a trusted CA validates — CT makes it findable in the Web PKI', async () => {
     const web = runAttack(createPki('web-classical'), 'misissuance');
     expect(web.results.every((r) => r.accepted)).toBe(true);
     expect(web.detectedBy).toBe('ctMonitor');
@@ -154,7 +158,7 @@ describe('Q-Day: protection only comes from rejecting classical chains', () => {
     });
   }
 
-  it('catalyst: the strict client rejects the forgery for the missing alternative signature', () => {
+  it('catalyst: the strict client rejects the forgery for the missing alternative signature', async () => {
     const strict = runQDay('catalyst').cells[2];
     const leafCheck = strict.forgedChecks.checks.find((c) => c.id === 'altSignature' && c.cert === 'portal.muster.example');
     expect(leafCheck).toMatchObject({ status: 'fail', reason: 'missing' });
@@ -162,7 +166,7 @@ describe('Q-Day: protection only comes from rejecting classical chains', () => {
 });
 
 describe('exposure window', () => {
-  it('min(notAfter, effective revocation) − compromise', () => {
+  it('min(notAfter, effective revocation) − compromise', async () => {
     expect(exposureDays(90, 30, 1, true)).toBe(1);
     expect(exposureDays(90, 30, 1, false)).toBe(60);       // revocation never reaches the client
     expect(exposureDays(6.67, 2, 1, false)).toBeCloseTo(4.67);

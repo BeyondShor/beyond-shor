@@ -3,7 +3,8 @@
 import type { AttackId, ClientId, ProfileId, QDayDeployment, Variant } from './meta';
 import type { ParsedCert } from './x509';
 import type { ValidationResult } from './validate';
-import type { FlightEstimate } from './tls';
+import type { BenchRun, HandshakeResult } from './engine';
+import type { AcmeTrace } from './acme';
 
 export interface CertView {
   der:    Uint8Array;
@@ -29,7 +30,8 @@ export interface LeafView {
   csrValid:     boolean;
   chainBytes:   number[];
   expectedHost: string;
-  timings:      { keygen: number; csr: number; popCheck: number; issue: number };
+  acme?:        AcmeTrace;
+  timings:      { keygen: number; csr: number; popCheck: number; validation: number; issue: number };
   mtc?: {
     landmark:    CertView;
     standalone:  CertView;
@@ -38,15 +40,7 @@ export interface LeafView {
   };
 }
 
-export interface HandshakeView {
-  client:     ClientId;
-  presented:  'chain' | 'landmark' | 'standalone';
-  validation: ValidationResult;
-  certVerify: 'pass' | 'fail' | 'skip';
-  accepted:   boolean;
-  flight:     FlightEstimate;
-  chainBytes: number;
-}
+export type HandshakeView = HandshakeResult;
 
 export interface AttackView {
   attack:      AttackId;
@@ -61,10 +55,7 @@ export interface QDayView {
   compositeForgeryRejected?: boolean;
 }
 
-export interface BenchRunView {
-  leafKeygen: number; csrSign: number; popCheck: number; issue: number; validate: number; cvSign: number; cvVerify: number;
-  chainBytes: number; handshakeBytes: number;
-}
+export type BenchRunView = BenchRun;
 
 export interface MtcSizeRow { logSize: number; proofHashes: number; landmarkBytes: number; standaloneBytes: number }
 

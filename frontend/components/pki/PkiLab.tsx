@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { ALGS, PRIVATE_PROFILES, PROFILES, WEB_PROFILES, type ProfileId, type Scope } from '@/lib/pki/meta';
 import { usePkiWorker } from '@/lib/pki/use-pki-worker';
 import type { HandshakeView, LeafView, PkiView } from '@/lib/pki/worker-types';
-import Architecture, { type Stage } from './Architecture';
+import Overview, { PHASE_MS, type Phase } from './Overview';
 import CertViewer from './CertViewer';
 import ValidationList from './ValidationList';
 import ByteBudget from './ByteBudget';
@@ -44,12 +44,43 @@ export default function PkiLab({ articles }: { articles: ArticleRef[] }) {
   const [attacker, setAttacker] = useState(false);
   const [pkiKey, setPkiKey] = useState(0);
 
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [running, setRunning] = useState(false);
+
   const p = PROFILES[profile];
-  const stage: Stage = handshakes ? 'connected' : leaf ? 'issued' : pki ? 'ceremony' : 'none';
   const ready = !!pki && pki.profile === profile;
 
+  /** The overview's start button: runs the real steps and paces the animation. */
+  async function runAll() {
+    setRunning(true); setError(null); setLeaf(null); setHandshakes(null);
+    const pace = async <T,>(ph: Phase, work: () => Promise<T>): Promise<T> => {
+      setPhase(ph);
+      const [r] = await Promise.all([work(), new Promise((res) => setTimeout(res, PHASE_MS))]);
+      return r;
+    };
+    try {
+      const view = await pace('ceremony', () => call({ op: 'createPki', profile }).done);
+      setPki(view);
+      const issued = call({ op: 'issueLeaf', variant: 'ok' }).done;      // one call: request, validation, issuance
+      await pace('request', () => Promise.resolve());
+      await pace('validate', () => Promise.resolve());
+      const r = await pace('issue', () => issued);
+      setLeaf(r.leaf);
+      setPkiKey((k) => k + 1);
+      const hs = await pace('handshake', () => call({ op: 'handshakes', crlReachable: true }).done);
+      setHandshakes(hs);
+      await pace('verdict', () => Promise.resolve());
+      setPhase('idle');
+    } catch (e) {
+      setError((e as Error).message);
+      setPhase('idle');
+    } finally {
+      setRunning(false);
+    }
+  }
+
   function choose(next: ProfileId) {
-    setProfile(next); setPki(null); setLeaf(null); setHandshakes(null); setError(null);
+    setProfile(next); setPki(null); setLeaf(null); setHandshakes(null); setError(null); setPhase('idle');
   }
 
   function switchScope(s: Scope) {
@@ -129,7 +160,8 @@ export default function PkiLab({ articles }: { articles: ArticleRef[] }) {
         </fieldset>
       </div>
 
-      <Architecture profileId={profile} stage={stage} attacker={attacker} handshakes={handshakes ?? undefined} />
+      <Overview profileId={profile} phase={phase} attacker={attacker} handshakes={ready ? handshakes : null}
+        onStart={runAll} running={running} done={ready && !!handshakes} />
 
       {error && <Note tone="danger">{t('error', { message: error })}</Note>}
 
@@ -172,7 +204,35 @@ export default function PkiLab({ articles }: { articles: ArticleRef[] }) {
             <ol className="flex flex-col gap-1.5 text-xs">
               <li className="flex gap-2"><span className="font-mono text-[var(--color-primary)]">1</span><span className="text-[var(--color-text-muted)]">{t('step2.keygen', { alg: ALGS[p.leaf].name, ms: f.ms(leaf.timings.keygen) })}</span></li>
               <li className="flex gap-2"><span className="font-mono text-[var(--color-primary)]">2</span><span className="text-[var(--color-text-muted)]">{t('step2.csr', { bytes: f.n(leaf.csrBytes) })} <Verdict ok={leaf.csrValid}>{t('step2.pop')}</Verdict></span></li>
-              <li className="flex gap-2"><span className="font-mono text-[var(--color-primary)]">3</span><span className="text-[var(--color-text-muted)]">{t(p.scope === 'private' ? 'step2.raPrivate' : 'step2.raWeb')}</span></li>
+              <li className="flex gap-2"><span className="font-mono text-[var(--color-primary)]">3</span>
+                <span className="min-w-0 flex-1 text-[var(--color-text-muted)]">
+                  {t(p.scope === 'private' ? 'step2.raPrivate' : 'step2.raWeb', { ms: f.ms(leaf.timings.validation) })}{' '}
+                  {leaf.acme && <Verdict ok={leaf.acme.valid}>{t('acme.valid')}</Verdict>}
+                  {leaf.acme && (
+                    <span className="mt-2 block">
+                      <Collapsible summary={t('acme.details')}>
+                        <dl className="grid gap-x-4 gap-y-1.5 text-xs sm:grid-cols-[minmax(0,10rem)_1fr]">
+                          {([
+                            [t('acme.account'), leaf.acme.accountUrl],
+                            [t('acme.thumbprint'), leaf.acme.thumbprint],
+                            [t('acme.jws'), `${t(leaf.acme.orderJwsOk ? 'acme.ok' : 'acme.bad')} (newOrder), ${t(leaf.acme.finalizeJwsOk ? 'acme.ok' : 'acme.bad')} (finalize)`],
+                            [t('acme.token'), leaf.acme.token],
+                            [t('acme.txt'), `${leaf.acme.txtName}  TXT  "${leaf.acme.txtValue}"`],
+                            [t('acme.perspectives'), leaf.acme.perspectives.map((x) => `${t(`acme.perspective.${x.name}`)} ${x.ok ? '✓' : '✗'}`).join(' · ')],
+                            [t('acme.caa'), leaf.acme.caa.checked ? (leaf.acme.caa.record ? `${leaf.acme.caa.owner}  CAA  ${leaf.acme.caa.record} ${leaf.acme.caa.ok ? '✓' : '✗'}` : t('acme.caaNone')) : t('acme.caaPrivate')],
+                          ] as const).map(([k, v]) => (
+                            <div key={k} className="contents">
+                              <dt className="font-mono text-[var(--color-text-muted)]">{k}</dt>
+                              <dd className="font-mono text-[var(--color-text-base)] break-all">{v}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                        <p className="mt-2 text-xs text-[var(--color-text-muted)] leading-relaxed">{t('acme.note')}</p>
+                      </Collapsible>
+                    </span>
+                  )}
+                </span>
+              </li>
               <li className="flex gap-2"><span className="font-mono text-[var(--color-primary)]">4</span><span className="text-[var(--color-text-muted)]">{t(p.mtc ? 'step2.issueMtc' : p.scope === 'web' ? 'step2.issueWeb' : 'step2.issuePrivate', { ms: f.ms(leaf.timings.issue), size: leaf.mtc ? f.n(leaf.mtc.logSize) : '' })}</span></li>
             </ol>
             {leaf.mtc ? (

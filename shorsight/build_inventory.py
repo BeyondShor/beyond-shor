@@ -115,6 +115,33 @@ def source_labels(cbom: dict) -> set[str]:
     return labels
 
 
+def drop_deadlines_of_accepted_risks(risk: dict) -> None:
+    """An accepted risk has no migration deadline.
+
+    ShorSight still computes shelf life X, migration time Y and a replacement
+    deadline for risks whose treatment is 'accept'. For an item whose risk tuples
+    are all accepted, the deadline and the Mosca reasoning are dropped; for an
+    asset whose risks are all accepted, X, Y and the deadline as well. The item or
+    asset is marked riskAccepted so the page can say why the values are missing.
+    Move this into ShorSight itself, then delete the function.
+    """
+    tuples = [tp for cat in ("acute", "quantum")
+              for cell in risk.get("riskMatrix", {}).get(cat, {}).get("cells", [])
+              for tp in cell.get("tuples", [])]
+    by_component: dict[str, list] = {}
+    by_asset: dict[str, list] = {}
+    for tp in tuples:
+        by_component.setdefault(tp["component"], []).append(tp)
+        by_asset.setdefault(tp["asset"], []).append(tp)
+    accepted = lambda tps: bool(tps) and all(tp.get("treatment") == "accept" for tp in tps)  # noqa: E731
+    for item in risk.get("items", []):
+        if accepted(by_component.get(item["component"], [])):
+            item.update(deadlineYear=None, startByYear=None, mosca="", riskAccepted=True)
+    for a in risk.get("assets", []):
+        if accepted(by_asset.get(a["asset"], [])):
+            a.update(shelfLifeYears=None, migrationYears=None, deadlineYear=None, riskAccepted=True)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -158,6 +185,7 @@ def main() -> int:
                      "the '(local)' kind suffix")
         cfg = GovernanceConfig.from_dict(raw)
         result = run(cbom, cfg).to_dict()
+        drop_deadlines_of_accepted_risks(result["risk"])
         html = embed(html, "governance-data", result)
         html = embed(html, "governance-config", raw)
         args.risk_out.write_text(json.dumps({"risk": result["risk"]}, ensure_ascii=False,

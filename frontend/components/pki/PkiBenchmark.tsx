@@ -11,7 +11,7 @@ import { Button, Note, useFormat } from './ui';
 type Call = <R extends PkiRequest>(req: R, onProgress?: (p: { done: number; total: number; run?: BenchRunView }) => void) =>
   { id: number; done: Promise<PkiResponse<R['op']>> };
 
-const METRICS = ['leafKeygen', 'csrSign', 'popCheck', 'issue', 'validate', 'cvSign', 'cvVerify'] as const;
+const METRICS = ['leafKeygen', 'csrSign', 'popCheck', 'validation', 'issue', 'validate', 'cvSign', 'cvVerify', 'handshake'] as const;
 type Metric = (typeof METRICS)[number];
 
 const COLORS: Record<ProfileId, string> = {

@@ -42,7 +42,7 @@ async function publishedArticles(locale: string): Promise<ArticleRef[]> {
 
 const ROLES = ['ca', 'ra', 'subscriber', 'relyingParty'] as const;
 const COMPARE = ['trust', 'algorithms', 'transparency', 'lifetime', 'pq'] as const;
-const NOTES = ['real', 'interop', 'composite', 'catalyst', 'mtc', 'simplified', 'shor'] as const;
+const NOTES = ['real', 'tls', 'acme', 'interop', 'composite', 'catalyst', 'mtc', 'simplified', 'shor'] as const;
 
 export default async function PkiPage({ params }: PageProps) {
   const { locale } = await params;

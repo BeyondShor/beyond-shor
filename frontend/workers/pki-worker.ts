@@ -47,6 +47,7 @@ function leafView(l: LeafResult): LeafView {
     csrValid: l.csrValid,
     chainBytes: l.chain.map((d) => d.length),
     expectedHost: l.expectedHost,
+    acme: l.acme,
     timings: l.timings,
     mtc: l.mtc && {
       landmark: view(l.mtc.landmarkRelative),
@@ -57,12 +58,11 @@ function leafView(l: LeafResult): LeafView {
   };
 }
 
-function handshakes(p: Pki, l: LeafResult, crlReachable: boolean): HandshakeView[] {
-  const { clients, crl } = clientsFor(p, crlReachable);
-  return clients.map((c) => {
-    const h = handshake(p, l, c, crl);
-    return { ...h, chainBytes: h.flight.certificate };
-  });
+async function handshakes(p: Pki, l: LeafResult, crlReachable: boolean): Promise<HandshakeView[]> {
+  const { clients, crls } = clientsFor(p, crlReachable);
+  const out: HandshakeView[] = [];
+  for (const c of clients) out.push(await handshake(p, l, c, crls));
+  return out;
 }
 
 function requirePki(): Pki {
@@ -80,7 +80,7 @@ async function handle(id: number, req: PkiRequest): Promise<unknown> {
       const p = requirePki();
       const l = issueLeaf(p, req.variant);
       if (req.variant === 'ok') leaf = l;
-      return { leaf: leafView(l), handshakes: handshakes(p, l, true) };
+      return { leaf: leafView(l), handshakes: await handshakes(p, l, true) };
     }
     case 'handshakes': {
       if (!leaf) throw new Error('no certificate yet');
@@ -97,7 +97,7 @@ async function handle(id: number, req: PkiRequest): Promise<unknown> {
       const runs = [];
       for (let i = 0; i < req.runs; i++) {
         if (cancelled.has(id)) break;
-        const run = benchmarkRun(bench);
+        const run = await benchmarkRun(bench);
         runs.push(run);
         post({ id, progress: { done: i + 1, total: req.runs, run } });
         // yield so a cancel message can arrive between runs

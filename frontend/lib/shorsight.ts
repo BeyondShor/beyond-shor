@@ -355,13 +355,16 @@ export interface RiskItem {
   startByYear: number | null;
   migrationStatus: string;
   vendorDependency: boolean;
+  /** every risk tuple of this algorithm is accepted: no deadline (set in build_inventory.py) */
+  riskAccepted?: boolean;
 }
 
 export interface RiskAsset {
   asset: string;
   kind: string;
-  shelfLifeYears: number;
-  migrationYears: number;
+  /** null when every risk of the asset is accepted (build_inventory.py) */
+  shelfLifeYears: number | null;
+  migrationYears: number | null;
   criticality: string;
   owner: string;
   riskOwner: string;
@@ -375,6 +378,7 @@ export interface RiskAsset {
   securityObjectives: Partial<Record<SecurityGoal, number>>;
   economicDamage: number | null;
   impactState: 'confirmed' | 'provisional';
+  riskAccepted?: boolean;
 }
 
 export interface RiskTuple {

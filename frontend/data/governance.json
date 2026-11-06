@@ -31,10 +31,11 @@
         "priority": 0,
         "summary": "Weak with today's computers — should be replaced.",
         "mosca": "",
-        "deadlineYear": 2026,
-        "startByYear": 2026,
-        "migrationStatus": "pqc-only",
-        "vendorDependency": false
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "not applicable",
+        "vendorDependency": false,
+        "riskAccepted": true
       },
       {
         "component": "EC-P256",
@@ -52,11 +53,12 @@
         "urgent": false,
         "priority": 2,
         "summary": "Secure today, but a future quantum computer (Shor's algorithm) can break it.",
-        "mosca": "Signatures can't be forged retroactively; replace before a CRQC (~2030, Google/Cloudflare; BSI ~2035); migration ~1y. 1 ≤ 4 → plan the migration.",
-        "deadlineYear": 2030,
-        "startByYear": 2029,
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
         "migrationStatus": "not applicable",
-        "vendorDependency": false
+        "vendorDependency": false,
+        "riskAccepted": true
       },
       {
         "component": "X25519",
@@ -74,11 +76,12 @@
         "urgent": false,
         "priority": 2,
         "summary": "Secure today, but a future quantum computer (Shor's algorithm) can break it.",
-        "mosca": "Protects data ~5y; migration ~1y vs ~9y until 2035. 5+1=6 ≤ 9 → there is time; plan the migration.",
-        "deadlineYear": 2035,
-        "startByYear": 2034,
-        "migrationStatus": "hybrid",
-        "vendorDependency": false
+        "mosca": "",
+        "deadlineYear": null,
+        "startByYear": null,
+        "migrationStatus": "not applicable",
+        "vendorDependency": false,
+        "riskAccepted": true
       },
       {
         "component": "AES-256-GCM",
@@ -393,7 +396,7 @@
       {
         "asset": "beyond-shor",
         "kind": "local",
-        "shelfLifeYears": 5,
+        "shelfLifeYears": null,
         "criticality": "medium",
         "owner": "Beyond Shor",
         "riskOwner": "Marvin Sprey",
@@ -421,7 +424,7 @@
           "SLH-DSA-SHA2-192s [none]",
           "X25519 [quantum]"
         ],
-        "deadlineYear": 2026,
+        "deadlineYear": null,
         "securityObjectives": {
           "confidentiality": 1,
           "integrity": 4,
@@ -429,8 +432,9 @@
           "nonRepudiation": 3
         },
         "economicDamage": 2,
-        "migrationYears": 1,
-        "impactState": "confirmed"
+        "migrationYears": null,
+        "impactState": "confirmed",
+        "riskAccepted": true
       }
     ],
     "unknowns": [],
@@ -566,10 +570,10 @@
                   "transfer",
                   "accept"
                 ],
-                "treatment": "",
-                "treatmentNote": "",
+                "treatment": "accept",
+                "treatmentNote": "Accepted: Classic McEliece appears only in the playground, for comparison and with a reference to the BSI advisory. No data is protected with it.",
                 "decidedBy": "Marvin Sprey",
-                "migrationStatus": "pqc-only",
+                "migrationStatus": "not applicable",
                 "vendorDependency": false,
                 "quantum": "safe",
                 "classical": "weak"
@@ -650,7 +654,7 @@
                   "reduce"
                 ],
                 "treatment": "accept",
-                "treatmentNote": "ECDSA P-256 is kept as the classical reference point in the signature benchmark.",
+                "treatmentNote": "Accepted: ECDSA P-256 appears only in the playgrounds, as the classical reference in the signature benchmark and in the classical PKI profiles. It protects nothing on the site.",
                 "decidedBy": "Marvin Sprey",
                 "migrationStatus": "not applicable",
                 "vendorDependency": false,
@@ -739,9 +743,9 @@
                   "accept"
                 ],
                 "treatment": "accept",
-                "treatmentNote": "Deliberate: X25519 is the classical half of the hybrid handshake and is paired with ML-KEM-1024.",
+                "treatmentNote": "Accepted: X25519 appears only in the playground, and only as the classical half of the hybrid key exchange with ML-KEM-1024. No data with a protection requirement depends on it.",
                 "decidedBy": "Marvin Sprey",
-                "migrationStatus": "hybrid",
+                "migrationStatus": "not applicable",
                 "vendorDependency": false,
                 "quantum": "unsafe",
                 "classical": "secure"

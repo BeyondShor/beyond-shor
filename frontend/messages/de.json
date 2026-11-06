@@ -761,10 +761,13 @@
       "x25519": "Curve25519-Schlüsseleinigung; durch Shor gebrochen."
     },
     "treatmentNote": {
-      "x25519": "Bewusste Entscheidung: X25519 ist die klassische Hälfte des Hybrid-Handshakes und wird immer zusammen mit ML-KEM-1024 eingesetzt.",
-      "ec-p256": "ECDSA P-256 bleibt als klassischer Vergleichspunkt im Signatur-Benchmark erhalten."
+      "x25519": "Akzeptiert: X25519 kommt nur in den Playgrounds vor und dort ausschließlich als klassische Hälfte hybrider Schlüsseleinigungen (mit ML-KEM-1024 und als X25519MLKEM768 im TLS-Handshake des PKI-Playgrounds). Schutzbedürftige Daten hängen nicht daran.",
+      "ec-p256": "Akzeptiert: ECDSA P-256 kommt nur in den Playgrounds vor, als klassischer Vergleichspunkt im Signatur-Benchmark, in den klassischen PKI-Profilen und als ACME-Kontoschlüssel. Es schützt nichts auf der Website.",
+      "classic-mceliece": "Akzeptiert: Classic McEliece kommt nur im Playground vor, zum Vergleich und mit Hinweis auf die Warnung des BSI. Damit werden keine Daten geschützt."
     },
-    "detailNote": "Ein Klick auf einen Eintrag zeigt die Belege mit Link auf die Fundstelle im Repository. Das Risikomanagement folgt dem BSI-Standard 200-3 und nutzt die Mosca-Ungleichung als Maß für die Dringlichkeit."
+    "detailNote": "Ein Klick auf einen Eintrag zeigt die Belege mit Link auf die Fundstelle im Repository. Das Risikomanagement folgt dem BSI-Standard 200-3 und nutzt die Mosca-Ungleichung als Maß für die Dringlichkeit.",
+    "findingAccepted": "Keine Migrationsfrist.",
+    "allRisksAccepted": "Alle Risiken dieses Assets sind bewusst akzeptiert. Schutzdauer, Migrationsdauer und Frist zur Ablösung entfallen deshalb."
   },
   "rbe": {
     "pageTitle": "Registration-Based Encryption — Interaktive Demo",
@@ -963,13 +966,15 @@
     "labIntro": "Wählen Sie, ob Sie eine interne oder eine öffentliche PKI aufbauen, und ein Profil. Die Schritte 01 bis 05 bauen aufeinander auf, ab Schritt 06 folgen Vertiefungen, die für sich funktionieren. Alle Zertifikate sind echt und lassen sich als PEM herunterladen.",
     "impl": {
       "title": "Wie der Playground gebaut ist",
-      "real": "Zertifikate, Anträge nach PKCS #10 und Sperrlisten entstehen im Browser nach RFC 5280 in DER-Kodierung und werden mit echten Schlüsseln signiert (@noble/curves und @noble/post-quantum, in einem Web Worker). Kein Server ist beteiligt.",
+      "real": "Zertifikate, Anträge nach PKCS #10, Sperrlisten und der TLS-Handshake entstehen im Browser in einem Web Worker, mit echten Schlüsseln (@noble/curves, @noble/post-quantum, WebCrypto). Kein Server ist beteiligt.",
       "interop": "Gegengeprüft mit OpenSSL 3.5: Die Ketten mit ECDSA, ML-DSA-44, ML-DSA-65 und SLH-DSA-Root bestehen eine strenge Prüfung samt Servername, Zweck und Sperrliste. Anträge und Sperrlisten verifizieren, gesperrte Zertifikate werden abgelehnt.",
       "composite": "Composite ML-DSA folgt draft-ietf-lamps-pq-composite-sigs-19 und ist gegen die Testvektoren des Entwurfs geprüft. Bis zum RFC können sich Details noch ändern.",
       "catalyst": "Die ITU-T-Erweiterungen folgen X.509 (10/2019), Abschnitt 9.8. Die Spezifikation lässt einige Punkte offen, die Demo folgt hier der Umsetzung in Bouncy Castle.",
       "mtc": "Merkle Tree Certificates folgen draft-ietf-plants-merkle-tree-certs-08: Log-Einträge, Inklusionsbeweise, Cosignaturen und die Prüfung nach Abschnitt 7.2. Für Post-Quanten-SCTs gibt es noch keinen festgelegten Codepoint, die Demo verwendet den TLS-Codepoint von ML-DSA-44.",
-      "simplified": "Vereinfacht sind die Domainprüfung, die Sperrprüfung (nur für das Serverzertifikat) und die Größe des TLS-Handshakes, die aus den Nachrichtenformaten von RFC 8446 berechnet wird.",
-      "shor": "Shors Algorithmus ist simuliert: Kein heutiger Quantencomputer kann ECDSA brechen. Fälschungen und Prüfungen sind dagegen echt."
+      "simplified": "Simuliert ist nur, was sich im Browser nicht echt herstellen lässt: das DNS, die Übertragung im Netz (die QUIC-Pakete werden nach RFC 9000 berechnet, nicht gesendet) und Shors Algorithmus.",
+      "shor": "Shors Algorithmus ist simuliert: Kein heutiger Quantencomputer kann ECDSA brechen. Fälschungen und Prüfungen sind dagegen echt.",
+      "tls": "Der Handshake folgt RFC 8446 mit der hybriden Schlüsseleinigung X25519MLKEM768 nach RFC 10024. Schlüsselableitung, Finished und Record-Verschlüsselung sind byte-genau gegen die Beispiel-Handshakes aus RFC 8448 geprüft.",
+      "acme": "Die Domainprüfung folgt ACME (RFC 8555) mit dns-01 und CAA (RFC 8659, RFC 8657). Alle kryptografischen Schritte sind echt, simuliert ist nur das DNS."
     },
     "series": {
       "title": "Die Artikelreihe dazu"
@@ -1007,7 +1012,7 @@
       "composite": {
         "name": "Composite ML-DSA-65 + ECDSA P-256",
         "short": "Composite",
-        "desc": "Ein Schlüssel, eine Signatur, gültig nur, wenn beide Teile stimmen. Das entspricht der hybriden Kombination, die die TR-02102-1 beschreibt. Ältere Software kann solche Zertifikate nicht prüfen."
+        "desc": "Ein Schlüssel, eine Signatur, gültig nur, wenn beide Teile stimmen. Das kommt der hybriden Kombination am nächsten, die die TR-02102-1 beschreibt. Ältere Software kann solche Zertifikate nicht prüfen."
       },
       "mixed": {
         "name": "Rollenmix: SLH-DSA-Root, ML-DSA darunter",
@@ -1068,7 +1073,7 @@
       "browserToday": {
         "name": "Browser heute",
         "short": "klassischer Root Store",
-        "desc": "Root Store mit klassischen Roots, verlangt zwei gültige SCTs und prüft Sperrungen mit vorab verteilten Daten wie CRLite."
+        "desc": "Root Store mit klassischen Roots, verlangt zwei gültige SCTs und prüft Sperrungen mit vorab verteilten Daten wie CRLite in Firefox."
       },
       "browserMtc": {
         "name": "Browser mit MTC",
@@ -1082,29 +1087,15 @@
       }
     },
     "arch": {
-      "title": "// architektur",
       "mtcCa": "MTC-CA mit Issuance Log",
-      "mtcCaSub": "trägt Zertifikate ins Log ein und cosigniert Teilbäume",
-      "cosignature": "Cosignatur",
       "rootPrivate": "Root-CA der Muster GmbH",
       "rootWeb": "Root-CA (im Root Store)",
       "rootSub": "offline, Schlüssel im HSM",
-      "signs": "signiert",
       "issuingPrivate": "Ausstellende CA",
       "issuingWeb": "Zwischen-CA",
-      "issuingSubPrivate": "nur serverAuth, nur Namen unter muster.example",
-      "issuingSubWeb": "nur serverAuth",
-      "logs": "Log-Eintrag und Inklusionsbeweis",
-      "issues": "stellt aus",
       "server": "Server",
-      "handshake": "TLS-Handshake",
       "mallory": "Mallory",
-      "mallorySub": "sitzt im Netz und sieht alles, was übertragen wird",
-      "ra": "Registrierungsstelle",
-      "raSubPrivate": "Freigaberegeln je Zertifikatsvorlage",
-      "raSubWeb": "ACME, Domainprüfung, CAA",
       "crl": "Sperrliste (CRL)",
-      "crlSub": "von der ausstellenden CA signiert",
       "ct": "CT-Logs",
       "ctSub": "zwei Logs signieren SCTs",
       "mirror": "Spiegel (Cosigner)",
@@ -1112,10 +1103,7 @@
       "updateChannel": "Update-Kanal",
       "updateChannelSub": "verteilt Landmarks an Browser",
       "issuanceLog": "Ausstellungsprotokoll",
-      "issuanceLogSub": "ersetzt öffentliche Logs",
-      "trustStore": "Trust Store",
-      "trustStorePrivate": "Root über die Geräteverwaltung verteilt",
-      "trustStoreWeb": "Root Store des Browsers"
+      "issuanceLogSub": "ersetzt öffentliche Logs"
     },
     "step1": {
       "title": "Schlüsselzeremonie",
@@ -1128,7 +1116,7 @@
       "issuing": "Ausstellende CA",
       "logs": "CT-Logs: {names}, signieren mit {alg}.",
       "cosigners": "CA-Cosigner und Spiegel signieren mit {alg}, je {bytes} Byte öffentlicher Schlüssel.",
-      "hsmPrivate": "In der Praxis entsteht der Root-Schlüssel in einem HSM nach FIPS 140-3 Stufe 3 oder Common Criteria EAL 4+, unter Mehrpersonenkontrolle. Klassische Roots enden in dieser Demo Ende 2035, quantensichere nach 20 Jahren. Warum, zeigen die drei Uhren in Schritt 08.",
+      "hsmPrivate": "Empfehlenswert ist, den Root-Schlüssel in einem HSM nach FIPS 140-3 Stufe 3 oder Common Criteria EAL 4+ unter Mehrpersonenkontrolle zu erzeugen, wie es die Baseline Requirements für öffentliche CAs verlangen. Klassische Roots enden in dieser Demo Ende 2035, quantensichere nach 20 Jahren. Warum, zeigen die drei Uhren in Schritt 08.",
       "hsmWeb": "Öffentliche Roots entstehen in einer protokollierten Schlüsselzeremonie und kommen erst nach Audits in die Root Stores. Die Demo-Root steht in keinem echten Root Store."
     },
     "step2": {
@@ -1140,8 +1128,8 @@
       "keygen": "Der Server erzeugt ein {alg}-Schlüsselpaar ({ms}). Der private Schlüssel verlässt den Server nicht.",
       "csr": "Antrag nach PKCS #10, {bytes} Byte, signiert mit dem neuen privaten Schlüssel:",
       "pop": "Besitznachweis geprüft",
-      "raPrivate": "Die Registrierungsstelle prüft den Antrag gegen die Freigaberegeln der Vorlage: Der Name liegt unter muster.example, der Zweck ist serverAuth. In der Demo vereinfacht.",
-      "raWeb": "Die CA lässt sich per ACME aus mehreren Netzwerkstandorten bestätigen, dass der Antragsteller die Domain kontrolliert, und fragt den CAA-Eintrag ab. In der Demo vereinfacht.",
+      "raPrivate": "Domainprüfung über den internen ACME-Server ({ms}): Der Server legt einen TXT-Eintrag in die interne DNS-Zone, die CA prüft ihn. Zusätzlich gilt die Regel der Vorlage: nur Namen unter muster.example, Zweck serverAuth.",
+      "raWeb": "Domainprüfung per ACME dns-01 ({ms}): Der Server legt einen TXT-Eintrag ins DNS, die CA prüft ihn aus drei Netzwerkstandorten und fragt den CAA-Eintrag der Domain ab.",
       "issuePrivate": "Die ausstellende CA signiert das Serverzertifikat ({ms}). Laufzeit: 90 Tage.",
       "issueWeb": "Die CA legt ein Vorzertifikat zwei CT-Logs vor, bettet deren SCTs ein und signiert das endgültige Zertifikat ({ms}). Laufzeit: 90 Tage.",
       "issueMtc": "Die CA trägt das Zertifikat in ein Log mit {size} Einträgen ein, CA und Spiegel cosignieren den Teilbaum ({ms}). Es entstehen zwei Formen: landmark-relativ und standalone.",
@@ -1150,9 +1138,9 @@
     },
     "step3": {
       "title": "Verbindungsaufbau",
-      "introPrivate": "Der Server schickt im TLS-1.3-Handshake sein Zertifikat und das der Zwischen-CA, die Root kennt der Client aus seinem Trust Store. Zusätzlich signiert der Server den Handshake (CertificateVerify). Drei Clients mit unterschiedlichen Fähigkeiten prüfen dieselbe Kette.",
-      "introWeb": "Der Server schickt im TLS-1.3-Handshake sein Zertifikat und das der Zwischen-CA und signiert den Handshake (CertificateVerify). Im öffentlichen Web entscheiden die Root Stores und Certificate Transparency. Drei Clients prüfen.",
-      "introMtc": "Der Server schickt im TLS-1.3-Handshake ein Merkle Tree Certificate ohne Zwischen-CA und signiert den Handshake (CertificateVerify). Welche Form er schickt, hängt vom Client ab: Wer den passenden Landmark kennt, bekommt die kleine landmark-relative Form, alle anderen die Standalone-Form mit Cosignaturen.",
+      "introPrivate": "Server und Client führen einen echten TLS-1.3-Handshake mit hybrider Schlüsseleinigung (X25519MLKEM768). Der Server schickt sein Zertifikat und das der Zwischen-CA, die Root kennt der Client aus seinem Trust Store, und er signiert den Handshake (CertificateVerify). Drei Clients mit unterschiedlichen Fähigkeiten prüfen dieselbe Kette.",
+      "introWeb": "Server und Client führen einen echten TLS-1.3-Handshake mit hybrider Schlüsseleinigung (X25519MLKEM768). Der Server schickt sein Zertifikat und das der Zwischen-CA und signiert den Handshake (CertificateVerify). Im öffentlichen Web entscheiden die Root Stores und Certificate Transparency.",
+      "introMtc": "Server und Client führen einen echten TLS-1.3-Handshake mit hybrider Schlüsseleinigung. Der Server schickt ein Merkle Tree Certificate ohne Zwischen-CA und signiert den Handshake. Welche Form er schickt, hängt vom Client ab: Wer den passenden Landmark kennt, bekommt die kleine landmark-relative Form, alle anderen die Standalone-Form mit Cosignaturen.",
       "run": "Handshake mit drei Clients",
       "needLeaf": "Stellen Sie zuerst ein Serverzertifikat aus.",
       "checks": "Prüfschritte",
@@ -1192,14 +1180,22 @@
       "cryptoLoad": "Schlüssel und Signaturen",
       "flight": "Erster Server-Flug (TCP)",
       "tcp": "TCP: erstes Staufenster (RFC 6928)",
-      "quic": "QUIC: Verstärkungsgrenze (RFC 9000)",
-      "eap": "EAP-TLS mit Fragmenten von {size} Byte: {fragments} Umläufe für den Server-Flug, bei gegenseitiger Authentisierung rund {mtls}. Manche Access Points brechen nach 40 bis 50 Umläufen ab.",
+      "quic": "QUIC: Verstärkungsgrenze (RFC 9000), der Client schickte {client} Byte",
+      "eap": "EAP-TLS mit Fragmenten von {size} Byte: {fragments} Umläufe für den Server-Flug. Manche Access Points brechen nach 40 bis 50 Umläufen ab.",
       "details": "Aufschlüsselung",
       "loadTitle": "Schlüssel und Signaturen",
       "flightTitle": "Handshake-Nachrichten",
-      "method": "Zertifikate, Schlüssel und Signaturen sind gemessen. Die Handshake-Nachrichten sind nach RFC 8446 mit minimalen Erweiterungen und der hybriden Schlüsseleinigung X25519MLKEM768 (1.120 Byte Server-Anteil) gerechnet, einschließlich TLS-Record-Overhead. Der QUIC-Wert ist eine Schätzung mit 60 Byte Overhead pro Paket.",
+      "method": "Alle Werte sind gemessen. Der Handshake läuft vollständig nach RFC 8446 mit X25519MLKEM768 und TLS_AES_128_GCM_SHA256: echte Schlüsselableitung, verschlüsselte Records, CertificateVerify über das tatsächliche Transkript und Finished. Für QUIC werden die gemessenen Handshake-Nachrichten nach RFC 9000 in Pakete und Datagramme von 1.200 Byte verpackt, mit 8 Byte langen Connection-IDs.",
       "overTcp": "Der erste Server-Flug passt nicht mehr ins erste TCP-Fenster. Der Server muss auf Bestätigungen warten, das kostet eine zusätzliche Umlaufzeit.",
-      "explain": "Der erste Server-Flug passt ins erste TCP-Fenster. Bei QUIC entscheidet die Dreifach-Regel, ob der Server ohne zusätzliche Umlaufzeit antworten kann."
+      "explain": "Der erste Server-Flug passt ins erste TCP-Fenster und unter die QUIC-Verstärkungsgrenze.",
+      "records": "TLS-Records des Server-Flugs",
+      "record": {
+        "ServerHello": "ServerHello (unverschlüsselt)",
+        "ChangeCipherSpec": "ChangeCipherSpec (Kompatibilitätsmodus)",
+        "encrypted": "verschlüsselter Record"
+      },
+      "privateScheme": "Für diesen Signaturalgorithmus ist in TLS noch kein Codepoint vergeben. Die Demo nutzt einen Wert aus dem Bereich für private Nutzung (RFC 8446), echte Gegenstellen würden ihn nicht kennen.",
+      "overQuic": "Der erste Server-Flug passt ins erste TCP-Fenster, überschreitet aber die QUIC-Verstärkungsgrenze. Der Server muss warten, bis der Client seine Adresse bestätigt hat, das kostet eine zusätzliche Umlaufzeit."
     },
     "cert": {
       "subject": "Inhaber (subject)",
@@ -1339,7 +1335,13 @@
         "label": "Manipuliert",
         "what": "16 Byte des öffentlichen Schlüssels im fertigen Zertifikat werden verändert, als hätte jemand den Schlüssel ausgetauscht.",
         "why": "Die Signatur der CA deckt jedes Byte des signierten Teils ab. Schon ein geändertes Bit lässt die Prüfung scheitern."
-      }
+      },
+      "intermediateRevoked": {
+        "label": "Zwischen-CA gesperrt",
+        "what": "Die Root stellt eine zweite ausstellende CA aus und sperrt sie gleich wieder in ihrer Sperrliste für CA-Zertifikate. Das Serverzertifikat stammt von dieser gesperrten CA.",
+        "why": "Geprüft wird der Sperrstatus jedes Zertifikats der Kette, nicht nur der des Serverzertifikats. Für Zwischen-CAs sehen die Baseline Requirements eine Sperrfrist von sieben Tagen vor."
+      },
+      "slowRoot": "Im Rollenmix-Profil signiert die SLH-DSA-Root dafür zweimal, das dauert einige Sekunden."
     },
     "attack": {
       "title": "Angreifersicht",
@@ -1434,7 +1436,7 @@
     "mtc": {
       "title": "Merkle Tree Certificates",
       "intro": "Für das öffentliche Web plant Chrome einen anderen Weg: Statt jedes Zertifikat einzeln zu signieren, trägt die CA es in ein Log ein, das nur wachsen darf. Signiert wird der Zustand des Logs.",
-      "s1": "Die CA hängt das Zertifikat als Eintrag an ihr Issuance Log an. Der Eintrag enthält nur einen Hash des öffentlichen Schlüssels.",
+      "s1": "Die CA hängt das Zertifikat als Eintrag an ihr Issuance Log an. Der Eintrag enthält Namen, Laufzeit und Erweiterungen, vom öffentlichen Schlüssel aber nur einen Hash.",
       "s2": "CA und ein unabhängiger Spiegel cosignieren Teilbäume des Logs mit ML-DSA-44.",
       "s3": "Browser erhalten beglaubigte Teilbäume, die Landmarks, vorab über ihren Update-Kanal. Im Handshake genügt dann ein Inklusionsbeweis aus SHA-256-Hashes.",
       "s4": "Clients ohne aktuelle Landmarks bekommen das Standalone-Zertifikat mit den Cosignaturen.",
@@ -1481,9 +1483,104 @@
         "issue": "Ausstellen (CA)",
         "validate": "Kette prüfen (Client)",
         "cvSign": "CertificateVerify signieren",
-        "cvVerify": "CertificateVerify prüfen"
+        "cvVerify": "CertificateVerify prüfen",
+        "validation": "Domainprüfung (ACME)",
+        "handshake": "TLS-Handshake komplett"
       },
       "note": "Die Zeiten hängen von Gerät, Browser und Auslastung ab und gelten für diese JavaScript-Implementierungen, nicht für optimierten nativen Code oder HSMs. Bei den Web-Profilen enthält „Ausstellen“ das Einholen der SCTs beziehungsweise den Aufbau des Logs. Browser runden die Zeitmessung auf etwa 0,1 Millisekunden, kurze Operationen erscheinen deshalb gerastert."
+    },
+    "acme": {
+      "valid": "bestanden",
+      "details": "ACME im Detail",
+      "account": "Konto",
+      "thumbprint": "JWK-Fingerabdruck",
+      "jws": "Signierte Anfragen (ES256)",
+      "ok": "gültig",
+      "bad": "ungültig",
+      "token": "Challenge-Token",
+      "txt": "TXT-Eintrag",
+      "perspectives": "Geprüft von",
+      "perspective": {
+        "primary": "Primärstandort",
+        "remote1": "Zweitstandort 1",
+        "remote2": "Zweitstandort 2",
+        "internal": "interner Resolver"
+      },
+      "caa": "CAA",
+      "caaNone": "kein CAA-Eintrag, jede CA darf ausstellen",
+      "caaPrivate": "nicht vorgeschrieben (private CA)",
+      "note": "Echt sind Kontoschlüssel, signierte Anfragen, Token, Fingerabdruck (RFC 7638) und TXT-Wert (RFC 8555). Simuliert ist nur das DNS, eine Zone im Arbeitsspeicher, weil die Demo keine echte Domain kontrolliert. Die drei Standorte fragen deshalb dieselbe Zone ab."
+    },
+    "overview": {
+      "aria": "Schaubild der PKI mit Beteiligten und Datenflüssen",
+      "steps": "Ablauf",
+      "start": "Start",
+      "replay": "Noch einmal abspielen",
+      "toDetails": "↓ Zu den Details",
+      "idleText": "Mit Start läuft die PKI des gewählten Profils einmal komplett durch: Schlüsselzeremonie, Antrag, Domainprüfung, Ausstellung und Handshake. Darunter können Sie jeden Schritt im Detail nachlesen und einzeln wiederholen.",
+      "doneText": "Durchgelaufen. Alle Ergebnisse stehen unten in den Schritten 01 bis 03, die Vertiefungen ab Schritt 04 bauen darauf auf.",
+      "verdictText": "{accepted} von {total} Clients akzeptieren die Verbindung. Warum, steht unten in Schritt 03.",
+      "node": {
+        "ra": "Registrierungsstelle",
+        "dns": "DNS",
+        "noCrl": "Sperrung"
+      },
+      "sub": {
+        "mtcCa": "Issuance Log, cosigniert",
+        "issuing": "stellt im Alltag aus",
+        "raPrivate": "interner ACME-Server",
+        "raWeb": "ACME, CAA",
+        "crl": "für CA- und Serverzertifikate",
+        "noCrl": "über gesperrte Seriennummernbereiche",
+        "mallory": "liest im Netz mit"
+      },
+      "pkt": {
+        "cosignerKey": "Schlüssel",
+        "caCert": "CA-Zertifikat",
+        "lookup": "Abfrage",
+        "subtree": "Teilbaum",
+        "cosignature": "Cosignatur",
+        "cert": "Zertifikat",
+        "logEntry": "Protokoll",
+        "precert": "Vorzertifikat",
+        "chain": "Kette",
+        "revocation": "Sperrdaten"
+      },
+      "phase": {
+        "ceremony": {
+          "short": "Schlüsselzeremonie",
+          "private": "Die Root-CA erzeugt ihr Schlüsselpaar, signiert ihr eigenes Zertifikat und das der ausstellenden CA. Danach geht die Root offline.",
+          "web": "Die Root-CA erzeugt ihr Schlüsselpaar und signiert das Zertifikat der Zwischen-CA. In die Root Stores der Browser kommt eine Root erst nach Audits.",
+          "mtc": "Die MTC-CA und ein unabhängiger Spiegel erzeugen ihre Cosigner-Schlüssel mit ML-DSA-44. Ein Root-Zertifikat gibt es nicht."
+        },
+        "request": {
+          "short": "Antrag",
+          "private": "Der Server erzeugt sein Schlüsselpaar selbst und schickt der Registrierungsstelle einen Antrag (CSR), signiert mit dem neuen privaten Schlüssel.",
+          "web": "Der Server erzeugt sein Schlüsselpaar selbst und schickt der Registrierungsstelle einen Antrag (CSR), signiert mit dem neuen privaten Schlüssel.",
+          "mtc": "Der Server erzeugt sein Schlüsselpaar selbst und schickt der Registrierungsstelle einen Antrag (CSR), signiert mit dem neuen privaten Schlüssel."
+        },
+        "validate": {
+          "short": "Domainprüfung",
+          "private": "Über den internen ACME-Server: Der Server legt einen TXT-Eintrag in die interne DNS-Zone, die Registrierungsstelle prüft ihn.",
+          "web": "Per ACME dns-01: Der Server legt einen TXT-Eintrag ins DNS, die CA prüft ihn aus drei Netzwerkstandorten und fragt den CAA-Eintrag ab.",
+          "mtc": "Per ACME dns-01: Der Server legt einen TXT-Eintrag ins DNS, die CA prüft ihn aus drei Netzwerkstandorten und fragt den CAA-Eintrag ab."
+        },
+        "issue": {
+          "short": "Ausstellung",
+          "private": "Die ausstellende CA signiert das Serverzertifikat und hält die Ausstellung im eigenen Protokoll fest.",
+          "web": "Zwei CT-Logs bestätigen das Vorzertifikat mit SCTs, die CA bettet sie ein und signiert das Serverzertifikat.",
+          "mtc": "Die CA trägt das Zertifikat in ihr Log ein, CA und Spiegel cosignieren den Teilbaum. Browser erhalten ihn als Landmark über ihren Update-Kanal."
+        },
+        "handshake": {
+          "short": "Handshake",
+          "private": "Echter TLS-1.3-Handshake mit hybrider Schlüsseleinigung: Der Server schickt seine Kette und signiert den Handshake, drei Clients prüfen.",
+          "web": "Echter TLS-1.3-Handshake mit hybrider Schlüsseleinigung: Der Server schickt seine Kette und signiert den Handshake, drei Clients prüfen.",
+          "mtc": "Echter TLS-1.3-Handshake mit hybrider Schlüsseleinigung: Der Server schickt sein Merkle Tree Certificate und signiert den Handshake, drei Clients prüfen."
+        },
+        "verdict": {
+          "short": "Ergebnis"
+        }
+      }
     }
   }
 }

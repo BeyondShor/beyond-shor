@@ -8,10 +8,11 @@ import {
 } from './meta';
 
 export * from './meta';
-import { toHex, type Bytes } from './der';
+import { fromHex, toHex, type Bytes } from './der';
 import { OID } from './oids';
 import { createCsr, parseCsr, verifyCsr } from './csr';
 import { createCrl, type RevokedEntry } from './crl';
+import { createAccount, emptyZone, validateDns01, type AcmeAccount, type AcmeCa, type AcmeTrace, type DnsZone } from './acme';
 import { createLog, createSct, encodeSctList, precertTbsOf, type CtLog } from './ct';
 import { createCosigner, issueMtc, MTC_CA_ID, MTC_MIRROR_ID, type Cosigner, type MtcIssued } from './mtc';
 import {
@@ -19,7 +20,7 @@ import {
   type CertSpec, type DName, type ExtSpec, type ParsedCert,
 } from './x509';
 import { validateChain, type ClientPolicy, type CrlOnNetwork, type TrustAnchor, type ValidationResult } from './validate';
-import { estimateFlight, signCertificateVerify, verifyCertificateVerify, type FlightEstimate } from './tls';
+import { PRIVATE_USE_SCHEMES, runHandshake, transportCost, type TlsHandshake, type TransportCost } from './tls13';
 
 export const DAY = 86_400_000;
 
@@ -46,8 +47,11 @@ export interface CaNode {
   der:       Bytes;
   cert:      ParsedCert;
   keyId:     Bytes;
+  /** where this CA publishes its CRL (the root: the CRL for CA certificates, an ARL) */
+  crlUri:    string;
   crlNumber: number;
   revoked:   RevokedEntry[];
+  crlCache?: { number: number; der: Bytes };
 }
 
 function caExtensions(key: KeyPair, issuerKeyId: Bytes | null, opts: { pathLen?: number; permitted?: string[]; serverAuthOnly?: boolean }): ExtSpec[] {
@@ -62,7 +66,7 @@ function caExtensions(key: KeyPair, issuerKeyId: Bytes | null, opts: { pathLen?:
   return ext;
 }
 
-function makeRoot(alg: AlgId, name: DName, now: Date, altAlg?: AlgId): CaNode {
+function makeRoot(alg: AlgId, name: DName, now: Date, altAlg?: AlgId, crlUri = ''): CaNode {
   const key = keygen(alg);
   const altKey = altAlg ? keygen(altAlg) : undefined;
   const keyId = keyIdentifier(key.publicKey);
@@ -74,13 +78,15 @@ function makeRoot(alg: AlgId, name: DName, now: Date, altAlg?: AlgId): CaNode {
     subjectKey: { alg, publicKey: key.publicKey }, extensions,
   };
   const der = altKey ? issueCatalystCertificate(spec, key, altKey) : issueCertificate(spec, key);
-  return { key, altKey, name, der, cert: parseCertificate(der), keyId, crlNumber: 1, revoked: [] };
+  return { key, altKey, name, der, cert: parseCertificate(der), keyId, crlUri, crlNumber: 1, revoked: [] };
 }
 
-function makeIntermediate(alg: AlgId, name: DName, parent: CaNode, now: Date, opts: { permitted?: string[]; altAlg?: AlgId }): CaNode {
+function makeIntermediate(alg: AlgId, name: DName, parent: CaNode, now: Date, opts: { permitted?: string[]; altAlg?: AlgId; crlUri?: string }): CaNode {
   const key = keygen(alg);
   const altKey = opts.altAlg ? keygen(opts.altAlg) : undefined;
   const extensions = caExtensions(key, parent.keyId, { pathLen: 0, permitted: opts.permitted, serverAuthOnly: true });
+  // the intermediate's own revocation status is published by the root
+  if (parent.crlUri) extensions.push({ type: 'crlDistributionPoint', uri: parent.crlUri });
   if (altKey) extensions.push({ type: 'altPublicKey', alg: altKey.alg, publicKey: altKey.publicKey });
   const notAfter = new Date(Math.min(parent.cert.notAfter.getTime(), Date.UTC(now.getUTCFullYear() + 5, now.getUTCMonth(), now.getUTCDate())));
   const spec: CertSpec = {
@@ -89,7 +95,7 @@ function makeIntermediate(alg: AlgId, name: DName, parent: CaNode, now: Date, op
     subjectKey: { alg, publicKey: key.publicKey }, extensions,
   };
   const der = parent.altKey && altKey ? issueCatalystCertificate(spec, parent.key, parent.altKey) : issueCertificate(spec, parent.key);
-  return { key, altKey, name, der, cert: parseCertificate(der), keyId: keyIdentifier(key.publicKey), crlNumber: 1, revoked: [] };
+  return { key, altKey, name, der, cert: parseCertificate(der), keyId: keyIdentifier(key.publicKey), crlUri: opts.crlUri ?? '', crlNumber: 1, revoked: [] };
 }
 
 // ── The PKI of one profile ────────────────────────────────────────────────────
@@ -102,6 +108,11 @@ export interface Pki {
   issuing?:  CaNode;
   logs?:     CtLog[];
   cosigners?: Cosigner[];
+  /** further issuing CAs under the same root (failure case: revoked intermediate) */
+  extraCas:  CaNode[];
+  /** the subscriber's DNS zone and ACME account (simulated DNS, real ACME cryptography) */
+  zone:      DnsZone;
+  account?:  AcmeAccount;
   ceremonyMs: Record<string, number>;
 }
 
@@ -111,8 +122,18 @@ function timed<T>(fn: () => T): [T, number] {
   return [r, performance.now() - t];
 }
 
-export function crlUri(p: Profile): string {
-  return p.scope === 'private' ? `http://pki.${PRIVATE_DOMAIN}/tls-ca-1.crl` : 'http://crl.example.net/demo-web-ca.crl';
+export function crlUris(p: Profile) {
+  return p.scope === 'private'
+    ? { root: `http://pki.${PRIVATE_DOMAIN}/root-ca.crl`, issuing: `http://pki.${PRIVATE_DOMAIN}/tls-ca-1.crl`, sibling: `http://pki.${PRIVATE_DOMAIN}/tls-ca-2.crl` }
+    : { root: 'http://crl.example.net/demo-web-root.crl', issuing: 'http://crl.example.net/demo-web-ca-r1.crl', sibling: 'http://crl.example.net/demo-web-ca-r2.crl' };
+}
+
+export function acmeCa(p: Profile): AcmeCa {
+  return p.scope === 'private'
+    // an internal ACME server; CAA is a rule for publicly trusted CAs only
+    ? { directory: `https://pki.${PRIVATE_DOMAIN}/acme`, caaDomain: `pki.${PRIVATE_DOMAIN}`, checkCaa: false, perspectives: ['internal'] }
+    // Baseline Requirements: domain control confirmed from several network perspectives, CAA checked
+    : { directory: 'https://acme.demo-web-ca.example', caaDomain: 'demo-web-ca.example', checkCaa: true, perspectives: ['primary', 'remote1', 'remote2'] };
 }
 
 export function createPki(profileId: ProfileId, now = new Date()): Pki {
@@ -122,21 +143,26 @@ export function createPki(profileId: ProfileId, now = new Date()): Pki {
   if (profile.mtc) {
     const [cosigners, ms] = timed(() => [createCosigner(MTC_CA_ID, 'ca'), createCosigner(MTC_MIRROR_ID, 'mirror')]);
     ceremonyMs.cosigners = ms;
-    return { profile, now, host, cosigners, ceremonyMs };
+    return { profile, now, host, cosigners, extraCas: [], zone: emptyZone(), ceremonyMs };
   }
   const org = profile.scope === 'private' ? ORG : WEB_ORG;
   const rootName: DName = profile.scope === 'private'
     ? { C: 'DE', O: org, CN: `${org} Root CA` }
     : { C: 'DE', O: org, CN: 'Demo Web Root' };
-  const [root, rootMs] = timed(() => makeRoot(profile.root, rootName, now));
+  const uris = crlUris(profile);
+  const [root, rootMs] = timed(() => {
+    const r = makeRoot(profile.root, rootName, now, undefined, uris.root);
+    caCrl(r, now);               // the root publishes its (empty) CRL for CA certificates right away
+    return r;
+  });
   ceremonyMs.root = rootMs;
   const intName: DName = profile.scope === 'private'
     ? { C: 'DE', O: org, CN: `${org} TLS CA 1` }
     : { C: 'DE', O: org, CN: 'Demo Web CA R1' };
   const [issuing, intMs] = timed(() => makeIntermediate(profile.intermediate, intName, root, now,
-    { permitted: profile.scope === 'private' ? [PRIVATE_DOMAIN] : undefined }));
+    { permitted: profile.scope === 'private' ? [PRIVATE_DOMAIN] : undefined, crlUri: uris.issuing }));
   ceremonyMs.intermediate = intMs;
-  const pki: Pki = { profile, now, host, root, issuing, ceremonyMs };
+  const pki: Pki = { profile, now, host, root, issuing, extraCas: [], zone: emptyZone(), ceremonyMs };
   if (profile.ct) {
     const [logs, ms] = timed(() => [createLog('Demo-Log A', profile.ct!), createLog('Demo-Log B', profile.ct!)]);
     pki.logs = logs;
@@ -160,10 +186,12 @@ export interface LeafResult {
   chain:     Bytes[];
   expectedHost: string;
   mtc?:      MtcIssued;
-  timings:   { keygen: number; csr: number; popCheck: number; issue: number };
+  /** domain validation (regular issuance only — the failure cases model a CA that skips it) */
+  acme?:     AcmeTrace;
+  timings:   { keygen: number; csr: number; popCheck: number; validation: number; issue: number };
 }
 
-export function leafSpec(pki: Pki, key: KeyPair, variant: Variant, dnsName: string): CertSpec {
+export function leafSpec(pki: Pki, key: KeyPair, variant: Variant, dnsName: string, issuing: CaNode | undefined = pki.issuing): CertSpec {
   const now = pki.now;
   const lifetime = 90 * DAY;            // within today's 200-day Baseline Requirements limit
   const notBefore = variant === 'expired' ? new Date(now.getTime() - 120 * DAY) : new Date(now.getTime() - 60_000);
@@ -175,14 +203,14 @@ export function leafSpec(pki: Pki, key: KeyPair, variant: Variant, dnsName: stri
     // Web certificates carry an empty subject, so subjectAltName must be critical (RFC 5280 §4.2.1.6)
     { type: 'subjectAltName', dns: [dnsName], critical: pki.profile.scope === 'web' },
   ];
-  if (pki.issuing) {
+  if (issuing) {
     extensions.push({ type: 'subjectKeyIdentifier', keyId: keyIdentifier(key.publicKey) });
-    extensions.push({ type: 'authorityKeyIdentifier', keyId: pki.issuing.keyId });
-    extensions.push({ type: 'crlDistributionPoint', uri: crlUri(pki.profile) });
+    extensions.push({ type: 'authorityKeyIdentifier', keyId: issuing.keyId });
+    extensions.push({ type: 'crlDistributionPoint', uri: issuing.crlUri });
   }
   return {
     serial: randomSerial(),
-    issuer: pki.issuing?.name ?? { trustAnchorId: MTC_CA_ID },
+    issuer: issuing?.name ?? { trustAnchorId: MTC_CA_ID },
     subject: pki.profile.scope === 'web' ? {} : { O: ORG, CN: dnsName },
     notBefore, notAfter,
     subjectKey: { alg: key.alg, publicKey: key.publicKey },
@@ -200,7 +228,35 @@ export function issueLeaf(pki: Pki, variant: Variant = 'ok', mtcFill = 4095): Le
   // Web certificates carry no subject name, only subjectAltName (as Let's Encrypt does since 2025)
   const [csr, csrMs] = timed(() => createCsr(p.scope === 'web' ? {} : { O: ORG, CN: dnsName }, key, [dnsName]));
   const [csrValid, popMs] = timed(() => verifyCsr(parseCsr(csr)));
-  const spec = leafSpec(pki, key, variant, dnsName);
+
+  // Regular issuance: ACME dns-01 for the requested name. The failure cases model a CA
+  // that deliberately skips its own checks, so they bypass it.
+  let acme: AcmeTrace | undefined;
+  let validationMs = 0;
+  if (variant === 'ok') {
+    [acme, validationMs] = timed(() => {
+      if (!pki.account) {
+        pki.account = createAccount(acmeCa(p).directory);
+        // the domain owner allows only this CA and this ACME account (RFC 8659, RFC 8657)
+        if (p.scope === 'web') pki.zone.caa.set('example.com', [`0 issue "${acmeCa(p).caaDomain}; accounturi=${pki.account.url}"`]);
+      }
+      return validateDns01(acmeCa(p), pki.account, dnsName, pki.zone, csr);
+    });
+    if (!acme.valid) throw new Error('domain validation failed');
+  }
+
+  // Failure case: a second issuing CA under the same root, revoked by the root
+  let issuing = pki.issuing;
+  if (variant === 'intermediateRevoked' && pki.root && pki.issuing) {
+    const org = p.scope === 'private' ? ORG : WEB_ORG;
+    const sibling = makeIntermediate(p.intermediate, { C: 'DE', O: org, CN: p.scope === 'private' ? `${org} TLS CA 2` : 'Demo Web CA R2' },
+      pki.root, pki.now, { permitted: p.scope === 'private' ? [PRIVATE_DOMAIN] : undefined, crlUri: crlUris(p).sibling });
+    pki.root.revoked.push({ serial: serialBytes(sibling.cert.serial), date: pki.now, reason: 'keyCompromise' });
+    pki.root.crlNumber++;
+    pki.extraCas.push(sibling);
+    issuing = sibling;
+  }
+  const spec = leafSpec(pki, key, variant, dnsName, issuing);
 
   if (p.mtc) {
     const [issued, ms] = timed(() => issueMtc(spec, pki.cosigners!, mtcFill));
@@ -209,32 +265,32 @@ export function issueLeaf(pki: Pki, variant: Variant = 'ok', mtcFill = 4095): Le
       : issued;
     return {
       variant, serial: spec.serial, key, csr, csrValid, der: mtc.landmarkRelative, cert: parseCertificate(mtc.landmarkRelative),
-      chain: [mtc.landmarkRelative], expectedHost, mtc,
-      timings: { keygen: keygenMs, csr: csrMs, popCheck: popMs, issue: ms },
+      chain: [mtc.landmarkRelative], expectedHost, mtc, acme,
+      timings: { keygen: keygenMs, csr: csrMs, popCheck: popMs, validation: validationMs, issue: ms },
     };
   }
 
-  const issuing = pki.issuing!;
+  const ca = issuing!;
   const [der, issueMs] = timed(() => {
     if (pki.logs) {
       // Precertificate flow, simplified: the logs sign the TBSCertificate without the SCT
       // extension (RFC 6962 §3.2); the CA then embeds the SCTs and signs the final certificate.
-      const pre = parseCertificate(issueCertificate(spec, issuing.key));
+      const pre = parseCertificate(issueCertificate(spec, ca.key));
       const ts = pki.now.getTime();
-      const scts = pki.logs.map((l) => createSct(l, precertTbsOf(pre), issuing.cert.spkiDer, ts, [dnsName], issuing.name.CN ?? ''));
+      const scts = pki.logs.map((l) => createSct(l, precertTbsOf(pre), ca.cert.spkiDer, ts, [dnsName], ca.name.CN ?? ''));
       spec.extensions.push({ type: 'sctList', list: encodeSctList(scts) });
     }
-    return issueCertificate(spec, issuing.key);
+    return issueCertificate(spec, ca.key);
   });
 
   let finalDer = der;
   if (variant === 'tampered') finalDer = tamperPublicKey(der);
   if (variant === 'revoked') revoke(pki, spec.serial, 'keyCompromise');
   const cert = parseCertificate(finalDer);
-  const chain = variant === 'missingIntermediate' ? [finalDer] : [finalDer, issuing.der];
+  const chain = variant === 'missingIntermediate' ? [finalDer] : [finalDer, ca.der];
   return {
-    variant, serial: spec.serial, key, csr, csrValid, der: finalDer, cert, chain, expectedHost,
-    timings: { keygen: keygenMs, csr: csrMs, popCheck: popMs, issue: issueMs },
+    variant, serial: spec.serial, key, csr, csrValid, der: finalDer, cert, chain, expectedHost, acme,
+    timings: { keygen: keygenMs, csr: csrMs, popCheck: popMs, validation: validationMs, issue: issueMs },
   };
 }
 
@@ -248,15 +304,34 @@ function tamperPublicKey(der: Bytes): Bytes {
   return out;
 }
 
+const serialBytes = (n: bigint) => {
+  const hex = n.toString(16);
+  return fromHex(hex.length % 2 ? `0${hex}` : hex);
+};
+
 export function revoke(pki: Pki, serial: Bytes, reason: RevokedEntry['reason']) {
   pki.issuing!.revoked.push({ serial, date: pki.now, reason });
   pki.issuing!.crlNumber++;
 }
 
-/** The issuing CA's current CRL; a new one after every revocation (BR: within 24 hours). */
-export function currentCrl(pki: Pki): Bytes {
-  const ca = pki.issuing!;
-  return createCrl(ca.name, ca.key, ca.keyId, ca.crlNumber, new Date(pki.now.getTime() - 3_600_000), new Date(pki.now.getTime() + 7 * DAY), ca.revoked);
+/** A CA's current CRL, re-signed only after a revocation (BR: a new CRL within 24 hours). */
+export function caCrl(ca: CaNode, now: Date): Bytes {
+  if (ca.crlCache?.number !== ca.crlNumber) {
+    ca.crlCache = {
+      number: ca.crlNumber,
+      der: createCrl(ca.name, ca.key, ca.keyId, ca.crlNumber, new Date(now.getTime() - 3_600_000), new Date(now.getTime() + 7 * DAY), ca.revoked),
+    };
+  }
+  return ca.crlCache.der;
+}
+
+/** The issuing CA's current CRL. */
+export const currentCrl = (pki: Pki) => caCrl(pki.issuing!, pki.now);
+
+/** Every CRL the PKI publishes, as a client could fetch it. */
+export function publishedCrls(pki: Pki, reachable: boolean): CrlOnNetwork[] {
+  const cas = [pki.root, pki.issuing, ...pki.extraCas].filter((c): c is CaNode => !!c && !!c.crlUri);
+  return cas.map((c) => ({ uri: c.crlUri, der: caCrl(c, pki.now), reachable }));
 }
 
 // ── Relying parties ───────────────────────────────────────────────────────────
@@ -266,12 +341,12 @@ export interface Client { id: ClientId; policy: ClientPolicy; anchors: TrustAnch
 
 const ALL_ALGS: AlgId[] = ['ecdsa-p256', 'mldsa44', 'mldsa65', 'slhdsa192s', 'composite-mldsa65-p256'];
 
-export function clientsFor(pki: Pki, crlReachable = true): { clients: Client[]; crl?: CrlOnNetwork } {
-  const crl = pki.issuing ? { der: currentCrl(pki), reachable: crlReachable } : undefined;
+export function clientsFor(pki: Pki, crlReachable = true): { clients: Client[]; crls: CrlOnNetwork[] } {
+  const crls = publishedCrls(pki, crlReachable);
   if (pki.profile.scope === 'private') {
     const anchors: TrustAnchor[] = [{ label: pki.root!.name.CN!, cert: pki.root!.cert }];
     return {
-      crl,
+      crls,
       clients: [
         { id: 'legacy', anchors, policy: { supportedAlgs: ['ecdsa-p256'], understandsCatalyst: false, enforceAltSignature: false, requirePq: false, revocation: 'soft' } },
         { id: 'modern', anchors, policy: { supportedAlgs: ALL_ALGS, understandsCatalyst: true, enforceAltSignature: false, requirePq: false, revocation: 'soft' } },
@@ -285,7 +360,7 @@ export function clientsFor(pki: Pki, crlReachable = true): { clients: Client[]; 
   const ct = pki.logs ? { requiredScts: 2, ctLogs: pki.logs } : {};
   const mtcLandmark = pki.cosigners ? { cosigners: pki.cosigners, quorum: 2, trustedSubtrees: new Map<string, Bytes>() } : undefined;
   return {
-    crl,
+    crls,
     clients: [
       { id: 'browserToday', anchors: webAnchors, policy: { supportedAlgs: ['ecdsa-p256'], understandsCatalyst: false, enforceAltSignature: false, requirePq: false, revocation: 'local', ...ct } },
       { id: 'browserMtc', anchors: webAnchors, policy: { supportedAlgs: ['ecdsa-p256', 'mldsa44'], understandsCatalyst: false, enforceAltSignature: false, requirePq: false, revocation: 'local', mtc: mtcLandmark, ...ct } },
@@ -301,11 +376,23 @@ export interface HandshakeResult {
   validation: ValidationResult;
   certVerify: 'pass' | 'fail' | 'skip';
   accepted:   boolean;
-  flight:     FlightEstimate;
+  tls: {
+    messages:  TlsHandshake['messages'];
+    records:   TlsHandshake['records'];
+    clientHelloBytes: number;
+    scheme:    number;
+    privateUseScheme: boolean;
+    checks:    TlsHandshake['clientChecks'];
+    transport: TransportCost;
+    timings:   TlsHandshake['timings'];
+  };
 }
 
-/** A full server authentication: the server presents a chain, the client validates it and checks CertificateVerify. */
-export function handshake(pki: Pki, leaf: LeafResult, client: Client, crl?: CrlOnNetwork, landmarkKnown = true): HandshakeResult {
+/**
+ * A full TLS 1.3 server authentication: real handshake with X25519MLKEM768, the client
+ * validates the chain (RFC 5280), CertificateVerify over the transcript and Finished.
+ */
+export async function handshake(pki: Pki, leaf: LeafResult, client: Client, crls: CrlOnNetwork[] = [], landmarkKnown = true): Promise<HandshakeResult> {
   let chain = leaf.chain;
   let presented: HandshakeResult['presented'] = 'chain';
   if (leaf.mtc) {
@@ -317,16 +404,17 @@ export function handshake(pki: Pki, leaf: LeafResult, client: Client, crl?: CrlO
     presented = hasLandmark ? 'landmark' : 'standalone';
     chain = [hasLandmark ? leaf.mtc.landmarkRelative : leaf.mtc.standalone];
   }
-  const validation = validateChain(chain, leaf.expectedHost, pki.now, client.anchors, client.policy, crl);
-  const transcript = crypto.getRandomValues(new Uint8Array(64));
-  const cv = signCertificateVerify(leaf.key, transcript);
+  const validation = validateChain(chain, leaf.expectedHost, pki.now, client.anchors, client.policy, crls);
   const leafCert = parseCertificate(chain[0]);
-  const certVerify = !client.policy.supportedAlgs.includes(leaf.key.alg) ? 'skip'
-    : verifyCertificateVerify(leaf.key.alg, leafCert.publicKey, cv.transcriptHash, cv.signature) ? 'pass' : 'fail';
+  const h = await runHandshake(leaf.expectedHost, chain, leaf.key, leafCert.publicKey, client.policy.supportedAlgs.includes(leaf.key.alg));
+  const certVerify = h.clientChecks.certificateVerify;
   return {
     client: client.id, presented, validation, certVerify,
-    accepted: validation.ok && certVerify === 'pass',
-    flight: estimateFlight(chain, cv.signature.length),
+    accepted: validation.ok && certVerify === 'pass' && h.clientChecks.decrypted && h.clientChecks.serverFinished,
+    tls: {
+      messages: h.messages, records: h.records, clientHelloBytes: h.clientHello.length, scheme: h.scheme,
+      privateUseScheme: PRIVATE_USE_SCHEMES.has(h.scheme), checks: h.clientChecks, transport: transportCost(h), timings: h.timings,
+    },
   };
 }
 
@@ -341,10 +429,10 @@ export interface AttackOutcome {
 }
 
 export function runAttack(pki: Pki, attack: AttackId, crlBlocked = true): AttackOutcome {
-  const { clients, crl } = clientsFor(pki, true);
+  const { clients, crls } = clientsFor(pki, true);
   const host = pki.host;
   let chain: Bytes[];
-  let crlOnNet: CrlOnNetwork | undefined = crl;
+  let crlsOnNet: CrlOnNetwork[] = crls;
   let detectedBy: AttackOutcome['detectedBy'];
 
   if (attack === 'ownCa') {
@@ -362,7 +450,7 @@ export function runAttack(pki: Pki, attack: AttackId, crlBlocked = true): Attack
     const l = issueLeaf(pki, 'ok');
     revoke(pki, l.serial, 'keyCompromise');
     chain = l.chain;
-    crlOnNet = { der: currentCrl(pki), reachable: !crlBlocked };
+    crlsOnNet = publishedCrls(pki, !crlBlocked);
   } else {
     // A trusted CA issues a certificate for the victim's name to Mallory (cf. Fina, 2025)
     const l = issueLeaf(pki, 'ok');
@@ -370,7 +458,7 @@ export function runAttack(pki: Pki, attack: AttackId, crlBlocked = true): Attack
     detectedBy = pki.logs ? 'ctMonitor' : null;
   }
   const results = clients.map((c) => {
-    const validation = validateChain(chain, host, pki.now, c.anchors, c.policy, crlOnNet);
+    const validation = validateChain(chain, host, pki.now, c.anchors, c.policy, crlsOnNet);
     return { client: c.id, accepted: validation.ok, validation };
   });
   return { attack, results, detectedBy };
@@ -399,7 +487,7 @@ const QDAY_POLICIES: Record<'legacy' | 'modern' | 'strict', ClientPolicy> = {
 function hierarchy(alg: AlgId, label: string, now: Date, altAlg?: AlgId) {
   const root = makeRoot(alg, { C: 'DE', O: ORG, CN: `${ORG} ${label} Root` }, now, altAlg);
   const issuing = makeIntermediate(alg, { C: 'DE', O: ORG, CN: `${ORG} ${label} TLS CA` }, root, now, { permitted: [PRIVATE_DOMAIN], altAlg });
-  const pki: Pki = { profile: { ...PROFILES.classical, leaf: alg }, now, host: PRIVATE_HOST, root, issuing, ceremonyMs: {} };
+  const pki: Pki = { profile: { ...PROFILES.classical, leaf: alg }, now, host: PRIVATE_HOST, root, issuing, extraCas: [], zone: emptyZone(), ceremonyMs: {} };
   return { root, issuing, pki, anchor: { label: root.name.CN!, cert: root.cert } as TrustAnchor };
 }
 
@@ -510,28 +598,28 @@ function forgeCompositeWithEcdsaHalf(issuing: CaNode, now: Date): Bytes {
 // ── Benchmark ─────────────────────────────────────────────────────────────────
 
 export interface BenchRun {
-  leafKeygen: number; csrSign: number; popCheck: number; issue: number; validate: number; cvSign: number; cvVerify: number;
+  leafKeygen: number; csrSign: number; popCheck: number; validation: number; issue: number; validate: number;
+  cvSign: number; cvVerify: number; handshake: number;
   chainBytes: number; handshakeBytes: number;
 }
 
-export function benchmarkRun(pki: Pki): BenchRun {
+export async function benchmarkRun(pki: Pki): Promise<BenchRun> {
   const leaf = issueLeaf(pki, 'ok', 1023);
-  const { clients, crl } = clientsFor(pki);
+  const { clients, crls } = clientsFor(pki);
   const client = clients[1];   // 'modern' / 'browserMtc': supports every algorithm of the profile
   let chain = leaf.chain;
   if (leaf.mtc) {
     client.policy.mtc?.trustedSubtrees.set(`${leaf.mtc.subtree.start}:${leaf.mtc.subtree.end}`, leaf.mtc.subtree.hash);
     chain = [leaf.mtc.landmarkRelative];
   }
-  const [, validateMs] = timed(() => validateChain(chain, leaf.expectedHost, pki.now, client.anchors, client.policy, crl));
-  const transcript = crypto.getRandomValues(new Uint8Array(64));
-  const [cv, cvSignMs] = timed(() => signCertificateVerify(leaf.key, transcript));
-  const [, cvVerifyMs] = timed(() => verifyCertificateVerify(leaf.key.alg, leaf.key.publicKey, cv.transcriptHash, cv.signature));
-  const flight = estimateFlight(chain, cv.signature.length);
+  const [, validateMs] = timed(() => validateChain(chain, leaf.expectedHost, pki.now, client.anchors, client.policy, crls));
+  const t = performance.now();
+  const h = await runHandshake(leaf.expectedHost, chain, leaf.key, parseCertificate(chain[0]).publicKey, true);
+  const handshakeMs = performance.now() - t;
   return {
-    leafKeygen: leaf.timings.keygen, csrSign: leaf.timings.csr, popCheck: leaf.timings.popCheck, issue: leaf.timings.issue,
-    validate: validateMs, cvSign: cvSignMs, cvVerify: cvVerifyMs,
-    chainBytes: chain.reduce((s, d) => s + d.length, 0), handshakeBytes: flight.tcpBytes,
+    leafKeygen: leaf.timings.keygen, csrSign: leaf.timings.csr, popCheck: leaf.timings.popCheck, validation: leaf.timings.validation,
+    issue: leaf.timings.issue, validate: validateMs, cvSign: h.timings.serverSign, cvVerify: h.timings.clientVerify, handshake: handshakeMs,
+    chainBytes: chain.reduce((s, d) => s + d.length, 0), handshakeBytes: h.serverFlight.length,
   };
 }
 

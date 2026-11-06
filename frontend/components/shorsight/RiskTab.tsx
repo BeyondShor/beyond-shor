@@ -227,7 +227,7 @@ export default function RiskTab() {
                       {t(`criticality_${a.criticality}`)}
                     </Badge>
                   </Td>
-                  <Td><Mono>{a.shelfLifeYears}{t('yearSuffix')}</Mono></Td>
+                  <Td><Mono>{a.shelfLifeYears != null ? `${a.shelfLifeYears}${t('yearSuffix')}` : '—'}</Mono></Td>
                   <Td><Mono>{a.deadlineYear ? String(a.deadlineYear) : '—'}</Mono></Td>
                   <Td><Mono>{a.acute}</Mono></Td>
                   <Td><Mono>{a.quantum}</Mono></Td>
@@ -431,10 +431,13 @@ function AssetCard({ asset }: { asset: RiskAsset }) {
         <Field label={t('colRiskOwner')}   value={asset.riskOwner} />
         <Field label={t('colDataClass')}   value={asset.dataClassification} />
         <Field label={t('colCriticality')} value={t(`criticality_${asset.criticality}`)} />
-        <Field label={t('fieldShelfLife')} value={`${asset.shelfLifeYears}${t('yearSuffix')}`} />
-        <Field label={t('fieldMigration')} value={`${asset.migrationYears}${t('yearSuffix')}`} />
+        <Field label={t('fieldShelfLife')} value={asset.shelfLifeYears != null ? `${asset.shelfLifeYears}${t('yearSuffix')}` : ''} />
+        <Field label={t('fieldMigration')} value={asset.migrationYears != null ? `${asset.migrationYears}${t('yearSuffix')}` : ''} />
         <Field label={t('fieldDeadline')}  value={asset.deadlineYear ? String(asset.deadlineYear) : ''} />
       </dl>
+      {asset.riskAccepted && (
+        <p className="mt-2 text-[11px] leading-relaxed text-[var(--color-text-muted)]">{t('allRisksAccepted')}</p>
+      )}
 
       <p className="mono-label mt-4 mb-2 text-[var(--color-primary)]">{t('objectivesTitle')}</p>
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-5">
@@ -512,7 +515,8 @@ function FindingRow({ item }: { item: RiskItem }) {
   const crqc   = isSig ? params.crqcYearSignatures : params.crqcYear;
 
   // years are passed as strings — ICU would otherwise group them as `2.035`
-  const mosca = item.category === 'quantum'
+  // An accepted risk has no migration plan, so there is no Mosca reasoning either
+  const mosca = item.category === 'quantum' && !item.riskAccepted
     ? t(item.urgent ? 'moscaUrgent' : 'moscaRelaxed', {
         x, y, z, sum: x + y,
         crqc:    String(crqc),
@@ -529,6 +533,11 @@ function FindingRow({ item }: { item: RiskItem }) {
           {item.category === 'acute' ? t('findingSummaryAcute') : t('findingSummaryQuantum')}
         </span>
         {mosca && <span className="mt-1 block text-[11px] leading-relaxed text-[var(--color-text-muted)]">{mosca}</span>}
+        {item.riskAccepted && (
+          <span className="mt-1 block text-[11px] leading-relaxed text-[var(--color-text-muted)]">
+            {t('findingAccepted')} <TreatmentNoteText component={item.component} />
+          </span>
+        )}
       </Td>
       <Td>
         <MigrationBadge status={item.migrationStatus} />
@@ -557,6 +566,12 @@ function TreatmentNote({ tuple }: { tuple: RiskTuple }) {
   const key = `treatmentNote.${tuple.component.toLowerCase()}`;
   if (t.has(key)) return <>{t(key)}</>;
   return <>{tuple.treatmentNote || '—'}</>;
+}
+
+function TreatmentNoteText({ component }: { component: string }) {
+  const t = useTranslations('cbom');
+  const key = `treatmentNote.${component.toLowerCase()}`;
+  return t.has(key) ? <>{t(key)}</> : null;
 }
 
 function MigrationBadge({ status }: { status: string }) {

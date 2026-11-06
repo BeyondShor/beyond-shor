@@ -89,8 +89,8 @@ export type ClientId = 'legacy' | 'modern' | 'strict' | 'browserToday' | 'browse
 export const PRIVATE_CLIENTS: ClientId[] = ['legacy', 'modern', 'strict'];
 export const WEB_CLIENTS: ClientId[] = ['browserToday', 'browserMtc', 'cliTool'];
 
-export type Variant = 'ok' | 'expired' | 'wrongHost' | 'missingIntermediate' | 'nameConstraints' | 'wrongEku' | 'revoked' | 'tampered';
-export const FAILURE_VARIANTS: Variant[] = ['expired', 'wrongHost', 'missingIntermediate', 'nameConstraints', 'wrongEku', 'revoked', 'tampered'];
+export type Variant = 'ok' | 'expired' | 'wrongHost' | 'missingIntermediate' | 'nameConstraints' | 'wrongEku' | 'revoked' | 'intermediateRevoked' | 'tampered';
+export const FAILURE_VARIANTS: Variant[] = ['expired', 'wrongHost', 'missingIntermediate', 'nameConstraints', 'wrongEku', 'revoked', 'intermediateRevoked', 'tampered'];
 
 export type AttackId = 'ownCa' | 'swapKey' | 'stolenKey' | 'misissuance';
 export const ATTACKS: AttackId[] = ['ownCa', 'swapKey', 'stolenKey', 'misissuance'];
@@ -100,11 +100,7 @@ export const QDAY_DEPLOYMENTS: QDayDeployment[] = ['classical', 'pqParallel', 'c
 
 // ── Protocol limits ───────────────────────────────────────────────────────────
 
-/** Server key share for X25519MLKEM768: ML-KEM-768 ciphertext (1088) + X25519 (32). */
-export const SERVER_KEY_SHARE = 1120;
 /** RFC 6928 initial window with the common 1460-byte MSS. */
 export const TCP_INITIAL_WINDOW = 14_600;
-/** RFC 9000 §8.1 with the minimum 1200-byte client Initial: three times what the client sent. */
-export const QUIC_AMPLIFICATION_LIMIT = 3 * 1200;
 /** RFC 9191 §2.1.1: EAP fragments are often only 1,020 to 1,500 bytes. */
 export const EAP_FRAGMENT = 1020;

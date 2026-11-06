@@ -53,11 +53,11 @@
       "vendorDependency": false
     },
     "Classic-McEliece": {
-      "migrationStatus": "pqc-only",
+      "migrationStatus": "not applicable",
       "vendorDependency": false
     },
     "X25519": {
-      "migrationStatus": "hybrid",
+      "migrationStatus": "not applicable",
       "vendorDependency": false
     },
     "EC-P256": {
@@ -69,12 +69,17 @@
     "beyond-shor :: X25519": {
       "option": "accept",
       "decidedBy": "Marvin Sprey",
-      "note": "Deliberate: X25519 is the classical half of the hybrid handshake and is paired with ML-KEM-1024."
+      "note": "Accepted: X25519 appears only in the playgrounds, and only as the classical half of hybrid key exchanges (with ML-KEM-1024, and as X25519MLKEM768 in the PKI playground's TLS handshake). No data with a protection requirement depends on it."
     },
     "beyond-shor :: EC-P256": {
       "option": "accept",
       "decidedBy": "Marvin Sprey",
-      "note": "ECDSA P-256 is kept as the classical reference point in the signature benchmark."
+      "note": "Accepted: ECDSA P-256 appears only in the playgrounds: as the classical reference in the signature benchmark, in the classical PKI profiles and as the ACME account key. It protects nothing on the site."
+    },
+    "beyond-shor :: Classic-McEliece": {
+      "option": "accept",
+      "decidedBy": "Marvin Sprey",
+      "note": "Accepted: Classic McEliece appears only in the playground, for comparison and with a reference to the BSI advisory. No data is protected with it."
     }
   }
 }
