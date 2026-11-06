@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/seo';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
@@ -35,6 +36,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title:       t('pageTitle'),
     description: t('metaDescription', { count: assets.length, libs: libs.length }),
+    ...pageMeta(locale, '/cbom', { title: t('pageTitle'), description: t('metaDescription', { count: assets.length, libs: libs.length }) }),
   };
 }
 

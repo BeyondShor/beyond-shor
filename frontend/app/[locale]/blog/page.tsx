@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/seo';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { getArticles, getCategories } from '@/lib/strapi';
@@ -15,21 +16,10 @@ const PAGE_SIZE = 9;
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'blog' });
-  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
   return {
     title: t('pageTitle'),
     description: t('metaDescription'),
-    alternates: {
-      canonical: `${BASE_URL}/${locale}/blog`,
-      languages: {
-        de: `${BASE_URL}/de/blog`,
-        en: `${BASE_URL}/en/blog`,
-      },
-    },
-    openGraph: {
-      title: `Beyond Shor — ${t('pageTitle')}`,
-      type: 'website',
-    },
+    ...pageMeta(locale, '/blog', { title: `Beyond Shor — ${t('pageTitle')}`, description: t('metaDescription') }),
   };
 }
 

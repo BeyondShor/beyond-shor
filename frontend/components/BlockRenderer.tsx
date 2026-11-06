@@ -92,6 +92,11 @@ async function RichText({ body }: { block: RichTextBlock; body: string }) {
               </a>
             );
           },
+          table: ({ children }) => (
+            <div className="overflow-x-auto">
+              <table>{children}</table>
+            </div>
+          ),
           h2: ({ children }) => {
             const id = slugify(nodeToText(children));
             return <h2 id={id}>{children}</h2>;

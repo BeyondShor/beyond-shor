@@ -32,7 +32,8 @@
     "latestArticles": "Neueste Artikel",
     "viewAll": "Alle anzeigen →",
     "noArticles": "// noch keine Artikel veröffentlicht",
-    "noArticlesDesc": "Starten Sie Strapi und veröffentlichen Sie Ihren ersten Artikel, um ihn hier zu sehen."
+    "noArticlesDesc": "Starten Sie Strapi und veröffentlichen Sie Ihren ersten Artikel, um ihn hier zu sehen.",
+    "metaDescription": "Wie Post-Quanten-Kryptografie funktioniert, was die NIST-Standards verlangen und wie die Migration gelingt. Für CISOs und Entwickler."
   },
   "blog": {
     "allArticlesLabel": "// alle Artikel",
@@ -93,7 +94,7 @@
   },
   "contact": {
     "label": "// kontakt",
-    "title": "Schreib mir",
+    "title": "Schreiben Sie mir",
     "intro": "Sie haben eine Frage zu einem Artikel, einen Fehler entdeckt oder eine Idee für eine Zusammenarbeit? Schreiben Sie mir einfach.",
     "fieldName": "Name",
     "fieldEmail": "E-Mail",
@@ -161,7 +162,7 @@
   },
   "verifier": {
     "pageTitle": "Signatur-Verifikation",
-    "metaDescription": "Prüfe die ML-DSA-65-Signaturen der Artikel und des Kryptografie-Inventars dieses Blogs.",
+    "metaDescription": "Prüfen Sie die ML-DSA-65-Signaturen der Artikel und des Kryptografie-Inventars dieses Blogs.",
     "label": "// signaturprüfung",
     "modeToggleLabel": "Verifikationsmodus",
     "modeArticle": "Artikel",
@@ -204,7 +205,7 @@
   },
   "playground": {
     "pageTitle": "Playground für hybride Verschlüsselung",
-    "metaDescription": "Interaktiver Playground für hybride Post-Quanten-Verschlüsselung im Browser: X25519 mit ML-KEM-1024, Classic McEliece oder FrodoKEM, dazu AES-256-GCM. Mit Tamper-Modus, KEM-Vergleich, 20×-Benchmark und Angreifer-Ansicht. Alles läuft lokal, ohne Backend.",
+    "metaDescription": "Hybride Post-Quanten-Verschlüsselung im Browser: X25519 mit ML-KEM, Classic McEliece oder FrodoKEM, mit Tamper-Modus und Benchmark.",
     "label": "// hybrid encryption",
     "title": "Playground für hybride Verschlüsselung",
     "intro": "Dieser Playground zeigt Schritt für Schritt, wie hybride Post-Quanten-Verschlüsselung abläuft. Gerechnet wird ausschließlich in Ihrem Browser. Wählen Sie ein KEM (ML-KEM-1024, Classic McEliece oder FrodoKEM), geben Sie eine Nachricht ein und klicken Sie auf „Generieren“. X25519 (ECDH) und das gewählte KEM liefern je ein Shared Secret, aus beiden leitet HKDF-SHA-256 einen AES-256-GCM-Schlüssel ab. Bei jedem Wert sehen Sie, ob er übertragen wird oder privat bleibt. Danach können Sie im Tamper-Modus einzelne Bytes ändern und beobachten, wo das Protokoll bricht, die Sicht einer Angreiferin oder eines Quantencomputers einblenden, alle drei KEMs gegeneinander antreten lassen oder einen Benchmark mit 20 Durchläufen starten.",

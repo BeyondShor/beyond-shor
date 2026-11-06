@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/seo';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { getArticles } from '@/lib/strapi';
@@ -12,26 +13,10 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'home' });
-  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
   return {
     title: { absolute: t('metaTitle') },
-    description: t('heroSubtitle'),
-    // replaces the layout's openGraph as a whole, so everything has to be repeated here
-    openGraph: {
-      type: 'website',
-      siteName: 'Beyond Shor',
-      title: t('metaTitle'),
-      description: t('heroSubtitle'),
-      locale: locale === 'de' ? 'de_DE' : 'en_US',
-      images: [{ url: '/og-default.png', width: 1200, height: 630, alt: t('metaTitle') }],
-    },
-    alternates: {
-      canonical: `${BASE_URL}/${locale}`,
-      languages: {
-        de: `${BASE_URL}/de`,
-        en: `${BASE_URL}/en`,
-      },
-    },
+    description: t('metaDescription'),
+    ...pageMeta(locale, '/', { title: t('metaTitle'), description: t('metaDescription') }),
   };
 }
 

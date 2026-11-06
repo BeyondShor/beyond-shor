@@ -57,6 +57,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: article.title,
       description: article.description ?? undefined,
       type: 'article',
+      url: `${BASE_URL}/${locale}/blog/${slug}`,
+      siteName: 'Beyond Shor',
       publishedTime: goLiveDate(article),
       modifiedTime: article.updatedAt,
       authors: article.author?.name ? [article.author.name] : undefined,
@@ -156,7 +158,7 @@ export default async function ArticlePage({ params }: PageProps) {
         )}
 
         {/* Title */}
-        <h1 className="text-3xl font-bold text-[var(--color-text-base)] leading-snug sm:text-4xl mb-6">
+        <h1 className="hyphens-auto break-words text-3xl font-bold text-[var(--color-text-base)] leading-snug sm:text-4xl mb-6">
           {article.title}
         </h1>
 

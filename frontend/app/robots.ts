@@ -10,12 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: [
           '/api/',
-          '/de/impressum',
-          '/en/imprint',
-          '/de/datenschutz',
-          '/en/privacy-policy',
-          '/de/kontakt',
-          '/en/contact',
         ],
       },
     ],

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/seo';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import RbePlayground from '@/components/RbePlayground';
@@ -19,6 +20,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: t('pageTitle'),
     description: t('metaDescription'),
+    ...pageMeta(locale, '/rbe', { title: t('pageTitle'), description: t('metaDescription') }),
   };
 }
 

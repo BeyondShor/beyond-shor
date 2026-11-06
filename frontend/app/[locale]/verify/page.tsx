@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/seo';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import SignatureVerifier from '@/components/SignatureVerifier';
 
@@ -17,6 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title:       t('pageTitle'),
     description: t('metaDescription'),
+    ...pageMeta(locale, '/verify', { title: t('pageTitle'), description: t('metaDescription') }),
   };
 }
 

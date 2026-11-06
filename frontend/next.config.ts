@@ -7,6 +7,7 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 const STRAPI_URL = process.env.STRAPI_URL ?? 'http://localhost:1337';
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   // Tell Next.js/Turbopack that the project root is this directory,
   // not the parent Strapi folder (which also has a lockfile).
   turbopack: {
@@ -30,6 +31,7 @@ const nextConfig: NextConfig = {
         source: '/:path*',
         headers: [
           { key: 'X-Frame-Options',       value: 'DENY' },
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy',        value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy',     value: 'geolocation=(), microphone=(), camera=()' },

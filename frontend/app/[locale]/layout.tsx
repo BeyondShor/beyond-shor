@@ -6,13 +6,20 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import JsonLd from '@/components/JsonLd';
 
-const websiteJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: 'Beyond Shor',
-  description: 'In-depth articles on post-quantum cryptography',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
-};
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+
+function websiteJsonLd(locale: string) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Beyond Shor',
+    inLanguage: locale,
+    description: locale === 'de'
+      ? 'Fundierte Artikel zu Post-Quanten-Kryptografie'
+      : 'In-depth articles on post-quantum cryptography',
+    url: `${SITE_URL}/${locale}`,
+  };
+}
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -36,7 +43,7 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
 
   return (
     <NextIntlClientProvider messages={messages}>
-      <JsonLd data={websiteJsonLd} />
+      <JsonLd data={websiteJsonLd(locale)} />
       <Header />
       <main id="main-content" className="flex-1">
         {children}

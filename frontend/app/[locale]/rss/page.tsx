@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/seo';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { getArticlesForFeed } from '@/lib/strapi';
@@ -33,6 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: t('title'),
     description: t('metaDescription'),
+    ...pageMeta(locale, '/rss', { title: t('title'), description: t('metaDescription') }),
   };
 }
 

@@ -32,7 +32,8 @@
     "latestArticles": "Latest Articles",
     "viewAll": "View all →",
     "noArticles": "// no articles published yet",
-    "noArticlesDesc": "Start Strapi and publish your first article to see it here."
+    "noArticlesDesc": "Start Strapi and publish your first article to see it here.",
+    "metaDescription": "How post-quantum cryptography works, what the NIST standards require and how to plan the migration. For CISOs and developers."
   },
   "blog": {
     "allArticlesLabel": "// all articles",
@@ -204,7 +205,7 @@
   },
   "playground": {
     "pageTitle": "Hybrid Encryption Playground",
-    "metaDescription": "Interactive browser playground for hybrid post-quantum encryption: X25519 with ML-KEM-1024, Classic McEliece or FrodoKEM, plus AES-256-GCM. With tamper mode, KEM race, 20× benchmark and attacker view. Everything runs locally, no backend.",
+    "metaDescription": "Hybrid post-quantum encryption in your browser: X25519 with ML-KEM, Classic McEliece or FrodoKEM, with tamper mode and benchmark.",
     "label": "// hybrid encryption",
     "title": "Hybrid Encryption Playground",
     "intro": "This playground walks through hybrid post-quantum encryption step by step. All computation happens in your browser. Pick a KEM (ML-KEM-1024, Classic McEliece or FrodoKEM), enter a message and click \"Generate\". X25519 (ECDH) and the chosen KEM each produce a shared secret, and HKDF-SHA-256 derives an AES-256-GCM key from both. Every value is marked as either transmitted or private. Afterwards you can change individual bytes in tamper mode and see where the protocol breaks, switch on the attacker's or a quantum computer's view, race all three KEMs against each other, or run a 20-round benchmark with statistics.",

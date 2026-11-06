@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/seo';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
-import { getPathname } from '@/i18n/navigation';
 import { getAppearances, type Appearance } from '@/lib/strapi';
 import { youTubeId } from '@/lib/youtube';
 
@@ -11,21 +11,10 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'elsewhere' });
-  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
   return {
     title: t('title'),
     description: t('metaDescription'),
-    alternates: {
-      canonical: `${BASE_URL}${getPathname({ locale, href: '/anderswo' })}`,
-      languages: {
-        de: `${BASE_URL}${getPathname({ locale: 'de', href: '/anderswo' })}`,
-        en: `${BASE_URL}${getPathname({ locale: 'en', href: '/anderswo' })}`,
-      },
-    },
-    openGraph: {
-      title: `Beyond Shor — ${t('title')}`,
-      type: 'website',
-    },
+    ...pageMeta(locale, '/anderswo', { title: `Beyond Shor — ${t('title')}`, description: t('metaDescription') }),
   };
 }
 

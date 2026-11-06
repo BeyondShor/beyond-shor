@@ -362,6 +362,13 @@
 }
 
 /* ─── Prose Overrides for react-markdown rich text ────────────────────────── */
+/* German compounds ("Informationssicherheitsbeauftragte") are wider than a phone:
+   let headings hyphenate (html[lang] drives the dictionary) and break as a last resort */
+.prose-pqc :is(h1, h2, h3, h4) {
+  hyphens: auto;
+  overflow-wrap: break-word;
+}
+
 .prose-pqc {
   --tw-prose-body:     #c8d6e2;   /* softer than text-base for long-form reading (~9:1 on bg-surface) */
   --tw-prose-headings: #dce8f0;   /* softer than near-white, still crisp (~11:1 on bg-surface) */

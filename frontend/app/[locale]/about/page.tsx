@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { pageMeta } from '@/lib/seo';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { getAbout } from '@/lib/strapi';
 import BlockRenderer from '@/components/BlockRenderer';
@@ -13,6 +14,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: t('fallbackTitle'),
     description: t('metaDescription'),
+    ...pageMeta(locale, '/about', { title: t('fallbackTitle'), description: t('metaDescription') }),
   };
 }
 

@@ -2,7 +2,7 @@
 
 import { useActionState, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { submitContact, type FormState } from './actions';
 
 const INITIAL: FormState = { status: 'idle' };
@@ -170,7 +170,7 @@ export default function ContactForm({ captchaQuestion, captchaToken, loadedAt, l
           />
           <span className="text-sm text-[var(--color-text-muted)] leading-snug">
             {t('dsgvoPrefix')}{' '}
-            <Link href="/datenschutz" className="text-[var(--color-primary)] hover:underline">
+            <Link href={{ pathname: '/datenschutz' }} className="text-[var(--color-primary)] hover:underline">
               {t('dsgvoLink')}
             </Link>{' '}
             {t('dsgvoSuffix')}{' '}
