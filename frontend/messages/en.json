@@ -1807,7 +1807,7 @@
       },
       "operators": {
         "title": "Note for operators",
-        "body": "Connections from the PQC Monitor come from a dedicated measurement server in the EU. It measures once a month, starting on the 1st, and opens only a few TLS connections to each website, at most three per name. Every connection ends after the handshake: no pages are fetched, no logins are attempted and no vulnerabilities are probed. The largest mail providers each receive one SMTP connection per month, up to the handshake after STARTTLS, and no email is sent. Toward mail servers, the measurement server identifies itself as pqc-lagebild.beyond-shor.eu.",
+        "body": "Connections from the PQC Monitor come from a dedicated measurement server in the EU. It measures once a month, starting on the 1st, and opens only a few TLS connections to each website, at most three per name. Every connection ends after the handshake: no pages are fetched, no logins are attempted and no vulnerabilities are probed. The largest mail providers each receive one SMTP connection per month, up to the handshake after STARTTLS, and no email is sent. Its IP addresses resolve to pqc-lagebild.beyond-shor.eu via reverse DNS, and it uses the same name toward mail servers.",
         "contact": "For questions about the measurement, or to have a website excluded, a message through the <link>contact form</link> is all it takes."
       }
     },
