@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { pageMeta } from '@/lib/seo';
@@ -31,6 +32,9 @@ export default async function MethodPage({ params }: PageProps) {
   const t = await getTranslations('pqcLagebild.method');
   const { latest } = loadLagebild();
   const ds = latest?.data ?? null;
+  const contactLink = (chunks: ReactNode) => (
+    <Link href="/kontakt" className="text-[var(--color-primary)] underline underline-offset-4 hover:opacity-80">{chunks}</Link>
+  );
 
   return (
     <div className="bg-[var(--color-bg-surface)]">
@@ -46,12 +50,20 @@ export default async function MethodPage({ params }: PageProps) {
           </p>
         </header>
 
+        <aside id="messserver" aria-labelledby="messserver-title" className="mb-12 rounded-xl border border-[var(--color-glass-border)] bg-[var(--color-primary-glow)] p-5 sm:p-6">
+          <h2 id="messserver-title" className="text-lg font-semibold text-[var(--color-text-base)]">{t('operators.title')}</h2>
+          <p className="mt-3 text-[var(--color-text-muted)] leading-relaxed">{t('operators.body')}</p>
+          <p className="mt-3 text-[var(--color-text-muted)] leading-relaxed">{t.rich('operators.contact', { link: contactLink })}</p>
+        </aside>
+
         <div className="space-y-12">
           {SECTIONS.map((s) => (
             <section key={s} id={s}>
               <h2 className="text-2xl font-bold text-[var(--color-text-base)]">{t(`${s}.title`)}</h2>
               <div className="mt-4 space-y-4 text-[var(--color-text-muted)] leading-relaxed">
-                {t(`${s}.body`).split('\n\n').map((p, i) => <p key={i}>{p}</p>)}
+                {s === 'optout'
+                  ? <p>{t.rich('optout.body', { link: contactLink })}</p>
+                  : t(`${s}.body`).split('\n\n').map((p, i) => <p key={i}>{p}</p>)}
               </div>
               {s === 'who' && ds && (
                 <div className="mt-6 overflow-x-auto rounded-xl border border-[var(--color-border)]">

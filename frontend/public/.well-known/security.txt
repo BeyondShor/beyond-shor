@@ -1,0 +1,10 @@
+# Beyond Shor (beyond-shor.eu)
+# Fragen zum Messserver des PQC-Lagebilds und Ausschluss aus der Messung:
+# Questions about the PQC Monitor's measurement server and opt-out:
+# https://beyond-shor.eu/de/pqc-lagebild/methodik#messserver
+# https://beyond-shor.eu/en/pqc-monitor/methodology#messserver
+Contact: https://beyond-shor.eu/de/kontakt
+Contact: https://beyond-shor.eu/en/contact
+Expires: 2027-11-01T00:00:00.000Z
+Preferred-Languages: de, en
+Canonical: https://beyond-shor.eu/.well-known/security.txt

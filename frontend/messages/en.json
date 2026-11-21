@@ -1750,7 +1750,7 @@
       "label": "Methodology",
       "pageTitle": "PQC Monitor: methodology",
       "metaDescription": "How the PQC Monitor measures: sources, categories, handshakes, mail providers, privacy and limitations.",
-      "intro": "This page explains how the figures in the PQC Monitor come about, what they tell you and what they don't.",
+      "intro": "This page describes how the figures in the PQC Monitor come about, what they say and what they do not. It also serves as the information page for the measurement server.",
       "back": "Back to the PQC Monitor",
       "sourcesCaption": "Sources of the {month} measurement",
       "sourcesSource": "Source",
@@ -1803,7 +1803,12 @@
       },
       "optout": {
         "title": "Opt-out and contact",
-        "body": "To have a website excluded from the measurement, a message through the contact form is enough. It will be excluded permanently, storing only its hash, not its name."
+        "body": "To have a website excluded from the measurement, a message through the <link>contact form</link> is enough. It will be excluded permanently, storing only its hash, not its name."
+      },
+      "operators": {
+        "title": "Note for operators",
+        "body": "Connections from the PQC Monitor come from a dedicated measurement server in the EU. It measures once a month, starting on the 1st, and opens only a few TLS connections to each website, at most three per name. Every connection ends after the handshake: no pages are fetched, no logins are attempted and no vulnerabilities are probed. The largest mail providers each receive one SMTP connection per month, up to the handshake after STARTTLS, and no email is sent. Toward mail servers, the measurement server identifies itself as pqc-lagebild.beyond-shor.eu.",
+        "contact": "For questions about the measurement, or to have a website excluded, a message through the <link>contact form</link> is all it takes."
       }
     },
     "hostingRow": "{name} · {share} of websites",
