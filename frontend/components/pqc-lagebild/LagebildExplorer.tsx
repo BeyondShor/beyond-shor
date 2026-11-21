@@ -146,7 +146,7 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
                 if (!n || pq == null) return [];
                 return [{
                   key: h, label: t('hostingRow', { name: t(`hosting.${h}`), share: pf(sh(n, main.web.reachable)) }),
-                  value: sh(pq, n), valueLabel: pf(sh(pq, n)),
+                  value: sh(pq, n), valueLabel: t('pqShare', { share: pf(sh(pq, n)) }),
                   detail: t('providerDetail', { pq: nf.format(pq), n: nf.format(n) }),
                 } satisfies BarDatum];
               })}
@@ -192,12 +192,31 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
                       { key: 'pq', label: t('mailParts.pq'), value: m.pq, color: SERIES[0] },
                       { key: 'classic', label: t('mailParts.classic'), value: m.answered - m.pq, color: SERIES[1] },
                       { key: 'unreachable', label: t('mailParts.unreachable'), value: Math.max(0, unreachable), color: SERIES[2] },
-                      { key: 'notMeasured', label: t('mailParts.notMeasured'), value: notMeasured, color: SERIES[3] },
+                      { key: 'notMeasured', label: t('mailParts.smaller'), value: notMeasured, color: SERIES[3] },
                     ]}
                   />
-                  <p className="mt-3 mb-8 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">
-                    {t('mailPartsNote', { notMeasured: pf(sh(notMeasured, m.withMx)), zones: nf.format(mail?.zones ?? 0), measured: String(mail?.measured ?? 0) })}
+                  <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">
+                    {t('mailPartsNote', { smaller: pf(sh(notMeasured, m.withMx)), zones: nf.format(mail?.zones ?? 0), measured: String(mail?.measured ?? 0) })}
                   </p>
+                  {(() => {
+                    const smp = mail?.sample?.[view];
+                    if (!smp || smp.size < 30) return null;
+                    // 95 % margin of error for the quantum-safe share (normal approximation)
+                    const p = smp.pq / smp.size;
+                    const moe = 1.96 * Math.sqrt((p * (1 - p)) / smp.size);
+                    return (
+                      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">
+                        {t('mailSample', {
+                          size: nf.format(smp.size),
+                          pq: pf(p),
+                          classic: pf((smp.answered - smp.pq) / smp.size),
+                          unreachable: pf(smp.unreachable / smp.size),
+                          moe: new Intl.NumberFormat(loc, { maximumFractionDigits: 0 }).format(Math.max(1, moe * 100)),
+                        })}
+                      </p>
+                    );
+                  })()}
+                  <div className="mb-8" />
                   <div className="relative overflow-x-auto rounded-xl border border-[var(--color-border)]">
                     <table className="min-w-full text-sm">
                       <thead className="bg-[var(--color-bg-base)]/60 text-left font-mono text-[11px] uppercase tracking-wider text-[var(--color-text-muted)]">

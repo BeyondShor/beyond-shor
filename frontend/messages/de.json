@@ -1777,7 +1777,7 @@
       },
       "mail": {
         "title": "Mailanbieter",
-        "body": "Für jede Domain wird der Mailserver mit der höchsten Priorität ermittelt (MX-Eintrag). Die Domains werden nach dem Anbieter dieses Mailservers gruppiert. Die größten Anbieter, gemessen an der Zahl der Domains, werden nacheinander und mit Pausen geprüft: Verbindung auf Port 25, Anmeldung mit EHLO, STARTTLS und derselbe browserähnliche Handshake wie bei Websites. Danach wird die Verbindung beendet; es wird keine E-Mail verschickt. Jeder Anbieter erhält so eine einzige Verbindung im Monat.\n\nDas Ergebnis eines Anbieters gilt für alle seine Domains. Die Aufteilung bezieht sich auf alle Domains mit Mailserver; Domains bei kleineren Anbietern oder mit eigenem Mailserver werden nicht gemessen und als solche ausgewiesen.\n\nViele große Mailanbieter beantworten Verbindungen aus Rechenzentrumsnetzen ohne passenden Reverse-DNS-Eintrag nicht oder lehnen sie ab. Solche Anbieter erscheinen als „nicht messbar“. Massenhafte Messungen aller Mailserver sind aus demselben Grund nicht möglich: Sie würden nach kurzer Zeit gedrosselt."
+        "body": "Für jede Domain wird der Mailserver mit der höchsten Priorität ermittelt (MX-Eintrag). Die Domains werden nach dem Anbieter dieses Mailservers gruppiert. Die größten Anbieter, gemessen an der Zahl der Domains, werden nacheinander und mit Pausen geprüft: Verbindung auf Port 25, Anmeldung mit EHLO, STARTTLS und derselbe browserähnliche Handshake wie bei Websites. Danach wird die Verbindung beendet; es wird keine E-Mail verschickt. Jeder Anbieter erhält so eine einzige Verbindung im Monat.\n\nDas Ergebnis eines Anbieters gilt für alle seine Domains. Die Aufteilung bezieht sich auf alle Domains mit Mailserver. Für Domains bei kleineren Anbietern oder mit eigenem Mailserver wird zusätzlich eine Zufallsstichprobe gemessen (je 120 Domains für Deutschland und die EU); ihr Ergebnis wird mit Schwankungsbreite angegeben und nicht mit den einzeln gezählten Anbietern vermischt.\n\nViele große Mailanbieter beantworten Verbindungen aus Rechenzentrumsnetzen ohne passenden Reverse-DNS-Eintrag nicht oder lehnen sie ab. Solche Anbieter erscheinen als „nicht messbar“. Massenhafte Messungen aller Mailserver sind aus demselben Grund nicht möglich: Sie würden nach kurzer Zeit gedrosselt."
       },
       "privacy": {
         "title": "Was nicht veröffentlicht wird",
@@ -1809,9 +1809,11 @@
       "pq": "quantensicher",
       "classic": "nicht quantensicher",
       "unreachable": "Anbieter nicht erreichbar",
-      "notMeasured": "nicht gemessen"
+      "smaller": "kleinere Anbieter und eigene Mailserver"
     },
-    "mailPartsNote": "„Nicht gemessen“ ({notMeasured}) sind Domains bei kleineren Anbietern oder mit eigenem Mailserver: Von {zones} Mail-Zonen werden nur die {measured} größten geprüft, weil massenhafte SMTP-Verbindungen aus Rechenzentrumsnetzen nach kurzer Zeit gedrosselt werden. Über diesen Teil lässt sich deshalb nichts sagen.",
-    "mailTableNote": "„Nicht erreichbar“ heißt, dass der Anbieter Verbindungen aus dem Netz des Messservers nicht beantwortet."
+    "mailPartsNote": "Gezählt werden die {measured} größten von {zones} Mail-Zonen einzeln. Die übrigen {smaller} der Domains verteilen sich auf zehntausende kleinere Anbieter und eigene Mailserver. Sie alle zu prüfen, würde massenhaft SMTP-Verbindungen erfordern, die aus Rechenzentrumsnetzen nach kurzer Zeit gedrosselt werden.",
+    "mailTableNote": "„Nicht erreichbar“ heißt, dass der Anbieter Verbindungen aus dem Netz des Messservers nicht beantwortet.",
+    "pqShare": "{share} quantensicher",
+    "mailSample": "Für diesen Teil gibt es eine Zufallsstichprobe von {size} Domains: {pq} handeln quantensicher aus, {classic} klassisch, bei {unreachable} war der Mailserver nicht erreichbar (Schwankungsbreite beim quantensicheren Anteil etwa ±{moe} Prozentpunkte)."
   }
 }

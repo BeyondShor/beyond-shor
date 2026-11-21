@@ -8,7 +8,7 @@
 import { closeSync, openSync, readFileSync, existsSync, unlinkSync, writeSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomInt } from 'node:crypto';
-import { CONCURRENCY, LIMIT, MIN_CELL, PUBLIC_DIR, STATE_DIR, MEASURE_MAIL, MAIL_TOP, MAIL_PAUSE_MS } from '../lib/config.mjs';
+import { CONCURRENCY, LIMIT, MIN_CELL, PUBLIC_DIR, STATE_DIR, MEASURE_MAIL, MAIL_TOP, MAIL_PAUSE_MS, MAIL_SAMPLE } from '../lib/config.mjs';
 import { log, mapPool, monthOf, previousMonth } from '../lib/util.mjs';
 import { publishDataset, publishFailure } from '../lib/publish.mjs';
 import { buildPopulation } from '../scan/lists/index.mjs';
@@ -118,6 +118,33 @@ async function main() {
     for (const p of probes) {
       if (p.mail?.mx) Object.assign(p.mail, results.get(p.mail.mxZone) ?? { ok: false, error: 'not-measured', errorClass: 'not-measured' });
     }
+    // The long tail (small providers, own mail servers) cannot be measured in full: estimate it from a
+    // random sample of its domains, per view. Sampled results stay out of the per-site figures.
+    const sample = {};
+    const sampleCache = new Map();
+    const notTop = (i) => probes[i].mail?.mx && !results.has(probes[i].mail.mxZone);
+    const pools = {
+      eu: records.map((r, i) => i).filter((i) => records[i].uniform && notTop(i)),
+      de: records.map((r, i) => i).filter((i) => records[i].country === 'DE' && notTop(i)),
+    };
+    for (const [view, pool] of Object.entries(pools)) {
+      const pick = shuffle([...pool]).slice(0, MAIL_SAMPLE);
+      const s2 = { size: pick.length, poolDomains: pool.length, answered: 0, tls: 0, pq: 0, unreachable: 0 };
+      for (const i of pick) {
+        const { mxZone, mxHost } = probes[i].mail;
+        if (!sampleCache.has(mxZone)) {
+          sampleCache.set(mxZone, await probeMailHost(mxHost).catch(() => ({ ok: false, error: 'error' })));
+          await new Promise((r) => setTimeout(r, MAIL_PAUSE_MS));
+        }
+        const r = sampleCache.get(mxZone);
+        if (!r.ok) { s2.unreachable++; continue; }
+        s2.answered++;
+        if (r.starttls && r.tls?.ok) { s2.tls++; if (r.tls.pq) s2.pq++; }
+      }
+      sample[view] = s2;
+      log(`mail sample ${view}: ${s2.pq}/${s2.size} quantum-safe, ${s2.unreachable} unreachable (pool ${pool.length} domains)`);
+    }
+
     const answered = [...results.values()].filter((r) => r.ok).length;
     const withMx = [...zoneCount.values()].reduce((a, z) => a + z.n, 0);
     const covered = top.reduce((a, [, z]) => a + z.n, 0);
@@ -126,6 +153,7 @@ async function main() {
       zones: zoneCount.size, measured: top.length, answered, domainsWithMx: withMx, domainsCovered: covered, domainsAnswered: answeredDomains,
       // publish mail figures only if providers for at least half of the measured domains answered
       reliable: covered > 0 && answeredDomains / covered >= 0.5,
+      sample,
     };
     log(`mail: ${answered}/${top.length} providers answered, covering ${covered} of ${withMx} domains`);
   }

@@ -27,7 +27,9 @@ export const MIN_CELL = Number(env.PQSCAN_MIN_CELL ?? 30);
 export const MEASURE_MAIL = env.PQSCAN_MAIL !== '0';
 // Mail: how many of the largest MX zones are measured, and the pause between two of them.
 export const MAIL_TOP = Number(env.PQSCAN_MAIL_TOP ?? 60);
-export const MAIL_PAUSE_MS = Number(env.PQSCAN_MAIL_PAUSE_MS ?? 3000);
+export const MAIL_PAUSE_MS = Number(env.PQSCAN_MAIL_PAUSE_MS ?? 2000);
+// Random sample of the remaining domains (per view), to estimate the long tail of small mail servers.
+export const MAIL_SAMPLE = Number(env.PQSCAN_MAIL_SAMPLE ?? 120);
 // Optional cap for test runs (0 = no cap).
 export const LIMIT = Number(env.PQSCAN_LIMIT ?? 0);
 

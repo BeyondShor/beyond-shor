@@ -1777,7 +1777,7 @@
       },
       "mail": {
         "title": "Mail providers",
-        "body": "For each domain, the mail server with the highest priority is determined (MX record), and domains are grouped by the provider of that mail server. The largest providers, by number of domains, are checked one after another with pauses in between: a connection on port 25, a greeting with EHLO, STARTTLS and the same browser-like handshake as for websites. Then the connection is closed; no email is sent. Each provider thus sees a single connection per month.\n\nA provider's result applies to all of its domains. The breakdown refers to all domains with a mail server; domains at smaller providers or with their own mail server are not measured and are shown as such.\n\nMany large mail providers do not answer or reject connections from data-center networks without a matching reverse DNS entry. Such providers are shown as \"not measurable\". For the same reason, measuring every mail server is not possible: it would be throttled within minutes."
+        "body": "For each domain, the mail server with the highest priority is determined (MX record), and domains are grouped by the provider of that mail server. The largest providers, by number of domains, are checked one after another with pauses in between: a connection on port 25, a greeting with EHLO, STARTTLS and the same browser-like handshake as for websites. Then the connection is closed; no email is sent. Each provider thus sees a single connection per month.\n\nA provider's result applies to all of its domains. The breakdown refers to all domains with a mail server. For domains at smaller providers or with their own mail server, a random sample is measured on top (120 domains each for Germany and the EU); its result is given with a margin of error and kept separate from the providers counted individually.\n\nMany large mail providers do not answer or reject connections from data-center networks without a matching reverse DNS entry. Such providers are shown as \"not measurable\". For the same reason, measuring every mail server is not possible: it would be throttled within minutes."
       },
       "privacy": {
         "title": "What is not published",
@@ -1809,9 +1809,11 @@
       "pq": "quantum-safe",
       "classic": "not quantum-safe",
       "unreachable": "provider not reachable",
-      "notMeasured": "not measured"
+      "smaller": "smaller providers and own mail servers"
     },
-    "mailPartsNote": "\"Not measured\" ({notMeasured}) are domains at smaller providers or with their own mail server: of {zones} mail zones, only the {measured} largest are checked, because bulk SMTP connections from data-center networks get throttled within minutes. Nothing can be said about this part.",
-    "mailTableNote": "\"Not reachable\" means the provider does not respond to connections from the measurement server's network."
+    "mailPartsNote": "The {measured} largest of {zones} mail zones are counted individually. The remaining {smaller} of domains are spread across tens of thousands of smaller providers and self-run mail servers. Checking them all would take bulk SMTP connections, which get throttled within minutes when they come from data-center networks.",
+    "mailTableNote": "\"Not reachable\" means the provider does not respond to connections from the measurement server's network.",
+    "pqShare": "{share} quantum-safe",
+    "mailSample": "For this part, there is a random sample of {size} domains: {pq} negotiate quantum-safe key exchange, {classic} classical, and for {unreachable} the mail server was not reachable (margin of error for the quantum-safe share about ±{moe} percentage points)."
   }
 }
