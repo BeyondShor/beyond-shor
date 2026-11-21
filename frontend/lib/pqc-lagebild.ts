@@ -89,6 +89,7 @@ export interface MatrixRelease {
   source?: string;
   codename?: string | null;
   lts?: boolean;
+  rolling?: boolean;
   eol?: string | boolean | null;
   image?: string;
   digest?: string;

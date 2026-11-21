@@ -122,9 +122,6 @@ export default async function PqcLagebildPage({ params }: PageProps) {
                 <MatrixTable matrix={matrix.data} locale={locale} />
                 <p className="mt-3 text-xs text-[var(--color-text-muted)]">{t('matrixNote', { month: formatMonth(matrix.data.month, locale) })}</p>
                 <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">{t('matrixPitfalls')}</p>
-                <div className="mt-6 max-w-xl">
-                  <LagebildSignatureBadge file={matrix.file} sig={matrix.sig} />
-                </div>
               </>
             ) : (
               <p className="text-[var(--color-text-muted)]">{t('matrixNone')}</p>
