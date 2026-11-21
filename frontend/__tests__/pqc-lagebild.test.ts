@@ -16,7 +16,7 @@ const hex = (b: Uint8Array) => Buffer.from(b).toString('hex');
 function cell(over: Partial<Cell> = {}): Cell {
   return {
     view: 'de', region: 'DE', category: 'all', sector: null, n: 120,
-    web: { reachable: 100, tls13: 95, pq: 40, pqPure: 0, cert: { rsa: 60, ecdsa: 40, eddsa: 0, pq: 0, other: 0 } },
+    web: { reachable: 100, tls13: 95, pq: 40, pqCapable: 41, pqPure: 0, groups: { X25519MLKEM768: 40, X25519: 60 }, cert: { rsa: 60, ecdsa: 40, eddsa: 0, pq: 0, other: 0 }, certKeys: { 'RSA-2048': 60, 'ECDSA P-256': 40 }, certSigs: { RSA: 70, ECDSA: 30 } },
     hosting: { cdn: 20, cloud: 10, other: 70, unknown: 0 },
     pqByHosting: { cdn: 20, cloud: null, other: 15, unknown: null },
     dns: null, mail: null, ...over,

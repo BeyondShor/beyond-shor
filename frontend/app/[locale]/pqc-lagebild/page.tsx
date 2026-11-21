@@ -3,13 +3,13 @@ import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { pageMeta } from '@/lib/seo';
 import {
-  PQC_LAGEBILD_PUBLIC, loadLagebild, datasetPublicKey, findCell, formatMonth, formatNumber, formatPercent,
+  PQC_LAGEBILD_PUBLIC, loadLagebild, findCell, formatMonth, formatNumber, formatPercent,
   type Cell,
 } from '@/lib/pqc-lagebild';
 import LagebildExplorer, { type HistoryPoint } from '@/components/pqc-lagebild/LagebildExplorer';
 import MatrixTable from '@/components/pqc-lagebild/MatrixTable';
 import LiveConnection from '@/components/pqc-lagebild/LiveConnection';
-import VerifyFile from '@/components/pqc-lagebild/VerifyFile';
+import LagebildSignatureBadge from '@/components/pqc-lagebild/LagebildSignatureBadge';
 import { SectionTitle, ShareBars } from '@/components/pqc-lagebild/charts';
 
 // Data arrives once a month from the pull job; re-read the directory at most hourly.
@@ -38,11 +38,10 @@ export default async function PqcLagebildPage({ params }: PageProps) {
   const t = await getTranslations('pqcLagebild');
   const { latest, history, matrix, visitors } = loadLagebild();
   const ds = latest?.data ?? null;
-  const pub = datasetPublicKey();
 
   // Only what the client explorer needs: EU and DE region cells, plus EU country totals.
   const explorerCells: Cell[] = ds
-    ? ds.cells.filter((c) => (c.region === 'EU' || c.region === 'DE') || (c.view === 'eu' && c.category === 'all' && c.sector === null))
+    ? ds.cells.filter((c) => c.sector === null && ((c.region === 'EU' || c.region === 'DE') || (c.view === 'eu' && c.category === 'all')))
     : [];
   const historyPoints: HistoryPoint[] = history.map((h) => {
     const eu = findCell(h, 'eu', 'EU');
@@ -65,8 +64,8 @@ export default async function PqcLagebildPage({ params }: PageProps) {
     : [];
 
   const files = [
-    ...(latest ? [{ name: latest.file, label: t('files.lagebild', { month: formatMonth(latest.data.month, locale) }) }] : []),
-    ...(matrix ? [{ name: matrix.file, label: t('files.matrix', { month: formatMonth(matrix.data.month, locale) }) }] : []),
+    ...(latest ? [{ name: latest.file, sig: latest.sig, label: t('files.lagebild', { month: formatMonth(latest.data.month, locale) }) }] : []),
+    ...(matrix ? [{ name: matrix.file, sig: matrix.sig, label: t('files.matrix', { month: formatMonth(matrix.data.month, locale) }) }] : []),
   ];
 
   return (
@@ -78,7 +77,7 @@ export default async function PqcLagebildPage({ params }: PageProps) {
           </p>
           <h1 className="text-3xl sm:text-4xl font-bold text-[var(--color-text-base)]">{t('pageTitle')}</h1>
           <div className="mt-4 space-y-3">
-            <p className="text-[var(--color-text-muted)] leading-relaxed">{t('intro')}</p>
+            <p className="text-[var(--color-text-muted)] leading-relaxed">{t('intro', { n: formatNumber(ds?.population.total ?? 175000, locale) })}</p>
             <p className="text-[var(--color-text-muted)] leading-relaxed">{t('introPrivacy')}</p>
           </div>
           {ds && (
@@ -86,8 +85,12 @@ export default async function PqcLagebildPage({ params }: PageProps) {
               <div><dt className="inline">{t('meta.measured')}: </dt><dd className="inline text-[var(--color-text-base)]">{new Date(ds.scan.finishedAt).toLocaleDateString(locale, { dateStyle: 'long' })}</dd></div>
               <div><dt className="inline">{t('meta.sites')}: </dt><dd className="inline text-[var(--color-text-base)]">{formatNumber(ds.population.total, locale)}</dd></div>
               <div><dt className="inline">{t('meta.reachable')}: </dt><dd className="inline text-[var(--color-text-base)]">{formatNumber(ds.population.reachable, locale)}</dd></div>
-              <div><dt className="inline">{t('meta.signature')}: </dt><dd className="inline text-[var(--color-text-base)]">ML-DSA-65</dd></div>
             </dl>
+          )}
+          {latest && (
+            <div className="mt-6 max-w-xl">
+              <LagebildSignatureBadge file={latest.file} sig={latest.sig} />
+            </div>
           )}
           <p className="mt-6">
             <Link href="/pqc-lagebild/methodik" className="font-mono text-sm text-[var(--color-primary)] underline underline-offset-4 hover:opacity-80">
@@ -100,6 +103,8 @@ export default async function PqcLagebildPage({ params }: PageProps) {
           {ds ? (
             <LagebildExplorer
               cells={explorerCells}
+              providers={ds.providers ?? []}
+              mail={ds.mail ?? null}
               trend={ds.trend?.cells.filter((c) => c.region === 'EU' || c.region === 'DE') ?? []}
               previousMonthLabel={ds.trend ? formatMonth(ds.trend.previousMonth, locale) : null}
               history={historyPoints}
@@ -156,18 +161,14 @@ export default async function PqcLagebildPage({ params }: PageProps) {
               <p>{t('filesIntro')}</p>
             </SectionTitle>
             {files.length ? (
-              <ul className="space-y-3">
+              <div className="grid gap-4 lg:grid-cols-2">
                 {files.map((f) => (
-                  <li key={f.name} className="flex flex-col gap-2 rounded-lg border border-[var(--color-border)] p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="text-sm text-[var(--color-text-base)]">{f.label}</span>
-                    <span className="flex flex-wrap items-center gap-3 font-mono text-xs">
-                      <a href={`/api/pqc-lagebild/${f.name}`} download={f.name} className="text-[var(--color-primary)] hover:opacity-80">{f.name}</a>
-                      <a href={`/api/pqc-lagebild/${f.name}.sig`} download={`${f.name}.sig`} className="text-[var(--color-primary)] hover:opacity-80">.sig</a>
-                      <VerifyFile file={f.name} publicKeyHex={pub} />
-                    </span>
-                  </li>
+                  <div key={f.name}>
+                    <p className="mb-2 text-sm text-[var(--color-text-base)]">{f.label}</p>
+                    <LagebildSignatureBadge file={f.name} sig={f.sig} />
+                  </div>
                 ))}
-              </ul>
+              </div>
             ) : (
               <p className="text-[var(--color-text-muted)]">{t('filesNone')}</p>
             )}

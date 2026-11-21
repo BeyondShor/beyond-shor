@@ -22,9 +22,12 @@ export const CONCURRENCY = Number(env.PQSCAN_CONCURRENCY ?? 64);
 export const TIMEOUT_MS = Number(env.PQSCAN_TIMEOUT_MS ?? 8000);
 // Smallest group we ever publish a number for. Smaller groups are folded into their parent.
 export const MIN_CELL = Number(env.PQSCAN_MIN_CELL ?? 30);
-// Mail-server STARTTLS measurement. Off until the scanner has forward-confirmed reverse DNS:
-// many large mail providers stall connections from VPS addresses without it, which would bias the result.
-export const MEASURE_MAIL = env.PQSCAN_MAIL === '1';
+// Mail-server STARTTLS measurement (PQSCAN_MAIL=0 switches it off). Some providers refuse or ignore
+// connections from VPS networks; the dataset reports that coverage per provider instead of hiding it.
+export const MEASURE_MAIL = env.PQSCAN_MAIL !== '0';
+// Mail: how many of the largest MX zones are measured, and the pause between two of them.
+export const MAIL_TOP = Number(env.PQSCAN_MAIL_TOP ?? 60);
+export const MAIL_PAUSE_MS = Number(env.PQSCAN_MAIL_PAUSE_MS ?? 3000);
 // Optional cap for test runs (0 = no cap).
 export const LIMIT = Number(env.PQSCAN_LIMIT ?? 0);
 

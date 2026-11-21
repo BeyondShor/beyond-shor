@@ -1,0 +1,111 @@
+# PQC-Lagebild, "Software ab Werk" for Windows and macOS.
+#
+# GitHub-hosted runners are stock Windows/macOS images, so they stand in for "the operating
+# system as shipped": each job records which key-exchange groups the OS's own TLS clients
+# offer by default (curl, PowerShell/.NET, URLSession, Network.framework, ssh) and, on
+# Windows, which group the built-in Schannel server negotiates. The merged result goes to the
+# data branch pqc-matrix-data (never main). The monthly matrix run on the scanner host picks
+# it up from there, checks schema and age, and signs it together with the Linux results.
+
+name: PQC-Lagebild – Software ab Werk (Windows/macOS)
+
+on:
+  schedule:
+    - cron: '10 1 1 * *'   # 1st of the month, before the Linux matrix (02:40 UTC)
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/pqc-matrix-os.yml'
+      - 'pqc-lagebild/matrix/os/**'
+      - 'pqc-lagebild/matrix/clienthello.mjs'
+      - 'pqc-lagebild/matrix/clienthello-sink.mjs'
+      - 'pqc-lagebild/matrix/probe-server.mjs'
+      - 'pqc-lagebild/matrix/results.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pqc-matrix-os
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        label: [windows-2025, windows-2022, windows-11-arm, macos-26, macos-15]
+    runs-on: ${{ matrix.label }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: pqc-lagebild/matrix
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Test the operating system's TLS defaults
+        shell: bash
+        env:
+          RUNNER_LABEL: ${{ matrix.label }}
+        run: node pqc-lagebild/matrix/os/run-os.mjs --label "$RUNNER_LABEL" --out "$RUNNER_TEMP/os-$RUNNER_LABEL.json"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: os-${{ matrix.label }}
+          path: ${{ runner.temp }}/os-${{ matrix.label }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  publish:
+    needs: test
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write   # push to the data branch only
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: pqc-lagebild/matrix
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: os-*
+          path: ${{ runner.temp }}/results
+          merge-multiple: true
+
+      - name: Merge runner results
+        run: |
+          cp pqc-lagebild/matrix/os/merge.mjs "$RUNNER_TEMP/merge.mjs"
+          node "$RUNNER_TEMP/merge.mjs" "$RUNNER_TEMP/results" "$RUNNER_TEMP/os-matrix.json"
+
+      - name: Commit os-matrix.json to pqc-matrix-data
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if git ls-remote --exit-code --heads origin pqc-matrix-data >/dev/null; then
+            git fetch --depth=1 origin pqc-matrix-data
+            git switch -C pqc-matrix-data FETCH_HEAD
+          else
+            git switch --orphan pqc-matrix-data
+          fi
+          git sparse-checkout disable || true
+          cp "$RUNNER_TEMP/os-matrix.json" os-matrix.json
+          printf '%s\n' '# pqc-matrix-data' '' \
+            'Machine-written by `.github/workflows/pqc-matrix-os.yml` on `main`. Do not edit by hand.' \
+            '`os-matrix.json` is read by the monthly PQC-Lagebild matrix run, which signs it.' > README.md
+          git add os-matrix.json README.md
+          git commit -m "OS-Matrix aktualisiert (Lauf ${GITHUB_RUN_ID})"
+          git push origin pqc-matrix-data

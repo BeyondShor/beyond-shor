@@ -61,7 +61,7 @@ export function ShareBars({ data, emptyLabel }: { data: BarDatum[]; emptyLabel: 
 export interface Part { key: string; label: string; value: number; color: string }
 
 /** Tall segmented bar (one whole split into parts) with legend; shares printed inside when they fit. */
-export function SegmentedBar({ parts, total, locale, ariaLabel }: { parts: Part[]; total: number; locale: string; ariaLabel: string }) {
+export function SegmentedBar({ parts, total, locale, ariaLabel, legend = true }: { parts: Part[]; total: number; locale: string; ariaLabel: string; legend?: boolean }) {
   const fmt = new Intl.NumberFormat(locale === 'de' ? 'de-DE' : 'en-US', { style: 'percent', maximumFractionDigits: 0 });
   const visible = parts.filter((p) => p.value > 0);
   const described = parts.map((p) => `${p.label} ${total ? fmt.format(p.value / total) : '–'}`).join(', ');
@@ -82,7 +82,7 @@ export function SegmentedBar({ parts, total, locale, ariaLabel }: { parts: Part[
           );
         })}
       </div>
-      <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-[var(--color-text-muted)]">
+      {legend && <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-[var(--color-text-muted)]">
         {parts.map((p) => (
           <li key={p.key} className="flex items-center gap-1.5">
             <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: p.color }} aria-hidden="true" />
@@ -90,7 +90,7 @@ export function SegmentedBar({ parts, total, locale, ariaLabel }: { parts: Part[
             {(!total || p.value / total < 0.08) && <span className="tabular-nums">{total ? fmt.format(p.value / total) : '–'}</span>}
           </li>
         ))}
-      </ul>
+      </ul>}
     </div>
   );
 }

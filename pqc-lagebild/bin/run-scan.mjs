@@ -8,12 +8,13 @@
 import { closeSync, openSync, readFileSync, existsSync, unlinkSync, writeSync } from 'node:fs';
 import { join } from 'node:path';
 import { randomInt } from 'node:crypto';
-import { CONCURRENCY, LIMIT, MIN_CELL, PUBLIC_DIR, STATE_DIR, MEASURE_MAIL } from '../lib/config.mjs';
+import { CONCURRENCY, LIMIT, MIN_CELL, PUBLIC_DIR, STATE_DIR, MEASURE_MAIL, MAIL_TOP, MAIL_PAUSE_MS } from '../lib/config.mjs';
 import { log, mapPool, monthOf, previousMonth } from '../lib/util.mjs';
 import { publishDataset, publishFailure } from '../lib/publish.mjs';
 import { buildPopulation } from '../scan/lists/index.mjs';
 import { loadHostingClassifier } from '../scan/asn.mjs';
-import { probeDomain, BROWSER_GROUPS, PURE_GROUPS } from '../scan/probe.mjs';
+import { loadPublicSuffixList } from '../lib/psl.mjs';
+import { probeDomain, probeMailHost, BROWSER_GROUPS, PURE_GROUPS } from '../scan/probe.mjs';
 import { toObservation, aggregate, trend, qualityGate } from '../scan/aggregate.mjs';
 import { panelHasher, savePanel, loadPanel } from '../scan/panel.mjs';
 import { loadOptOut } from './optout.mjs';
@@ -65,25 +66,65 @@ async function main() {
 
   const hosting = await loadHostingClassifier();
   const classifyIp = (ip) => hosting.classify(ip);
+  const psl = await loadPublicSuffixList();
+  const mxZoneOf = (h) => psl.registrableDomain(h);
+
+  // Phase 1: web, DNSSEC and MX lookup per site
+  const probes = new Array(records.length);
+  let errors = 0;
+  await mapPool(records, CONCURRENCY, async (rec, i) => {
+    try {
+      probes[i] = await probeDomain(rec, { classifyIp, mxZoneOf });
+    } catch {
+      errors++;
+      probes[i] = { web: { reachable: false }, dnssec: { ok: false }, mail: { mx: false } };
+    }
+  }, (done, total) => log(`probed ${done}/${total}`));
+
+  // Phase 2: STARTTLS of the largest mail providers, one after another. Bulk SMTP from VPS networks
+  // gets throttled or refused within minutes, so only the top zones are measured — slowly, one
+  // connection per provider per month — and the rest is reported as "not measured".
+  let mailMeta = null;
+  if (MEASURE_MAIL) {
+    const zoneCount = new Map();
+    for (const p of probes) {
+      if (!p.mail?.mx) continue;
+      const z = zoneCount.get(p.mail.mxZone) ?? { host: p.mail.mxHost, n: 0 };
+      z.n++;
+      zoneCount.set(p.mail.mxZone, z);
+    }
+    const top = [...zoneCount].sort((a, b) => b[1].n - a[1].n).slice(0, MAIL_TOP);
+    log(`mail: ${zoneCount.size} MX zones, measuring the top ${top.length}`);
+    const results = new Map();
+    for (const [zone, { host }] of top) {
+      results.set(zone, await probeMailHost(host).catch(() => ({ ok: false, error: 'error', errorClass: 'other' })));
+      await new Promise((r) => setTimeout(r, MAIL_PAUSE_MS));
+    }
+    for (const p of probes) {
+      if (p.mail?.mx) Object.assign(p.mail, results.get(p.mail.mxZone) ?? { ok: false, error: 'not-measured', errorClass: 'not-measured' });
+    }
+    const answered = [...results.values()].filter((r) => r.ok).length;
+    const withMx = [...zoneCount.values()].reduce((a, z) => a + z.n, 0);
+    const covered = top.reduce((a, [, z]) => a + z.n, 0);
+    mailMeta = {
+      zones: zoneCount.size, measured: top.length, answered, domainsWithMx: withMx, domainsCovered: covered,
+      // publish mail figures only if most of the measured providers answered
+      reliable: top.length > 0 && answered / top.length >= 0.6,
+    };
+    log(`mail: ${answered}/${top.length} providers answered, covering ${covered} of ${withMx} domains`);
+  }
 
   const observations = new Array(records.length);
   const panel = new Map();
-  let errors = 0;
-  await mapPool(records, CONCURRENCY, async (rec, i) => {
-    let probe;
-    try {
-      probe = await probeDomain(rec, { classifyIp });
-    } catch {
-      errors++;
-      probe = { web: { reachable: false }, dnssec: { ok: false }, mail: { mx: false } };
-    }
-    const o = toObservation(rec, probe);
+  records.forEach((rec, i) => {
+    const o = toObservation(rec, probes[i]);
     observations[i] = o;
     panel.set(hash(rec.site), o);
-  }, (done, total) => log(`probed ${done}/${total}`));
+  });
   records.length = 0; // drop the list as soon as it is no longer needed
+  probes.length = 0;
 
-  const { cells, suppressed } = aggregate(observations, { minCell: MIN_CELL });
+  const { cells, providers, suppressed } = aggregate(observations, { minCell: MIN_CELL });
   const prevMonth = previousMonth(month);
   const prevPanel = loadPanel(prevMonth);
   const trendResult = prevPanel ? trend(prevPanel, panel, { minCell: MIN_CELL }) : null;
@@ -118,7 +159,9 @@ async function main() {
       euView: observations.filter((o) => o.uniform).length,
       deView: observations.filter((o) => o.country === 'DE').length,
     },
+    mail: mailMeta,
     cells,
+    providers,
     suppressedCells: suppressed,
     trend: trendResult ? { previousMonth: prevMonth, cells: trendResult.cells, suppressedCells: trendResult.suppressed } : null,
   };
@@ -130,7 +173,7 @@ async function main() {
   log(`EU: ${share(eu)} · DE: ${share(de)} · cells ${cells.length}, suppressed ${suppressed}, probe errors ${errors}`);
 
   if (DRY) {
-    console.log(JSON.stringify({ population: dataset.population, eu, de, cells: cells.length, suppressed }, null, 2));
+    console.log(JSON.stringify({ population: dataset.population, eu, de, providers, cells: cells.length, suppressed }, null, 2));
     return;
   }
   if (problems.length) {

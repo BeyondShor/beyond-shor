@@ -40,42 +40,75 @@ async function cached(name, url, maxAgeDays) {
   return readFileSync(path);
 }
 
+// Display names for the networks that host many sites. Matched against the AS description;
+// anything else falls back to a cleaned-up AS name. Order matters (first match wins).
+const PROVIDER_NAMES = [
+  [/CLOUDFLARE/, 'Cloudflare'], [/AKAMAI|LINODE/, 'Akamai'], [/FASTLY/, 'Fastly'],
+  [/AMAZON/, 'Amazon (AWS)'], [/GOOGLE/, 'Google'], [/MICROSOFT/, 'Microsoft (Azure)'],
+  [/ORACLE/, 'Oracle'], [/ALIBABA/, 'Alibaba'], [/TENCENT/, 'Tencent'],
+  [/IONOS|1AND1|ONEANDONE|1&1|FASTHOSTS|ARSYS/, 'IONOS'], [/STRATO/, 'Strato'], [/HETZNER/, 'Hetzner'],
+  [/\bOVH/, 'OVHcloud'], [/HOSTINGER/, 'Hostinger'], [/CONTABO/, 'Contabo'], [/NETCUP/, 'netcup'],
+  [/ALL-INKL|ALLINKL|NEUE MEDIEN/, 'ALL-INKL'], [/MITTWALD/, 'Mittwald'], [/HOSTEUROPE|HOST EUROPE/, 'Host Europe'],
+  [/PLUSSERVER|PLUSLINE/, 'plusserver'], [/DOMAINFACTORY|DF-/, 'domainfactory'], [/DIGITALOCEAN/, 'DigitalOcean'],
+  [/SCALEWAY|ONLINE S\.A\.S/, 'Scaleway'], [/INFOMANIAK/, 'Infomaniak'], [/ARUBA/, 'Aruba'], [/REGISTER/, 'Register.it'],
+  [/LEASEWEB/, 'Leaseweb'], [/TRANSIP/, 'TransIP'], [/ONE\.COM|ONECOM/, 'one.com'], [/GANDI/, 'Gandi'],
+  [/WIX/, 'Wix'], [/SQUARESPACE/, 'Squarespace'], [/SHOPIFY/, 'Shopify'], [/AUTOMATTIC/, 'Automattic (WordPress.com)'],
+  [/GITHUB/, 'GitHub'], [/VERCEL/, 'Vercel'], [/NETLIFY/, 'Netlify'], [/BUNNY/, 'bunny.net'], [/CDN77|DATACAMP/, 'CDN77'],
+  [/G-CORE|GCORE/, 'Gcore'], [/IMPERVA|INCAPSULA/, 'Imperva'], [/SUCURI/, 'Sucuri'], [/MYRA/, 'Myra Security'],
+  [/LINK11/, 'Link11'], [/EDGECAST|EDGIO|LIMELIGHT/, 'Edgio'], [/DTAG|DEUTSCHE TELEKOM|T-SYSTEMS/, 'Deutsche Telekom'],
+  [/VODAFONE/, 'Vodafone'], [/IWAY|SWISSCOM/, 'Swisscom'], [/ORANGE/, 'Orange'], [/TELEFONICA/, 'Telefónica'],
+];
+
+export function providerName(desc) {
+  const D = desc.toUpperCase();
+  for (const [re, name] of PROVIDER_NAMES) if (re.test(D)) return name;
+  // "EXAMPLE-AS Example Hosting GmbH" → "EXAMPLE"
+  const first = desc.split(/\s+/)[0].replace(/[-_](AS|NET|NETWORK|HOSTING)?\d*$/i, '').replace(/^AS[-_]?/i, '');
+  return first || desc.slice(0, 30);
+}
+
 export class HostingClassifier {
   constructor(ip2asnTsv, awsRanges) {
     const starts = [];
     const ends = [];
     const classes = [];
+    const providers = [];
+    const names = new Map();
     for (const line of ip2asnTsv.split('\n')) {
       const [s, e, asn, , desc = ''] = line.split('\t');
       if (!s || asn === '0') continue;
       const D = desc.toUpperCase();
       const cls = CDN_AS.test(D) ? 'cdn' : CLOUD_AS.test(D) ? 'cloud' : 'other';
+      if (!names.has(desc)) names.set(desc, providerName(desc));
       starts.push(ipToInt(s));
       ends.push(ipToInt(e));
       classes.push(cls);
+      providers.push(names.get(desc));
     }
     this.starts = Uint32Array.from(starts);
     this.ends = Uint32Array.from(ends);
     this.classes = classes;
+    this.providers = providers;
     this.cloudfront = (awsRanges?.prefixes ?? [])
       .filter((p) => p.service === 'CLOUDFRONT')
       .map((p) => cidrToRange(p.ip_prefix))
       .sort((a, b) => a[0] - b[0]);
   }
 
+  /** { hosting: 'cdn' | 'cloud' | 'other' | 'unknown', provider: display name or null } */
   classify(ip) {
     const n = ipToInt(ip);
-    if (n === null) return 'unknown'; // IPv6: rare enough to report separately
-    for (const [s, e] of this.cloudfront) if (n >= s && n <= e) return 'cdn';
+    if (n === null) return { hosting: 'unknown', provider: null }; // IPv6: rare, reported separately
+    for (const [s, e] of this.cloudfront) if (n >= s && n <= e) return { hosting: 'cdn', provider: 'Amazon CloudFront' };
     let lo = 0;
     let hi = this.starts.length - 1;
     while (lo <= hi) {
       const mid = (lo + hi) >> 1;
       if (n < this.starts[mid]) hi = mid - 1;
       else if (n > this.ends[mid]) lo = mid + 1;
-      else return this.classes[mid];
+      else return { hosting: this.classes[mid], provider: this.providers[mid] };
     }
-    return 'other';
+    return { hosting: 'other', provider: null };
   }
 }
 

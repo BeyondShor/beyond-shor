@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-const SECTIONS = ['what', 'who', 'categories', 'how', 'hosting', 'privacy', 'views', 'limits', 'automation', 'optout'] as const;
+const SECTIONS = ['what', 'who', 'categories', 'how', 'hosting', 'mail', 'privacy', 'views', 'software', 'limits', 'automation', 'optout'] as const;
 
 export default async function MethodPage({ params }: PageProps) {
   const { locale } = await params;

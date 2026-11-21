@@ -27,9 +27,23 @@ command -v curl >/dev/null || dnf -y -q install curl >>/tmp/install.log 2>&1
 apk add -q --no-cache nginx apache2 apache2-ssl postfix openssh-server openssh-client openssl curl python3 \\
   >/tmp/install.log 2>&1 || { tail -5 /tmp/install.log; echo "STATUS install fail apk"; exit 1; }
 `,
+  zypper: `
+# 107 = installed, but a package script complained (typical in containers without systemd)
+zypper -n --quiet install nginx apache2 postfix openssh-server openssh-clients openssl curl python3 >/tmp/install.log 2>&1
+RC=$?; [ $RC -eq 0 ] || [ $RC -eq 107 ] || { tail -5 /tmp/install.log; echo "STATUS install fail zypper $RC"; exit 1; }
+`,
+  pacman: `
+pacman -Sy --noconfirm --needed archlinux-keyring >/tmp/install.log 2>&1
+pacman -Su --noconfirm --needed nginx apache postfix openssh openssl curl python >>/tmp/install.log 2>&1 \\
+  || { tail -5 /tmp/install.log; echo "STATUS install fail pacman"; exit 1; }
+`,
 };
 
-const nginxConfDir = { deb: '/etc/nginx/conf.d', rpm: '/etc/nginx/conf.d', apk: '/etc/nginx/http.d' };
+// Arch's nginx.conf includes no directory, so the server block is included explicitly there.
+const nginxConfDir = { deb: '/etc/nginx/conf.d', rpm: '/etc/nginx/conf.d', apk: '/etc/nginx/http.d', zypper: '/etc/nginx/conf.d', pacman: '/etc/pqm/nginx' };
+const nginxInclude = {
+  pacman: `grep -q '/etc/pqm/nginx/' /etc/nginx/nginx.conf || sed -i '0,/^[[:space:]]*http[[:space:]]*{/s//&\\n    include \\/etc\\/pqm\\/nginx\\/*.conf;/' /etc/nginx/nginx.conf`,
+};
 
 const apache = {
   deb: `
@@ -48,11 +62,30 @@ mkdir -p /etc/ssl/apache2
 [ -s /etc/ssl/apache2/server.pem ] || { cp /etc/pqm/cert.pem /etc/ssl/apache2/server.pem; cp /etc/pqm/key.pem /etc/ssl/apache2/server.key; }
 httpd -k start >/tmp/apache.log 2>&1 && echo "STATUS apache ok" || echo "STATUS apache fail $(tail -1 /tmp/apache.log)"
 echo "VER apache $(httpd -v 2>/dev/null | head -1 | sed 's/^Server version: //')"
+`,  zypper: `
+# SUSE: enable mod_ssl and the SSL flag, and turn the shipped SSL vhost template into a vhost
+a2enmod ssl >/dev/null 2>&1; a2enflag SSL >/dev/null 2>&1
+mkdir -p /srv/www/htdocs /var/log/apache2  # Tumbleweed images lack the default DocumentRoot and log dir
+T=/etc/apache2/vhosts.d/vhost-ssl.template
+[ -f "$T" ] && sed -e 's#/etc/apache2/ssl.crt/vhost-example.crt#/etc/pqm/cert.pem#' -e 's#/etc/apache2/ssl.key/vhost-example.key#/etc/pqm/key.pem#' "$T" > /etc/apache2/vhosts.d/pqm-ssl.conf
+if command -v start_apache2 >/dev/null; then start_apache2 -k start >/tmp/apache.log 2>&1; else apachectl start >/tmp/apache.log 2>&1; fi \\
+  && echo "STATUS apache ok" || echo "STATUS apache fail $(tail -1 /tmp/apache.log)"
+H=$(command -v httpd || command -v httpd-prefork || command -v httpd-event)
+echo "VER apache $($H -v 2>/dev/null | head -1 | sed 's/^Server version: //')"
+`,
+  pacman: `
+# Arch ships mod_ssl and the upstream httpd-ssl.conf commented out
+C=/etc/httpd/conf/httpd.conf
+sed -i -e 's/^#\\(LoadModule ssl_module\\)/\\1/' -e 's/^#\\(LoadModule socache_shmcb_module\\)/\\1/' -e 's|^#\\(Include conf/extra/httpd-ssl.conf\\)|\\1|' "$C"
+cp /etc/pqm/cert.pem /etc/httpd/conf/server.crt; cp /etc/pqm/key.pem /etc/httpd/conf/server.key
+httpd -k start >/tmp/apache.log 2>&1 && echo "STATUS apache ok" || echo "STATUS apache fail $(tail -1 /tmp/apache.log)"
+echo "VER apache $(httpd -v 2>/dev/null | head -1 | sed 's/^Server version: //')"
 `,
 };
 
 /** Install, configure and start everything; print versions and SSH defaults. */
 export function setupScript(family) {
+  if (!install[family]) throw new Error(`no recipe for package family ${family}`);
   return `
 set -u
 ${install[family]}
@@ -69,6 +102,7 @@ for f in /etc/nginx/nginx.conf /etc/nginx/sites-enabled/* /etc/nginx/conf.d/*.co
   [ -f "$f" ] && sed -ri 's/(listen[[:space:]]+(\\[::\\]:)?)80([[:space:]]|;)/\\18080\\3/' "$f"
 done
 mkdir -p ${nginxConfDir[family]}
+${nginxInclude[family] ?? ''}
 cat > ${nginxConfDir[family]}/pqm.conf <<'EOF'
 server {
     listen ${PORTS.nginx} ssl;
@@ -101,11 +135,13 @@ postfix start >/tmp/postfix.log 2>&1 && echo "STATUS postfix ok" || echo "STATUS
 # OpenSSH: effective defaults, no daemon needed
 mkdir -p /run/sshd
 ssh-keygen -A >/dev/null 2>&1
-echo "SSH server $(sshd -T 2>/dev/null | awk 'tolower($1)=="kexalgorithms"{print $2}')"
-echo "SSH client $(ssh -G pqm.test 2>/dev/null | awk 'tolower($1)=="kexalgorithms"{print $2}')"
+# (grep/cut, not awk: minimal images such as SUSE BCI have no awk)
+echo "SSH server $(sshd -T 2>/dev/null | grep -i '^kexalgorithms ' | cut -d' ' -f2)"
+echo "SSH client $(ssh -G pqm.test 2>/dev/null | grep -i '^kexalgorithms ' | cut -d' ' -f2)"
 echo "VER openssh $(ssh -V 2>&1)"
 echo "VER curl $(curl --version 2>/dev/null | head -1)"
 echo "VER python $(python3 -c 'import ssl,sys;print(sys.version.split()[0], ssl.OPENSSL_VERSION)' 2>/dev/null)"
+[ -r /etc/os-release ] && echo "VER os-release $(. /etc/os-release; echo "\${PRETTY_NAME:-} \${VERSION_ID:-}")"
 true
 `;
 }

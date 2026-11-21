@@ -187,10 +187,31 @@ export function probeSmtp({ ip, mxHost }) {
   });
 }
 
-const smtpCache = new Map();
+// Mail is measured in a second phase, once per MX zone (e.g. all *.mail.protection.outlook.com
+// hosts share one Microsoft 365 configuration): every mail provider sees exactly one connection
+// per month, and the web measurement never waits for slow mail servers.
 
-/** Mail result for a domain: lowest-preference MX, cached per MX host (many domains share providers). */
-export async function probeMail(domain) {
+/** IPv6 first for SMTP: from the scanner's network, several large providers only answer on IPv6. */
+async function resolveMailIp(host) {
+  try {
+    const v6 = await resolver.resolve6(host);
+    if (v6.length) return { ip: v6[0], family: 6 };
+  } catch { /* fall through */ }
+  return resolveIp(host);
+}
+
+/** Classify why a mail server could not be measured (for the coverage statistics). */
+export function mailErrorClass(error) {
+  if (!error) return null;
+  if (/^greeting-5|^ehlo-5/.test(error)) return 'refused';
+  if (error === 'timeout') return 'timeout';
+  if (error === 'ECONNREFUSED' || error === 'ECONNRESET') return 'refused';
+  if (error === 'no-address' || error === 'ENOTFOUND') return 'no-address';
+  return 'other';
+}
+
+/** Lowest-preference MX of a domain and its zone (registrable domain via `mxZoneOf`). */
+export async function lookupMx(domain, mxZoneOf = (h) => h) {
   let mx;
   try {
     mx = await resolver.resolveMx(domain);
@@ -200,30 +221,30 @@ export async function probeMail(domain) {
   mx = mx.filter((r) => r.exchange && r.exchange !== '.').sort((a, b) => a.priority - b.priority);
   if (!mx.length) return { mx: false }; // includes RFC 7505 null MX
   const mxHost = mx[0].exchange.toLowerCase().replace(/\.$/, '');
-  if (!smtpCache.has(mxHost)) {
-    smtpCache.set(mxHost, (async () => {
-      const addr = await resolveIp(mxHost);
-      if (!addr || addr.family !== 4) return { ok: false, error: addr ? 'ipv6-only' : 'no-address' };
-      return probeSmtp({ ip: addr.ip, mxHost });
-    })());
-  }
-  const r = await smtpCache.get(mxHost);
-  return { mx: true, mxHost, ...r };
+  return { mx: true, mxHost, mxZone: mxZoneOf(mxHost) ?? mxHost };
+}
+
+/** One STARTTLS measurement of a mail host. */
+export async function probeMailHost(mxHost) {
+  const addr = await resolveMailIp(mxHost);
+  const r = addr ? await probeSmtp({ ip: addr.ip, mxHost }) : { ok: false, error: 'no-address' };
+  return { ...r, errorClass: r.ok ? null : mailErrorClass(r.error) };
 }
 
 /**
  * Full measurement of one site (e.g. "bsi.bund.de"; its zone "bund.de" is used for DNSSEC).
- * Tries the bare name first, then www. Mail: MX of the site, else of the zone.
+ * Tries the bare name first, then www. Mail: MX of the site, else of the zone (looked up only).
  * Returns only facts about the site's own servers; the caller decides what to keep.
  */
-export async function probeDomain({ site, zone }, { classifyIp }) {
+export async function probeDomain({ site, zone }, { classifyIp, mxZoneOf }) {
   const result = { web: null, dnssec: null, mail: null };
-  const [dnssec, mailSite] = await Promise.all([
+  const [dnssec, mxSite] = await Promise.all([
     dnssecAlgorithms(zone ?? site),
-    MEASURE_MAIL ? probeMail(site) : Promise.resolve(null),
+    MEASURE_MAIL ? lookupMx(site, mxZoneOf) : Promise.resolve(null),
   ]);
   result.dnssec = dnssec;
-  if (MEASURE_MAIL) result.mail = !mailSite.mx && zone && zone !== site ? await probeMail(zone) : mailSite;
+  // only the MX is looked up here; the SMTP measurement happens later, once per MX zone
+  if (MEASURE_MAIL) result.mail = !mxSite.mx && zone && zone !== site ? await lookupMx(zone, mxZoneOf) : mxSite;
 
   for (const host of [site, `www.${site}`]) {
     const addr = await resolveIp(host);
@@ -231,15 +252,21 @@ export async function probeDomain({ site, zone }, { classifyIp }) {
     const browser = await handshake({ ip: addr.ip, servername: host, groups: BROWSER_GROUPS });
     if (!browser.ok) {
       if (host === site) continue; // the bare name may simply not serve TLS; try www
-      result.web = { reachable: false, error: browser.error, hosting: classifyIp(addr.ip) };
+      result.web = { reachable: false, error: browser.error };
       break;
     }
     const pure = await handshake({ ip: addr.ip, servername: host, groups: PURE_GROUPS });
+    // Chose a classical group although ML-KEM was offered? Ask once more with only the hybrid:
+    // a server that accepts it supports ML-KEM but prefers classical groups.
+    const hybridOnly = browser.pq ? null : await handshake({ ip: addr.ip, servername: host, groups: 'X25519MLKEM768' });
+    const where = classifyIp(addr.ip);
     result.web = {
       reachable: true,
       host: host === site ? 'bare' : 'www',
       family: addr.family,
-      hosting: classifyIp(addr.ip),
+      hosting: where.hosting,
+      provider: where.provider,
+      pqCapable: browser.pq || !!(hybridOnly?.ok && hybridOnly.pq),
       protocol: browser.protocol,
       group: browser.group,
       pq: browser.pq,

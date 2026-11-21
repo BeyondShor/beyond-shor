@@ -30,14 +30,22 @@ export interface Cell {
   sector: string | null;
   n: number;
   web: {
-    reachable: number; tls13: number; pq: number; pqPure: number;
+    reachable: number; tls13: number; pq: number; pqCapable: number; pqPure: number;
+    groups: Record<string, number>;
     cert: { rsa: number; ecdsa: number; eddsa: number; pq: number; other: number };
+    certKeys: Record<string, number>;
+    certSigs: Record<string, number>;
   };
   hosting: Record<Hosting, number>;
   pqByHosting: Record<Hosting, number | null>;
   dns: { answered: number; signed: number; algorithms: Record<string, number> } | null;
-  mail: { withMx: number; answered: number; starttls: number; tls: number; pq: number } | null;
+  mail: { withMx: number; answered: number; starttls: number; tls: number; pq: number; groups: Record<string, number>; errors: Record<string, number> } | null;
 }
+
+export interface WebProvider { hosting: 'cdn' | 'cloud' | 'other'; name: string; n: number; pq: number; pqCapable: number }
+export interface MailProvider { name: string; n: number; answered: number; tls: number; pq: number; group: string | null; errors: Record<string, number> }
+export interface ProviderRanking { view: View; region: string; web: WebProvider[]; mail: MailProvider[] }
+export interface MailMeta { zones: number; measured: number; answered: number; domainsWithMx: number; domainsCovered: number; reliable: boolean }
 
 export interface TrendCell {
   view: View; region: string; category: Category;
@@ -55,6 +63,8 @@ export interface LagebildDataset {
   minCell: number;
   population: { total: number; reachable: number; byCategory: Record<string, number>; euView: number; deView: number };
   cells: Cell[];
+  providers?: ProviderRanking[];
+  mail?: MailMeta | null;
   suppressedCells: number;
   trend: { previousMonth: string; cells: TrendCell[]; suppressedCells: number } | null;
 }
@@ -74,7 +84,9 @@ export interface MatrixResult {
 export interface MatrixRelease {
   id: string;
   distro: string;
+  name?: string;
   version: string;
+  source?: string;
   codename?: string | null;
   lts?: boolean;
   eol?: string | boolean | null;
@@ -129,6 +141,14 @@ function monthsOf(dir: string, kind: 'lagebild' | 'matrix'): string[] {
   if (!existsSync(dir)) return [];
   const re = new RegExp(`^${kind}-(\\d{4}-\\d{2})\\.json$`);
   return readdirSync(dir).map((f) => re.exec(f)?.[1]).filter((m): m is string => !!m).sort();
+}
+
+/** Published data files that have a signature next to them, newest month first (lagebild before matrix). */
+export function listSignedFiles(dir = DATA_DIR): string[] {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => /^(lagebild|matrix)-\d{4}-\d{2}\.json$/.test(f) && existsSync(join(dir, `${f}.sig`)))
+    .sort((a, b) => b.slice(-12).localeCompare(a.slice(-12)) || a.localeCompare(b));
 }
 
 export interface LagebildBundle {

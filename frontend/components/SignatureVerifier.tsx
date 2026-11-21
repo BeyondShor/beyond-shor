@@ -6,7 +6,7 @@ import type { ContentBlock, MediaBlock, SliderBlock } from '@/lib/types';
 
 type StepStatus = 'done' | 'error';
 type VerifyStatus = 'idle' | 'verifying' | 'valid' | 'invalid' | 'error';
-type Mode = 'article' | 'cbom';
+type Mode = 'article' | 'cbom' | 'lagebild';
 
 interface Step {
   label: string;
@@ -89,12 +89,19 @@ interface Props {
   defaultSig?: string;
   defaultDocId?: string;
   defaultMode?: Mode;
+  /** PQC-Lagebild: signed files on offer (newest first), the preselected one, and the dataset key. */
+  lagebildFiles?: string[];
+  defaultLagebildFile?: string;
+  lagebildPublicKey?: string;
 }
 
 export default function SignatureVerifier({
   defaultSig   = '',
   defaultDocId = '',
   defaultMode  = 'article',
+  lagebildFiles = [],
+  defaultLagebildFile = '',
+  lagebildPublicKey = '',
 }: Props) {
   const t      = useTranslations('verifier');
   const locale = useLocale();
@@ -105,6 +112,10 @@ export default function SignatureVerifier({
   const [docId, setDocId]   = useState(defaultDocId);
   const [status, setStatus] = useState<VerifyStatus>('idle');
   const [steps, setSteps]   = useState<Step[]>([]);
+  const [lbFile, setLbFile] = useState(defaultLagebildFile || lagebildFiles[0] || '');
+
+  // The PQC-Lagebild has its own signing key (it is signed on the measurement server).
+  const shownKey = mode === 'lagebild' ? lagebildPublicKey : PUBLIC_KEY_HEX;
 
   function switchMode(m: Mode) {
     if (m === mode) return;
@@ -114,7 +125,7 @@ export default function SignatureVerifier({
   }
 
   async function copyKey() {
-    await navigator.clipboard.writeText(PUBLIC_KEY_HEX);
+    await navigator.clipboard.writeText(shownKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 2_000);
   }
@@ -273,6 +284,48 @@ export default function SignatureVerifier({
     }
   }
 
+  // ── PQC-Lagebild verification ─────────────────────────────────────────────
+
+  async function verifyLagebild() {
+    if (status === 'verifying' || !lbFile) return;
+    setStatus('verifying');
+    setSteps([]);
+
+    try {
+      // Step 1 — the published file, as exact bytes
+      const dataRes = await fetch(`/api/pqc-lagebild/${encodeURIComponent(lbFile)}`, { cache: 'no-store' });
+      if (!dataRes.ok) throw new Error(`${lbFile}: ${dataRes.status}`);
+      const dataBuf = new Uint8Array(await dataRes.arrayBuffer());
+      setSteps([{ label: t('lagebildStepFetchData'), value: `${lbFile}, ${dataBuf.length.toLocaleString()} B`, status: 'done' }]);
+
+      // Step 2 — its signature
+      const sigRes = await fetch(`/api/pqc-lagebild/${encodeURIComponent(lbFile)}.sig`, { cache: 'no-store' });
+      if (!sigRes.ok) throw new Error(`${lbFile}.sig: ${sigRes.status}`);
+      const sigHex = (await sigRes.text()).trim();
+      setSteps((s) => [...s, {
+        label: t('lagebildStepFetchSig'),
+        value: `${truncateHex(sigHex, 16, 16)} (${(sigHex.length / 2).toLocaleString()} B)`,
+        status: 'done',
+      }]);
+
+      const { ml_dsa65 } = await import('@noble/post-quantum/ml-dsa.js');
+      setSteps((s) => [...s, { label: t('cbomStepMessage'), value: `${dataBuf.length.toLocaleString()} B (UTF-8 of ${lbFile})`, status: 'done' }]);
+
+      // Step 3 — ML-DSA-65.verify against the dataset key
+      const valid = ml_dsa65.verify(hexToBytes(sigHex), dataBuf, hexToBytes(lagebildPublicKey));
+      setSteps((s) => [...s, {
+        label: t('stepVerify'),
+        value: valid ? t('lagebildResultValid') : t('lagebildResultInvalid'),
+        status: valid ? 'done' : 'error',
+      }]);
+      setStatus(valid ? 'valid' : 'invalid');
+    } catch (err) {
+      console.error('[pqc-lagebild-verifier]', err);
+      setSteps((s) => [...s, { label: t('stepVerify'), value: t('resultError'), status: 'error' }]);
+      setStatus('error');
+    }
+  }
+
   // ── Event handlers ────────────────────────────────────────────────────────
 
   async function handleArticleVerify(e: React.FormEvent) {
@@ -302,7 +355,7 @@ export default function SignatureVerifier({
         aria-label={t('modeToggleLabel')}
         className="mb-10 flex gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-base)] p-1 w-fit"
       >
-        {(['article', 'cbom'] as const).map((m) => (
+        {(['article', 'cbom', 'lagebild'] as const).map((m) => (
           <button
             key={m}
             role="tab"
@@ -314,7 +367,7 @@ export default function SignatureVerifier({
                 : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-base)]'
             }`}
           >
-            {m === 'article' ? t('modeArticle') : t('modeCbom')}
+            {m === 'article' ? t('modeArticle') : m === 'cbom' ? t('modeCbom') : t('modeLagebild')}
           </button>
         ))}
       </div>
@@ -322,23 +375,23 @@ export default function SignatureVerifier({
       {/* ── Description ──────────────────────────────────────────────── */}
       <div className="mb-8 space-y-3 max-w-3xl">
         <p className="text-[var(--color-text-muted)] leading-relaxed">
-          {mode === 'article' ? t('description') : t('descriptionCbom')}
+          {mode === 'article' ? t('description') : mode === 'cbom' ? t('descriptionCbom') : t('descriptionLagebild')}
         </p>
         <p className="text-[var(--color-text-muted)] leading-relaxed">
-          {mode === 'article' ? t('intro') : t('introCbom')}
+          {mode === 'article' ? t('intro') : mode === 'cbom' ? t('introCbom') : t('introLagebild')}
         </p>
       </div>
 
-      {/* ── Public key (same for both modes — same signing key) ──────── */}
+      {/* ── Public key (articles and CBOM share one key; the PQC-Lagebild has its own) ── */}
       <div className="mb-8">
-        <p className="mono-label text-[var(--color-text-muted)] mb-2">{t('pubKeyLabel')}</p>
+        <p className="mono-label text-[var(--color-text-muted)] mb-2">{mode === 'lagebild' ? t('pubKeyLabelLagebild') : t('pubKeyLabel')}</p>
         <div className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-4 py-3">
           <code className="min-w-0 flex-1 break-all text-xs font-mono leading-relaxed text-[var(--color-primary)]">
-            {PUBLIC_KEY_HEX
-              ? truncateHex(PUBLIC_KEY_HEX, 40, 16)
+            {shownKey
+              ? truncateHex(shownKey, 40, 16)
               : t('pubKeyNotConfigured')}
           </code>
-          {PUBLIC_KEY_HEX && (
+          {shownKey && (
             <button
               type="button"
               onClick={copyKey}
@@ -371,7 +424,7 @@ export default function SignatureVerifier({
                 {t('messageFormatDesc')}
               </p>
             </>
-          ) : (
+          ) : mode === 'cbom' ? (
             <>
               <code className="text-xs font-mono text-[var(--color-text-muted)]">
                 <span className="text-[var(--color-primary)]">UTF-8</span>
@@ -379,6 +432,16 @@ export default function SignatureVerifier({
               </code>
               <p className="mt-2 text-xs text-[var(--color-text-muted)]">
                 {t('messageFormatDescCbom')}
+              </p>
+            </>
+          ) : (
+            <>
+              <code className="text-xs font-mono text-[var(--color-text-muted)]">
+                <span className="text-[var(--color-primary)]">UTF-8</span>
+                {' ('}{lbFile || 'lagebild-YYYY-MM.json'}{')'}
+              </code>
+              <p className="mt-2 text-xs text-[var(--color-text-muted)]">
+                {t('messageFormatDescLagebild')}
               </p>
             </>
           )}
@@ -445,7 +508,38 @@ export default function SignatureVerifier({
         </div>
       )}
 
-      {/* ── Verification steps (shared for both modes) ───────────────── */}
+      {/* ── PQC-Lagebild verify ──────────────────────────────────────── */}
+      {mode === 'lagebild' && (
+        <div className="space-y-4">
+          <p className="mono-label text-[var(--color-text-muted)] mb-1">{t('lagebildFormLabel')}</p>
+          {lagebildFiles.length ? (
+            <>
+              <div>
+                <label htmlFor="lb-file" className="mb-1 block text-xs font-mono text-[var(--color-text-muted)]">{t('lagebildFileLabel')}</label>
+                <select
+                  id="lb-file"
+                  value={lbFile}
+                  onChange={(e) => { setLbFile(e.target.value); setStatus('idle'); setSteps([]); }}
+                  className={inputCls}
+                >
+                  {lagebildFiles.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+              <button
+                onClick={verifyLagebild}
+                disabled={status === 'verifying'}
+                className="rounded-lg border border-[var(--color-primary)] bg-[var(--color-primary)]/10 px-6 py-2.5 text-sm font-mono font-semibold text-[var(--color-primary)] transition-all hover:bg-[var(--color-primary)]/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {status === 'verifying' ? t('verifying') : t('submitButtonLagebild')}
+              </button>
+            </>
+          ) : (
+            <p className="text-sm text-[var(--color-text-muted)]">{t('lagebildNoFiles')}</p>
+          )}
+        </div>
+      )}
+
+      {/* ── Verification steps (shared for all modes) ────────────────── */}
       {steps.length > 0 && (
         <div className="mt-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-surface)] p-5 space-y-3">
           <p className="mono-label text-[var(--color-text-muted)] mb-4">{t('stepsLabel')}</p>

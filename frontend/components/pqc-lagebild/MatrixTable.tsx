@@ -1,13 +1,18 @@
 import { getTranslations } from 'next-intl/server';
-import type { MatrixDataset, MatrixResult } from '@/lib/pqc-lagebild';
+import type { MatrixDataset, MatrixRelease, MatrixResult } from '@/lib/pqc-lagebild';
 
+// Column order and labels; a column is shown only if some release in the table has it.
 const SERVER_COLS: [string, string][] = [
   ['nginx-server', 'nginx'], ['apache-server', 'Apache'], ['postfix-server', 'Postfix'], ['openssh-server', 'OpenSSH'],
+  ['schannel-server', 'Schannel'],
 ];
 const CLIENT_COLS: [string, string][] = [
   ['openssl-client', 'OpenSSL'], ['curl-client', 'curl'], ['python-client', 'Python'], ['openssh-client', 'OpenSSH'],
-  ['go-client', 'Go'], ['java-client', 'Java'], ['node-client', 'Node.js'],
+  ['powershell-client', 'PowerShell'], ['dotnet-client', '.NET'], ['urlsession-client', 'URLSession'],
+  ['network-framework-client', 'Network.framework'],
 ];
+const DISTRO_ORDER = ['windows', 'macos', 'debian', 'ubuntu', 'rhel', 'almalinux', 'rockylinux', 'oraclelinux', 'centos-stream',
+  'fedora', 'amazonlinux', 'sles', 'opensuse-leap', 'opensuse-tumbleweed', 'archlinux', 'alpine'];
 
 function detail(r: MatrixResult): string {
   const parts: string[] = [];
@@ -34,20 +39,29 @@ function ResultCell({ r, labels }: { r: MatrixResult | undefined; labels: { pq: 
   );
 }
 
-export default async function MatrixTable({ matrix, locale }: { matrix: MatrixDataset; locale: string }) {
+/** "OpenSSL 3.5.9 29 Sep 2026 (Library: …)" → "3.5.9" */
+function shortVersion(v: string | null | undefined): string | null {
+  if (!v) return null;
+  return /\d+\.\d+(?:\.\d+)?[a-z]?/.exec(v)?.[0] ?? null;
+}
+
+function sortReleases(list: MatrixRelease[]): MatrixRelease[] {
+  const rank = (d: string) => { const i = DISTRO_ORDER.indexOf(d.toLowerCase()); return i < 0 ? DISTRO_ORDER.length : i; };
+  return [...list].sort((a, b) => rank(a.distro) - rank(b.distro) || a.distro.localeCompare(b.distro)
+    || b.version.localeCompare(a.version, undefined, { numeric: true }));
+}
+
+async function Table({ releases, caption, locale, showOpenssl }: { releases: MatrixRelease[]; caption: string; locale: string; showOpenssl: boolean }) {
   const t = await getTranslations({ locale, namespace: 'pqcLagebild' });
-  const has = (k: string) => matrix.releases.some((r) => r.results?.[k]);
+  const has = (k: string) => releases.some((r) => r.results?.[k]);
   const servers = SERVER_COLS.filter(([k]) => has(k));
   const clients = CLIENT_COLS.filter(([k]) => has(k));
   const labels = { pq: t('matrix.pq'), classic: t('matrix.classic'), na: t('matrix.na') };
-  const order = ['debian', 'ubuntu', 'almalinux', 'rhel', 'rocky', 'fedora', 'alpine'];
-  const rank = (d: string) => { const i = order.indexOf(d.toLowerCase()); return i < 0 ? order.length : i; };
-  const releases = [...matrix.releases].sort((a, b) => rank(a.distro) - rank(b.distro) || a.distro.localeCompare(b.distro) || b.version.localeCompare(a.version, undefined, { numeric: true }));
 
   return (
     <div className="relative overflow-x-auto rounded-xl border border-[var(--color-border)]">
       <table className="min-w-full text-sm">
-        <caption className="sr-only">{t('matrixTitle')}</caption>
+        <caption className="sr-only">{caption}</caption>
         <thead className="bg-[var(--color-bg-base)]/60 text-left">
           <tr className="font-mono text-[11px] uppercase tracking-wider text-[var(--color-text-muted)]">
             <th scope="col" rowSpan={2} className="px-4 py-2 align-bottom">{t('matrix.release')}</th>
@@ -63,9 +77,9 @@ export default async function MatrixTable({ matrix, locale }: { matrix: MatrixDa
           {releases.map((r) => (
             <tr key={r.id} className="border-t border-[var(--color-border-dim)]">
               <th scope="row" className="whitespace-nowrap px-4 py-2.5 text-left font-normal">
-                <span className="text-[var(--color-text-base)]">{prettyDistro(r.distro)} {r.version}</span>
+                <span className="text-[var(--color-text-base)]">{r.name ?? r.distro} {r.version}</span>
                 {r.lts && <span className="ml-2 font-mono text-[10px] text-[var(--color-text-muted)]">LTS</span>}
-                {shortVersion(r.packages?.openssl) && <span className="block font-mono text-[10px] text-[var(--color-text-muted)]">OpenSSL {shortVersion(r.packages?.openssl)}</span>}
+                {showOpenssl && shortVersion(r.packages?.openssl) && <span className="block font-mono text-[10px] text-[var(--color-text-muted)]">OpenSSL {shortVersion(r.packages?.openssl)}</span>}
               </th>
               {servers.map(([k], i) => <td key={k} className={`px-3 py-2.5 ${i === 0 ? 'border-l border-[var(--color-border-dim)]' : ''}`}><ResultCell r={r.results?.[k]} labels={labels} /></td>)}
               {clients.map(([k], i) => <td key={k} className={`px-3 py-2.5 ${i === 0 ? 'border-l border-[var(--color-border-dim)]' : ''}`}><ResultCell r={r.results?.[k]} labels={labels} /></td>)}
@@ -80,13 +94,22 @@ export default async function MatrixTable({ matrix, locale }: { matrix: MatrixDa
   );
 }
 
-/** "OpenSSL 3.5.9 29 Sep 2026 (Library: …)" → "3.5.9" */
-function shortVersion(v: string | null | undefined): string | null {
-  if (!v) return null;
-  return /\d+\.\d+(?:\.\d+)?[a-z]?/.exec(v)?.[0] ?? null;
-}
-
-function prettyDistro(d: string): string {
-  const map: Record<string, string> = { debian: 'Debian', ubuntu: 'Ubuntu', rhel: 'RHEL (UBI)', ubi: 'RHEL (UBI)', almalinux: 'AlmaLinux', rocky: 'Rocky Linux', alpine: 'Alpine', fedora: 'Fedora' };
-  return map[d.toLowerCase()] ?? d;
+export default async function MatrixTable({ matrix, locale }: { matrix: MatrixDataset; locale: string }) {
+  const t = await getTranslations({ locale, namespace: 'pqcLagebild' });
+  const desktop = sortReleases(matrix.releases.filter((r) => r.source === 'github-hosted-runner'));
+  const linux = sortReleases(matrix.releases.filter((r) => r.source !== 'github-hosted-runner'));
+  return (
+    <div className="space-y-8">
+      {desktop.length > 0 && (
+        <div>
+          <h3 className="mb-3 text-lg font-semibold text-[var(--color-text-base)]">{t('matrix.desktopTitle')}</h3>
+          <Table releases={desktop} caption={t('matrix.desktopTitle')} locale={locale} showOpenssl={false} />
+        </div>
+      )}
+      <div>
+        <h3 className="mb-3 text-lg font-semibold text-[var(--color-text-base)]">{t('matrix.linuxTitle')}</h3>
+        <Table releases={linux} caption={t('matrix.linuxTitle')} locale={locale} showOpenssl />
+      </div>
+    </div>
+  );
 }
