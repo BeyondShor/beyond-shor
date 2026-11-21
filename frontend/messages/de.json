@@ -1801,14 +1801,10 @@
         "title": "Ablauf und Signatur",
         "body": "Die Messung startet automatisch am 1. jedes Monats und dauert einige Stunden. Ihr Ergebnis wird auf dem Messserver mit ML-DSA-65 (FIPS 204) signiert. Der Webserver holt die Dateien ab, prüft jede Signatur gegen den hinterlegten öffentlichen Schlüssel und übernimmt nur, was stimmt. Diese Seite prüft beim Anzeigen ein zweites Mal, und im Verifier können Sie die Signaturen selbst prüfen.\n\nSchlägt eine Messung fehl oder fällt sie bei den Plausibilitätsprüfungen durch, etwa weil plötzlich deutlich weniger Websites erreichbar sind, bleibt der letzte gültige Stand sichtbar."
       },
-      "optout": {
-        "title": "Ausschluss und Kontakt",
-        "body": "Soll eine Website aus der Messung ausgenommen werden, genügt eine Nachricht über das <link>Kontaktformular</link>. Sie wird dann dauerhaft ausgeschlossen; gespeichert wird dafür nur ihr Hashwert, nicht der Name."
-      },
       "operators": {
         "title": "Hinweis für Betreiber",
         "body": "Verbindungen des PQC-Lagebilds kommen von einem eigenen Messserver in der EU. Er misst einmal im Monat, ab dem 1., und baut zu jeder Website nur wenige TLS-Verbindungen auf, höchstens drei je Name. Jede Verbindung endet nach dem Handshake: Es werden keine Seiten abgerufen, keine Anmeldungen versucht und keine Schwachstellen gesucht. Die größten Mailanbieter erhalten im Monat je eine SMTP-Verbindung bis zum Handshake nach STARTTLS, ohne dass eine E-Mail verschickt wird. Seine IP-Adressen lösen per Reverse DNS auf pqc-lagebild.beyond-shor.eu auf; unter diesem Namen meldet er sich auch gegenüber Mailservern.",
-        "contact": "Für Fragen zur Messung oder wenn eine Website ausgenommen werden soll, genügt eine Nachricht über das <link>Kontaktformular</link>."
+        "contact": "Für Fragen zur Messung oder wenn eine Website ausgenommen werden soll, genügt eine Nachricht über das <link>Kontaktformular</link>. Die Website wird dann dauerhaft ausgeschlossen; gespeichert wird dafür nur ihr Hashwert, nicht der Name."
       }
     },
     "hostingRow": "{name} · {share} der Websites",

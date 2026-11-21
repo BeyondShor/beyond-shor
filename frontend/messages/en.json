@@ -1801,14 +1801,10 @@
         "title": "Schedule and signature",
         "body": "The measurement starts automatically on the 1st of each month and takes a few hours. Its result is signed with ML-DSA-65 (FIPS 204) on the measurement server. The web server fetches the files, verifies each signature against the pinned public key and only accepts what checks out. This page verifies a second time before displaying anything, and you can check the signatures yourself in the verifier.\n\nIf a measurement fails or does not pass the plausibility checks, for example because suddenly far fewer websites are reachable, the last valid results stay online."
       },
-      "optout": {
-        "title": "Opt-out and contact",
-        "body": "To have a website excluded from the measurement, a message through the <link>contact form</link> is enough. It will be excluded permanently, storing only its hash, not its name."
-      },
       "operators": {
         "title": "Note for operators",
         "body": "Connections from the PQC Monitor come from a dedicated measurement server in the EU. It measures once a month, starting on the 1st, and opens only a few TLS connections to each website, at most three per name. Every connection ends after the handshake: no pages are fetched, no logins are attempted and no vulnerabilities are probed. The largest mail providers each receive one SMTP connection per month, up to the handshake after STARTTLS, and no email is sent. Its IP addresses resolve to pqc-lagebild.beyond-shor.eu via reverse DNS, and it uses the same name toward mail servers.",
-        "contact": "For questions about the measurement, or to have a website excluded, a message through the <link>contact form</link> is all it takes."
+        "contact": "For questions about the measurement, or to have a website excluded, a message through the <link>contact form</link> is all it takes. The website is then excluded permanently, storing only its hash, not its name."
       }
     },
     "hostingRow": "{name} · {share} of websites",

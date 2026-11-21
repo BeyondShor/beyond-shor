@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-const SECTIONS = ['what', 'who', 'categories', 'how', 'hosting', 'mail', 'privacy', 'views', 'software', 'limits', 'automation', 'optout'] as const;
+const SECTIONS = ['what', 'who', 'categories', 'how', 'hosting', 'mail', 'privacy', 'views', 'software', 'limits', 'automation'] as const;
 
 export default async function MethodPage({ params }: PageProps) {
   const { locale } = await params;
@@ -61,9 +61,7 @@ export default async function MethodPage({ params }: PageProps) {
             <section key={s} id={s}>
               <h2 className="text-2xl font-bold text-[var(--color-text-base)]">{t(`${s}.title`)}</h2>
               <div className="mt-4 space-y-4 text-[var(--color-text-muted)] leading-relaxed">
-                {s === 'optout'
-                  ? <p>{t.rich('optout.body', { link: contactLink })}</p>
-                  : t(`${s}.body`).split('\n\n').map((p, i) => <p key={i}>{p}</p>)}
+                {t(`${s}.body`).split('\n\n').map((p, i) => <p key={i}>{p}</p>)}
               </div>
               {s === 'who' && ds && (
                 <div className="mt-6 overflow-x-auto rounded-xl border border-[var(--color-border)]">
