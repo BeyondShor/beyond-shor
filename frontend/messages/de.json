@@ -1722,8 +1722,9 @@
       "na": "nicht verfügbar",
       "legendPq": "quantensicher ab Werk",
       "legendClassic": "nur klassisch",
-      "desktopTitle": "Windows und macOS",
-      "linuxTitle": "Linux-Distributionen"
+      "linuxTitle": "Linux-Distributionen",
+      "windowsTitle": "Windows",
+      "macosTitle": "macOS"
     },
     "visitorsTitle": "Ihre Verbindung",
     "visitorsIntro": "Die Verbindung zu dieser Seite nutzt hybrides ML-KEM, sofern Ihr Browser es anbietet.",
@@ -1744,14 +1745,6 @@
       "groupDetail": "{n} von {total} Verbindungen"
     },
     "visitorsPrivacy": "Für diese Statistik protokolliert der Webserver je Verbindung nur Zeitpunkt, TLS-Version, ausgehandeltes Verfahren und ob es sich um einen Bot handelt. IP-Adressen, aufgerufene Seiten und Browserkennungen werden dafür nicht gespeichert.",
-    "filesTitle": "Daten und Signaturen",
-    "filesIntro": "Jede Monatsdatei ist mit ML-DSA-65 (FIPS 204) signiert, und zwar auf dem Messserver mit einem eigenen Schlüssel. Der Webserver übernimmt eine Datei nur, wenn ihre Signatur stimmt. Prüfen können Sie das im Verifier.",
-    "files": {
-      "lagebild": "PQC-Lagebild {month}",
-      "matrix": "Software-Matrix {month}"
-    },
-    "filesNone": "Noch keine signierten Daten.",
-    "filesKey": "Öffentlicher Schlüssel des Datensatzes:",
     "method": {
       "label": "Methodik",
       "pageTitle": "PQC-Lagebild: Methodik",

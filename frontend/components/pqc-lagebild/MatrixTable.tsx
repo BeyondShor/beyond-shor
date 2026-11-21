@@ -96,20 +96,21 @@ async function Table({ releases, caption, locale, showOpenssl }: { releases: Mat
 
 export default async function MatrixTable({ matrix, locale }: { matrix: MatrixDataset; locale: string }) {
   const t = await getTranslations({ locale, namespace: 'pqcLagebild' });
-  const desktop = sortReleases(matrix.releases.filter((r) => r.source === 'github-hosted-runner'));
-  const linux = sortReleases(matrix.releases.filter((r) => r.source !== 'github-hosted-runner'));
+  const runner = matrix.releases.filter((r) => r.source === 'github-hosted-runner');
+  // one table per system family, so every table only has columns that exist on that system
+  const groups: [string, MatrixRelease[], boolean][] = [
+    [t('matrix.windowsTitle'), sortReleases(runner.filter((r) => r.distro === 'windows')), false],
+    [t('matrix.macosTitle'), sortReleases(runner.filter((r) => r.distro === 'macos')), false],
+    [t('matrix.linuxTitle'), sortReleases(matrix.releases.filter((r) => r.source !== 'github-hosted-runner')), true],
+  ];
   return (
     <div className="space-y-8">
-      {desktop.length > 0 && (
-        <div>
-          <h3 className="mb-3 text-lg font-semibold text-[var(--color-text-base)]">{t('matrix.desktopTitle')}</h3>
-          <Table releases={desktop} caption={t('matrix.desktopTitle')} locale={locale} showOpenssl={false} />
+      {groups.filter(([, list]) => list.length > 0).map(([title, list, linux]) => (
+        <div key={title}>
+          <h3 className="mb-3 text-lg font-semibold text-[var(--color-text-base)]">{title}</h3>
+          <Table releases={list} caption={title} locale={locale} showOpenssl={linux} />
         </div>
-      )}
-      <div>
-        <h3 className="mb-3 text-lg font-semibold text-[var(--color-text-base)]">{t('matrix.linuxTitle')}</h3>
-        <Table releases={linux} caption={t('matrix.linuxTitle')} locale={locale} showOpenssl />
-      </div>
+      ))}
     </div>
   );
 }

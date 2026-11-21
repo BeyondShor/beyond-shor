@@ -63,10 +63,6 @@ export default async function PqcLagebildPage({ params }: PageProps) {
     }))
     : [];
 
-  const files = [
-    ...(latest ? [{ name: latest.file, sig: latest.sig, label: t('files.lagebild', { month: formatMonth(latest.data.month, locale) }) }] : []),
-    ...(matrix ? [{ name: matrix.file, sig: matrix.sig, label: t('files.matrix', { month: formatMonth(matrix.data.month, locale) }) }] : []),
-  ];
 
   return (
     <div className="bg-[var(--color-bg-surface)]">
@@ -126,6 +122,9 @@ export default async function PqcLagebildPage({ params }: PageProps) {
                 <MatrixTable matrix={matrix.data} locale={locale} />
                 <p className="mt-3 text-xs text-[var(--color-text-muted)]">{t('matrixNote', { month: formatMonth(matrix.data.month, locale) })}</p>
                 <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">{t('matrixPitfalls')}</p>
+                <div className="mt-6 max-w-xl">
+                  <LagebildSignatureBadge file={matrix.file} sig={matrix.sig} />
+                </div>
               </>
             ) : (
               <p className="text-[var(--color-text-muted)]">{t('matrixNone')}</p>
@@ -156,27 +155,6 @@ export default async function PqcLagebildPage({ params }: PageProps) {
             <p className="mt-4 text-xs text-[var(--color-text-muted)]">{t('visitorsPrivacy')}</p>
           </section>
 
-          <section>
-            <SectionTitle label="// data" title={t('filesTitle')}>
-              <p>{t('filesIntro')}</p>
-            </SectionTitle>
-            {files.length ? (
-              <div className="grid gap-4 lg:grid-cols-2">
-                {files.map((f) => (
-                  <div key={f.name}>
-                    <p className="mb-2 text-sm text-[var(--color-text-base)]">{f.label}</p>
-                    <LagebildSignatureBadge file={f.name} sig={f.sig} />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-[var(--color-text-muted)]">{t('filesNone')}</p>
-            )}
-            <p className="mt-4 font-mono text-xs text-[var(--color-text-muted)]">
-              {t('filesKey')}{' '}
-              <a href="/api/pqc-lagebild/public-key.txt" className="text-[var(--color-primary)] hover:opacity-80">public-key.txt</a>
-            </p>
-          </section>
         </div>
       </div>
     </div>

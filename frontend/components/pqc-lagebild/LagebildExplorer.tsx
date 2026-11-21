@@ -113,14 +113,14 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
           </section>
 
           {/* 02 what servers negotiate */}
-          <section>
+          {main.web.groups && <section>
             <SectionTitle label="// 02" title={t('groupsTitle')}>
               <p>{t('groupsIntro')}</p>
             </SectionTitle>
             <div className="space-y-7">
               {CATS.map((c) => {
                 const cc = cell(c);
-                if (!cc) return null;
+                if (!cc || !cc.web.groups) return null;
                 return (
                   <div key={c}>
                     <div className="mb-2 flex items-baseline justify-between gap-4 text-sm">
@@ -138,7 +138,7 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
               <Fact label={t('groups.tls13')} value={pf(sh(main.web.tls13, main.web.reachable))} />
             </dl>
             <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">{t('groupsNote')}</p>
-          </section>
+          </section>}
 
           {/* 03 hosting */}
           <section>
@@ -175,11 +175,11 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
                 })}
               </div>
             )}
-            <p className="mt-4 text-xs text-[var(--color-text-muted)]">{t('providerNote', { min: minCell })}</p>
+            {ranking && ranking.web.length > 0 && <p className="mt-4 text-xs text-[var(--color-text-muted)]">{t('providerNote', { min: minCell })}</p>}
           </section>
 
           {/* 04 mail */}
-          <section>
+          {mail !== null && <section>
             <SectionTitle label="// 04" title={t('mailTitle')}>
               <p>{t('mailIntro')}</p>
             </SectionTitle>
@@ -220,7 +220,7 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
             ) : (
               <p className="text-[var(--color-text-muted)]">{t('mailNone')}</p>
             )}
-          </section>
+          </section>}
 
           {/* 05 signatures */}
           <section>
@@ -228,16 +228,16 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
               <p>{t('sigIntro')}</p>
             </SectionTitle>
             <div className="space-y-10">
-              <div>
+              {sum(main.web.certKeys) > 0 && <div>
                 <h3 className="mb-1 text-lg font-semibold text-[var(--color-text-base)]">{t('sigKeysTitle')}</h3>
                 <p className="mb-4 text-sm text-[var(--color-text-muted)]">{t('sigKeysNote')}</p>
                 <SegmentedBar locale={locale} ariaLabel={t('sigKeysTitle')} total={sum(main.web.certKeys)} parts={topParts(Object.entries(main.web.certKeys ?? {}), t('groups.other'))} />
-              </div>
-              <div>
+              </div>}
+              {sum(main.web.certSigs) > 0 && <div>
                 <h3 className="mb-1 text-lg font-semibold text-[var(--color-text-base)]">{t('sigCaTitle')}</h3>
                 <p className="mb-4 text-sm text-[var(--color-text-muted)]">{t('sigCaNote')}</p>
                 <SegmentedBar locale={locale} ariaLabel={t('sigCaTitle')} total={sum(main.web.certSigs)} parts={topParts(Object.entries(main.web.certSigs ?? {}), t('groups.other'))} />
-              </div>
+              </div>}
               <div>
                 <h3 className="mb-1 text-lg font-semibold text-[var(--color-text-base)]">{t('sigDnssecTitle')}</h3>
                 <p className="mb-4 text-sm text-[var(--color-text-muted)]">

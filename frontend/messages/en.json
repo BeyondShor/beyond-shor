@@ -1722,8 +1722,9 @@
       "na": "not available",
       "legendPq": "quantum-safe by default",
       "legendClassic": "classical only",
-      "desktopTitle": "Windows and macOS",
-      "linuxTitle": "Linux distributions"
+      "linuxTitle": "Linux distributions",
+      "windowsTitle": "Windows",
+      "macosTitle": "macOS"
     },
     "visitorsTitle": "Your connection",
     "visitorsIntro": "The connection to this page uses hybrid ML-KEM if your browser offers it.",
@@ -1744,14 +1745,6 @@
       "groupDetail": "{n} of {total} connections"
     },
     "visitorsPrivacy": "For these statistics, the web server only logs the time, TLS version, negotiated method and whether the client is a bot for each connection. IP addresses, requested pages and user agents are not stored for this purpose.",
-    "filesTitle": "Data and signatures",
-    "filesIntro": "Each monthly file is signed with ML-DSA-65 (FIPS 204), on the measurement server and with its own key. The web server only accepts a file if its signature checks out. You can verify it yourself in the verifier.",
-    "files": {
-      "lagebild": "PQC Monitor {month}",
-      "matrix": "Software matrix {month}"
-    },
-    "filesNone": "No signed data yet.",
-    "filesKey": "Public key of the dataset:",
     "method": {
       "label": "Methodology",
       "pageTitle": "PQC Monitor: methodology",
