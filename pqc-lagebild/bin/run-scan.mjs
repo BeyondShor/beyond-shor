@@ -20,6 +20,8 @@ import { panelHasher, savePanel, loadPanel } from '../scan/panel.mjs';
 import { loadOptOut } from './optout.mjs';
 
 const DRY = process.env.PQSCAN_DRY === '1';
+const LIST_ATTEMPTS = Number(process.env.PQSCAN_LIST_ATTEMPTS ?? 4);
+const LIST_RETRY_MIN = Number(process.env.PQSCAN_LIST_RETRY_MIN ?? 20);
 const month = process.env.PQSCAN_MONTH ?? monthOf();
 
 function shuffle(a) {
@@ -55,7 +57,20 @@ async function main() {
   const startedAt = new Date();
   log(`scan ${month} starting${DRY ? ' (dry run)' : ''}, concurrency ${CONCURRENCY}`);
 
-  const { records: built, sources } = await buildPopulation({ log });
+  // Public data services (Wikidata, QLever, Tranco) have bad hours. A transient failure must not cost
+  // the month: retry the whole list build a few times with long pauses before giving up.
+  let built;
+  let sources;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      ({ records: built, sources } = await buildPopulation({ log }));
+      break;
+    } catch (err) {
+      if (attempt >= LIST_ATTEMPTS) throw err;
+      log(`building the population failed (${err.message}); attempt ${attempt + 1}/${LIST_ATTEMPTS} in ${LIST_RETRY_MIN} min`);
+      await new Promise((r) => setTimeout(r, LIST_RETRY_MIN * 60_000));
+    }
+  }
   const hash = panelHasher();
   const optOut = loadOptOut();
   const all = optOut.size ? built.filter((r) => !optOut.has(hash(r.site))) : built;
