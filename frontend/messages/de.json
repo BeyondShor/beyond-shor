@@ -8,14 +8,16 @@
     "playground": "Playground",
     "openMenu": "Menü öffnen",
     "closeMenu": "Menü schließen",
-    "elsewhere": "Anderswo"
+    "elsewhere": "Anderswo",
+    "lagebild": "PQC-Lagebild"
   },
   "footer": {
     "contact": "Kontakt",
     "impressum": "Impressum",
     "datenschutz": "Datenschutz",
     "tagline": "Post-Quanten-Kryptografie, gründlich erklärt",
-    "rights": "Alle Rechte vorbehalten"
+    "rights": "Alle Rechte vorbehalten",
+    "verify": "Verifier"
   },
   "lang": {
     "de": "Deutsch",
@@ -1812,6 +1814,9 @@
     },
     "mailTableNote": "„Nicht erreichbar“ heißt, dass der Anbieter Verbindungen aus dem Netz des Messservers nicht beantwortet.",
     "pqShare": "{share} quantensicher",
-    "mailScope": "Betrachtet werden die {measured} größten Mailanbieter; bei ihnen empfangen {covered} der gemessenen Domains ihre E-Mails. Kleinere Anbieter und eigene Mailserver gehen nicht ein. Der Balken teilt die Domains bei den großen Anbietern danach auf, was der jeweilige Anbieter aushandelt."
+    "mailScope": "Betrachtet werden die {measured} größten Mailanbieter; bei ihnen empfangen {covered} der gemessenen Domains ihre E-Mails. Kleinere Anbieter und eigene Mailserver gehen nicht ein. Der Balken teilt die Domains bei den großen Anbietern danach auf, was der jeweilige Anbieter aushandelt.",
+    "domains": "{n} Domains",
+    "zones": "{n} von {of} Zonen signiert",
+    "mailBarLabel": "Domains bei den größten Anbietern"
   }
 }

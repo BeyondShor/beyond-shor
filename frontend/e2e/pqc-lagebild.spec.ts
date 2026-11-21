@@ -1,16 +1,17 @@
 /**
- * PQC-Lagebild E2E: page renders in both languages, stays out of search engines while
- * PQC_LAGEBILD_PUBLIC is false, and the live connection widget settles on a result.
+ * PQC-Lagebild E2E: page renders in both languages,
+ * the page is indexable and linked in the main navigation, and the live connection widget settles on a result.
  * Works with or without data in PQC_LAGEBILD_DIR (shows the "first measurement" state).
  */
 import { test, expect } from '@playwright/test';
 
-test('German page renders with methodology link and noindex', async ({ page }) => {
+test('German page renders, is indexable and linked in the navigation', async ({ page }) => {
   const res = await page.goto('/de/pqc-lagebild');
   expect(res?.status()).toBe(200);
   await expect(page.getByRole('heading', { level: 1, name: 'PQC-Lagebild' })).toBeVisible();
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
-  await expect(page.getByRole('link', { name: /So messen wir/ })).toBeVisible();
+  await expect(page.locator('meta[name="robots"][content*="noindex"]')).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'PQC-Lagebild' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /So wird gemessen/ })).toBeVisible();
   await expect(page.getByRole('heading', { level: 2, name: 'Software ab Werk' })).toBeVisible();
 });
 

@@ -16,7 +16,7 @@ export default function Header() {
     { href: '/about'      as const, label: t('about')      },
     { href: '/anderswo'   as const, label: t('elsewhere')  },
     { href: '/cbom'       as const, label: t('cbom')       },
-    { href: '/verify'     as const, label: t('verify')     },
+    { href: '/pqc-lagebild' as const, label: t('lagebild')  },
     { href: '/playground' as const, label: t('playground') },
   ];
 

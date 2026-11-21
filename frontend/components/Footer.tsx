@@ -41,6 +41,9 @@ export default function Footer() {
         <Link href="/datenschutz" className={linkClass('/datenschutz')} aria-current={pathname === '/datenschutz' ? 'page' : undefined}>
           {t('datenschutz')}
         </Link>
+        <Link href="/verify" className={linkClass('/verify')} aria-current={pathname === '/verify' ? 'page' : undefined}>
+          {t('verify')}
+        </Link>
         <Link
           href="/rss"
           className={`${linkClass('/rss')} inline-flex items-center gap-1`}

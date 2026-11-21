@@ -189,6 +189,7 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
                   <p className="mb-4 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">
                     {t('mailScope', { measured: String(mail?.measured ?? 0), covered: pf(sh(measured, m.withMx)) })}
                   </p>
+                  <BarHead label={t('mailBarLabel')} count={t('domains', { n: nf.format(measured) })} />
                   <SegmentedBar
                     locale={locale}
                     ariaLabel={t('mailTitle')}
@@ -213,7 +214,7 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
                         {mailRows.map((e) => (
                           <tr key={e.name} className="border-t border-[var(--color-border-dim)]">
                             <td className="px-4 py-2 text-[var(--color-text-base)]">{e.name}</td>
-                            <td className="px-4 py-2 text-right tabular-nums text-[var(--color-text-muted)]">{pf(sh(e.n, measured), 1)}</td>
+                            <td className="whitespace-nowrap px-4 py-2 text-right tabular-nums text-[var(--color-text-muted)]">{nf.format(e.n)}<span className="ml-2 text-xs text-[var(--color-text-dim)]">({pf(sh(e.n, measured), 1)})</span></td>
                             <td className="px-4 py-2">
                               {e.answered === 0 ? (
                                 <span className="font-mono text-xs text-[var(--color-text-muted)]">{t('mailTable.unreachable')}</span>
@@ -243,17 +244,17 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
             </SectionTitle>
             <div className="space-y-10">
               {sum(main.web.certKeys) > 0 && <div>
-                <h3 className="mb-1 text-lg font-semibold text-[var(--color-text-base)]">{t('sigKeysTitle')}</h3>
+                <SigHead title={t('sigKeysTitle')} count={t('sites', { n: nf.format(sum(main.web.certKeys)) })} />
                 <p className="mb-4 text-sm text-[var(--color-text-muted)]">{t('sigKeysNote')}</p>
                 <SegmentedBar locale={locale} ariaLabel={t('sigKeysTitle')} total={sum(main.web.certKeys)} parts={topParts(Object.entries(main.web.certKeys ?? {}), t('groups.other'))} />
               </div>}
               {sum(main.web.certSigs) > 0 && <div>
-                <h3 className="mb-1 text-lg font-semibold text-[var(--color-text-base)]">{t('sigCaTitle')}</h3>
+                <SigHead title={t('sigCaTitle')} count={t('sites', { n: nf.format(sum(main.web.certSigs)) })} />
                 <p className="mb-4 text-sm text-[var(--color-text-muted)]">{t('sigCaNote')}</p>
                 <SegmentedBar locale={locale} ariaLabel={t('sigCaTitle')} total={sum(main.web.certSigs)} parts={topParts(Object.entries(main.web.certSigs ?? {}), t('groups.other'))} />
               </div>}
               <div>
-                <h3 className="mb-1 text-lg font-semibold text-[var(--color-text-base)]">{t('sigDnssecTitle')}</h3>
+                <SigHead title={t('sigDnssecTitle')} count={main.dns ? t('zones', { n: nf.format(main.dns.signed), of: nf.format(main.dns.answered) }) : undefined} />
                 <p className="mb-4 text-sm text-[var(--color-text-muted)]">
                   {main.dns ? t('sigDnssecNote', { signed: pf(sh(main.dns.signed, main.dns.answered)) }) : t('kpi.tooFew')}
                 </p>
@@ -313,6 +314,24 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
           </section>
         </>
       )}
+    </div>
+  );
+}
+
+function BarHead({ label, count }: { label: string; count: string }) {
+  return (
+    <div className="mb-2 flex items-baseline justify-between gap-4 text-sm">
+      <span className="text-[var(--color-text-base)]">{label}</span>
+      <span className="font-mono text-xs text-[var(--color-text-muted)]">{count}</span>
+    </div>
+  );
+}
+
+function SigHead({ title, count }: { title: string; count?: string }) {
+  return (
+    <div className="mb-1 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+      <h3 className="text-lg font-semibold text-[var(--color-text-base)]">{title}</h3>
+      {count && <span className="font-mono text-xs text-[var(--color-text-muted)]">{count}</span>}
     </div>
   );
 }

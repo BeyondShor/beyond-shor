@@ -24,6 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { href: '/verify',       changeFrequency: 'monthly', priority: 0.6 },
     { href: '/rbe',          changeFrequency: 'monthly', priority: 0.6 },
     { href: '/pki',          changeFrequency: 'monthly', priority: 0.7 },
+    { href: '/pqc-lagebild', changeFrequency: 'monthly', priority: 0.8 },
+    { href: '/pqc-lagebild/methodik', changeFrequency: 'monthly', priority: 0.5 },
   ];
 
   for (const locale of LOCALES) {

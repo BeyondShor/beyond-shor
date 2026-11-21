@@ -8,7 +8,7 @@ import { join } from 'path';
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
 
 /** Flip to true when the page goes public: enables indexing, sitemap entry and nav link. */
-export const PQC_LAGEBILD_PUBLIC = false;
+export const PQC_LAGEBILD_PUBLIC = true;
 
 export const DATA_DIR = process.env.PQC_LAGEBILD_DIR ?? '/var/lib/beyond-shor/pqc-lagebild';
 

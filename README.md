@@ -45,6 +45,17 @@ Unterstützte Signaturverfahren (inkl. 20× Benchmark):
 ### 📋 Signiertes Kryptografie-Inventar (ShorSight)
 Das vollständige Scan-Ergebnis von **ShorSight** als Cryptography Bill of Materials nach [CycloneDX v1.7](https://cyclonedx.org). ShorSight durchsucht die Codebase nach kryptografischen Assets, belegt jedes mit Datei und Zeile, vergibt einen Evidenzgrad (literal / abgeleitet / nur Name) und bewertet Quantum- wie klassischen Status. Ergänzt wird das um eine Risikoanalyse nach **BSI-Standard 200-3** mit **Mosca** als Dringlichkeitsmaß — inklusive Impact-Bewertung, zweier Risikomatrizen und der dokumentierten Risikobehandlung je Objekt. Auf [beyond-shor.eu/cbom](https://beyond-shor.eu/cbom) ist dafür auf Desktop-Breite die Originaloberfläche von ShorSight eingebunden, reduziert auf Inventar und Risikomanagement; auf kleineren Bildschirmen zeigt eine kompakte React-Darstellung dieselben Daten. Die CBOM selbst wird mit ML-DSA-65 signiert; die Signatur lässt sich direkt im Browser prüfen.
 
+### 📡 PQC-Lagebild
+Auf dem [PQC-Lagebild](https://beyond-shor.eu/de/pqc-lagebild) ([englisch: PQC Monitor](https://beyond-shor.eu/en/pqc-monitor)) steht monatlich aktualisiert, wie weit Post-Quanten-Kryptografie in Deutschland und der EU tatsächlich angekommen ist. Alles läuft automatisch, ohne Handarbeit:
+
+- **Messung der Websites:** Am 1. jedes Monats baut ein eigener Messserver die Liste neu auf (Tranco-Top-1M für EU-Länderendungen und `.eu`, Wikidata, Verzeichnis deutscher Behördendomains) und misst jede Website mit einem einzelnen TLS-Handshake: Wird `X25519MLKEM768` ausgehandelt, welche Verfahren unterstützt der Server, welcher Zertifikatsschlüssel, welche CA-Signatur, welcher DNSSEC-Algorithmus. Bei den größten Mailanbietern wird zusätzlich der STARTTLS-Handshake gemessen.
+- **Nur Aggregate:** Veröffentlicht werden ausschließlich Anteile je Kategorie (KRITIS-Sektoren, öffentliche Institutionen, Konzerne, übrige Websites), je Land und je Hosting-Art, jeweils mit Mindestgröße. Es werden keine einzelnen Websites genannt, und es wird keine Domainliste gespeichert. Der Vergleich zum Vormonat läuft über HMAC-Hashes derselben Websites, damit Änderungen an den Listen nicht wie eine Umstellung aussehen.
+- **Software ab Werk:** Eine Matrix zeigt, ob Server- und Client-Software (nginx, Apache, Postfix, OpenSSH, OpenSSL, curl, Python) in der Standardkonfiguration aktueller Linux-Distributionen ML-KEM aushandelt, gemessen in Containern. Windows und macOS laufen über einen GitHub-Actions-Workflow auf gehosteten Runnern.
+- **Besucherverbindungen:** Wie viele Verbindungen zu beyond-shor.eu selbst bereits hybrid ausgehandelt werden. Gezählt werden nur die Verfahren (ohne IP-Adresse, URL oder User-Agent), außerdem sieht jede Besucherin und jeder Besucher die eigene Verbindung.
+- **Signiert:** Jeder Datensatz wird auf dem Messserver mit einem eigenen ML-DSA-65-Schlüssel signiert. Der Blog-Server holt ihn ab, prüft Signatur und SHA-256 gegen einen signierten Index und zeigt nur geprüfte Daten an. Im [Verifier](https://beyond-shor.eu/verify) lässt sich jeder Datensatz selbst prüfen.
+
+Wie gemessen wird, steht ausführlich in der [Methodik](https://beyond-shor.eu/de/pqc-lagebild/methodik); der Code liegt unter [`pqc-lagebild/`](pqc-lagebild/).
+
 ### 📅 Interaktive Q-Day Timeline
 Eine chronologische, interaktive Timeline von 1994 bis ~2040 — von Shors Algorithmus über die NIST-Standardisierung bis zu regulatorischen Deadlines und Q-Day-Schätzungen. Ereignisse sind nach Kategorien (Geschichte, Standard, Hardware, Regulierung, Prognose) farblich kodiert und per Klick aufklappbar.
 
@@ -85,6 +96,8 @@ beyond-shor.eu/
 ├── src/
 │   └── api/                # Strapi Content Types inkl. Lifecycle Hook (Signierung)
 ├── shorsight/              # Rohe CBOM, Governance-Konfiguration, scan.sh, build_inventory.py
+├── pqc-lagebild/           # PQC-Lagebild: Listen, Scanner, Aggregation, Software-Matrix, Abholung/Prüfung
+├── .github/workflows/      # pqc-matrix-os.yml: Windows/macOS-Messung für die Software-Matrix
 ├── scripts/
 │   └── sign-cbom.mjs       # CBOM veröffentlichen und mit ML-DSA-65 signieren
 └── README.md

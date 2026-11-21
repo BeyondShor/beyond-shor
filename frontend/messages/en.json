@@ -8,14 +8,16 @@
     "playground": "Playground",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "elsewhere": "Elsewhere"
+    "elsewhere": "Elsewhere",
+    "lagebild": "PQC Monitor"
   },
   "footer": {
     "contact": "Contact",
     "impressum": "Legal Notice",
     "datenschutz": "Privacy Policy",
     "tagline": "Post-quantum cryptography, explained in depth",
-    "rights": "All rights reserved"
+    "rights": "All rights reserved",
+    "verify": "Verifier"
   },
   "lang": {
     "de": "Deutsch",
@@ -1812,6 +1814,9 @@
     },
     "mailTableNote": "\"Not reachable\" means the provider does not respond to connections from the measurement server's network.",
     "pqShare": "{share} quantum-safe",
-    "mailScope": "The {measured} largest mail providers are covered; {covered} of the measured domains receive their email there. Smaller providers and self-run mail servers are not included. The bar splits the domains at the large providers by what their provider negotiates."
+    "mailScope": "The {measured} largest mail providers are covered; {covered} of the measured domains receive their email there. Smaller providers and self-run mail servers are not included. The bar splits the domains at the large providers by what their provider negotiates.",
+    "domains": "{n} domains",
+    "zones": "{n} of {of} zones signed",
+    "mailBarLabel": "Domains at the largest providers"
   }
 }
