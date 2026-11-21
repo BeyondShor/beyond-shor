@@ -1644,8 +1644,6 @@
       "pqSub": "Anteil der Websites, die mit einem aktuellen Browser einen hybriden ML-KEM-Schlüsselaustausch aushandeln.",
       "self": "Ohne CDN",
       "selfSub": "Derselbe Anteil, nur für Websites, die nicht hinter einem CDN liegen. Hier haben Betreiber oder Hoster selbst umgestellt.",
-      "mail": "Mail über quantensichere Anbieter",
-      "mailSub": "Anteil der Domains mit Mailserver, deren Anbieter beim STARTTLS-Handshake ML-KEM aushandelt. Gemessen werden konnten Anbieter für {covered} der Domains.",
       "tls13": "TLS 1.3",
       "tls13Sub": "Voraussetzung für ML-KEM: Ein quantensicherer Schlüsselaustausch ist nur mit TLS 1.3 möglich.",
       "cert": "Quantensichere Zertifikate",
@@ -1660,9 +1658,12 @@
       "other": "Sonstige",
       "capable": "Können ML-KEM, wählen aber klassisch",
       "pure": "Akzeptieren reines ML-KEM",
-      "tls13": "Unterstützen TLS 1.3"
+      "tls13": "Unterstützen TLS 1.3",
+      "capableNote": "Fast kein Server zieht ein klassisches Verfahren vor, wenn er ML-KEM beherrscht. Wo ML-KEM fehlt, fehlt also die Unterstützung, nicht die richtige Einstellung.",
+      "pureNote": "Kaum verbreitet. In der Übergangszeit gilt das hybride Verfahren als die vorsichtigere Wahl.",
+      "tls13Note": "Ohne TLS 1.3 ist ML-KEM nicht möglich. Hier liegt das Hindernis also selten."
     },
-    "groupsNote": "X25519 und P-256 sind klassische Verfahren, die ein Quantencomputer brechen könnte. „Können ML-KEM, wählen aber klassisch“ sind Server, die das hybride Verfahren beherrschen, ihm aber ein klassisches vorziehen. Reines ML-KEM ohne klassischen Anteil wird im Web bisher kaum angeboten; hybride Verfahren gelten in der Übergangszeit als die vorsichtigere Wahl.",
+    "groupsNote": "X25519 und P-256 sind klassische Verfahren, die ein Quantencomputer brechen könnte.",
     "category": {
       "all": "Alle Websites",
       "kritis": "KRITIS-Sektoren",
@@ -1671,23 +1672,21 @@
       "other": "Übrige Websites"
     },
     "hostingTitle": "CDN, Cloud oder eigener Server",
-    "hostingIntro": "Ob eine Website quantensicher verschlüsselt, entscheidet oft nicht ihr Betreiber, sondern der Dienst, der die Verbindung annimmt. Bei CDNs ist hybrides ML-KEM meist schon voreingestellt. Bei klassischen Hostern und eigenen Servern muss es jemand einschalten. Die Listen zeigen, bei welchen Anbietern wie viele der gemessenen Websites quantensicher verbunden sind.",
+    "hostingIntro": "Ob eine Website quantensicher verschlüsselt, entscheidet oft nicht ihr Betreiber, sondern der Dienst, der die Verbindung annimmt. Bei CDNs ist hybrides ML-KEM meist schon voreingestellt, bei klassischen Hostern und eigenen Servern muss es jemand einschalten. Die Balken zeigen, welcher Anteil der Websites in jeder Gruppe quantensicher verbunden ist, darunter aufgeschlüsselt nach Anbieter.",
     "hosting": {
       "cdn": "CDN",
       "cloud": "Hyperscaler-Cloud",
       "other": "Hoster und eigene Server"
     },
     "providerDetail": "{pq} von {n} Websites in diesem Netz",
-    "providerNote": "Zugeordnet wird über das Netz der IP-Adresse. Genannt werden nur Anbieter mit mindestens {min} gemessenen Websites, nie einzelne Websites.",
     "mailTitle": "Mailserver",
-    "mailIntro": "Auch zwischen Mailservern kann der Schlüsselaustausch quantensicher sein, wenn sie per STARTTLS verschlüsseln. Gemessen werden die größten Mailanbieter, also die Server, bei denen die meisten der gemessenen Domains ihre E-Mails empfangen. Jeder Anbieter wird einmal im Monat geprüft.",
+    "mailIntro": "Auch zwischen Mailservern kann der Schlüsselaustausch quantensicher sein, wenn sie per STARTTLS verschlüsseln. Gemessen werden die größten Mailanbieter, jeder einmal im Monat. Der Balken teilt alle Domains mit Mailserver danach auf, was bei ihrem Anbieter gemessen wurde.",
     "mailTable": {
       "provider": "Anbieter",
       "domains": "Anteil der Domains",
       "result": "Ausgehandelt",
-      "unreachable": "nicht messbar"
+      "unreachable": "nicht erreichbar"
     },
-    "mailCoverage": "Gemessen wurden die {measured} größten Anbieter; sie empfangen die E-Mails von {covered} der Domains. „Nicht messbar“ heißt, dass der Anbieter Verbindungen aus dem Netz des Messservers nicht beantwortet.",
     "mailNone": "In diesem Monat ließen sich zu wenige Mailanbieter erreichen, um belastbare Werte zu zeigen.",
     "sigTitle": "Signaturen",
     "sigIntro": "Der Schlüsselaustausch schützt die Vertraulichkeit. Ob die Gegenseite echt ist, sichern dagegen Signaturen ab: im Zertifikat der Website und, bei signierten Zonen, im DNS. Hier ist die Umstellung noch nicht angekommen, denn dafür braucht es neue Standards, Zertifizierungsstellen und Software auf allen Seiten.",
@@ -1711,7 +1710,7 @@
     "matrixTitle": "Software ab Werk",
     "matrixIntro": "Was können Betriebssysteme ohne jede Anpassung? Für Linux werden die Pakete jeden Monat in frischen Containern installiert, die Server mit Standardkonfiguration gestartet und geprüft, ob sie quantensicher aushandeln. Bei Clients wird geprüft, ob sie von sich aus einen ML-KEM-Schlüssel anbieten. Windows und macOS laufen auf den Standard-Images von GitHub Actions.",
     "matrixNote": "Getestet im {month}. Neue Releases kommen automatisch dazu, Releases ohne Support fallen weg. Details zeigt ein Mouseover über dem jeweiligen Feld.",
-    "matrixPitfalls": "Drei Fallstricke: Postfix bis Version 3.10 setzt eine eigene Liste von Schlüsselaustausch-Gruppen und bietet deshalb auch mit OpenSSL 3.5 kein ML-KEM an; erst ab Postfix 3.11 ist hybrides ML-KEM voreingestellt. Bei RHEL 9 und den davon abgeleiteten Systemen sowie bei Amazon Linux 2023 gibt die systemweite Crypto-Policy ML-KEM nicht frei, obwohl OpenSSL 3.5 vorhanden ist. Und Windows und macOS werden auf den Server- bzw. Runner-Images von GitHub getestet, nicht auf Endgeräten.",
+    "matrixPitfalls": "Ein ✘ heißt nur, dass ML-KEM ab Werk nicht aktiv ist. Wo OpenSSL 3.5 vorhanden ist, lässt es sich meist mit einer Zeile einschalten: in nginx über ssl_ecdh_curve, in Apache über SSLOpenSSLConfCmd Groups und in Postfix bis Version 3.10 über tls_eecdh_auto_curves (erst ab 3.11 ist hybrides ML-KEM voreingestellt). Bei RHEL 9 und den davon abgeleiteten Systemen genügt die Crypto-Policy DEFAULT:PQ (update-crypto-policies --set DEFAULT:PQ). Windows und macOS werden auf den Server- bzw. Runner-Images von GitHub getestet, nicht auf Endgeräten.",
     "matrixNone": "Die erste Software-Matrix wird gerade erstellt.",
     "matrix": {
       "release": "Release",
@@ -1774,11 +1773,11 @@
       },
       "hosting": {
         "title": "CDN, Cloud oder eigener Server",
-        "body": "Anhand der IP-Adresse wird jede Website einem Netz zugeordnet, offline über den Datensatz von iptoasn.com (Public Domain) und die von AWS veröffentlichten CloudFront-Adressbereiche. Netze von CDN- und Schutzdiensten wie Cloudflare, Akamai oder Fastly gelten als CDN, die von Amazon, Google, Microsoft, Oracle und Alibaba als Hyperscaler-Cloud, alle übrigen als Hoster und eigene Server. Der Anbietername ergibt sich aus dem Namen des Netzes.\n\n„Ohne CDN“ ist der Anteil quantensicherer Schlüsselaustausche unter allen erreichbaren Websites, die nicht hinter einem CDN liegen. Er zeigt besser als der Gesamtwert, wie weit Betreiber und Hoster selbst sind. In den Anbieterlisten erscheinen nur Netze mit mindestens 30 gemessenen Websites."
+        "body": "Anhand der IP-Adresse wird jede Website einem Netz zugeordnet, offline über den Datensatz von iptoasn.com (Public Domain) und die von AWS veröffentlichten CloudFront-Adressbereiche. Netze von CDN- und Schutzdiensten wie Cloudflare, Akamai oder Fastly gelten als CDN, die von Amazon, Google, Microsoft, Oracle und Alibaba als Hyperscaler-Cloud, alle übrigen als Hoster und eigene Server. Der Anbietername ergibt sich aus dem Namen des Netzes.\n\n„Ohne CDN“ ist der Anteil quantensicherer Schlüsselaustausche unter allen erreichbaren Websites, die nicht hinter einem CDN liegen. Er zeigt besser als der Gesamtwert, wie weit Betreiber und Hoster selbst sind. Namentlich genannt werden nur öffentlich buchbare Anbieter wie CDNs, Clouds und Hoster, keine Netze einzelner Organisationen oder Verbünde, etwa die IT einer Bankengruppe oder kommunale Rechenzentren."
       },
       "mail": {
         "title": "Mailanbieter",
-        "body": "Für jede Domain wird der Mailserver mit der höchsten Priorität ermittelt (MX-Eintrag). Die Domains werden nach dem Anbieter dieses Mailservers gruppiert. Die größten Anbieter, gemessen an der Zahl der Domains, werden nacheinander und mit Pausen geprüft: Verbindung auf Port 25, Anmeldung mit EHLO, STARTTLS und derselbe browserähnliche Handshake wie bei Websites. Danach wird die Verbindung beendet; es wird keine E-Mail verschickt. Jeder Anbieter erhält so eine einzige Verbindung im Monat.\n\nDas Ergebnis eines Anbieters gilt für alle seine Domains. Der Anteil „Mail über quantensichere Anbieter“ bezieht sich auf alle Domains mit Mailserver; Domains bei kleineren Anbietern oder mit eigenem Mailserver werden nicht gemessen und zählen als unbekannt.\n\nViele große Mailanbieter beantworten Verbindungen aus Rechenzentrumsnetzen ohne passenden Reverse-DNS-Eintrag nicht oder lehnen sie ab. Solche Anbieter erscheinen als „nicht messbar“. Massenhafte Messungen aller Mailserver sind aus demselben Grund nicht möglich: Sie würden nach kurzer Zeit gedrosselt."
+        "body": "Für jede Domain wird der Mailserver mit der höchsten Priorität ermittelt (MX-Eintrag). Die Domains werden nach dem Anbieter dieses Mailservers gruppiert. Die größten Anbieter, gemessen an der Zahl der Domains, werden nacheinander und mit Pausen geprüft: Verbindung auf Port 25, Anmeldung mit EHLO, STARTTLS und derselbe browserähnliche Handshake wie bei Websites. Danach wird die Verbindung beendet; es wird keine E-Mail verschickt. Jeder Anbieter erhält so eine einzige Verbindung im Monat.\n\nDas Ergebnis eines Anbieters gilt für alle seine Domains. Die Aufteilung bezieht sich auf alle Domains mit Mailserver; Domains bei kleineren Anbietern oder mit eigenem Mailserver werden nicht gemessen und als solche ausgewiesen.\n\nViele große Mailanbieter beantworten Verbindungen aus Rechenzentrumsnetzen ohne passenden Reverse-DNS-Eintrag nicht oder lehnen sie ab. Solche Anbieter erscheinen als „nicht messbar“. Massenhafte Messungen aller Mailserver sind aus demselben Grund nicht möglich: Sie würden nach kurzer Zeit gedrosselt."
       },
       "privacy": {
         "title": "Was nicht veröffentlicht wird",
@@ -1804,6 +1803,15 @@
         "title": "Ausschluss und Kontakt",
         "body": "Soll eine Website aus der Messung ausgenommen werden, genügt eine Nachricht über das Kontaktformular. Sie wird dann dauerhaft ausgeschlossen; gespeichert wird dafür nur ihr Hashwert, nicht der Name."
       }
-    }
+    },
+    "hostingRow": "{name} · {share} der Websites",
+    "mailParts": {
+      "pq": "quantensicher",
+      "classic": "nicht quantensicher",
+      "unreachable": "Anbieter nicht erreichbar",
+      "notMeasured": "nicht gemessen"
+    },
+    "mailPartsNote": "„Nicht gemessen“ ({notMeasured}) sind Domains bei kleineren Anbietern oder mit eigenem Mailserver: Von {zones} Mail-Zonen werden nur die {measured} größten geprüft, weil massenhafte SMTP-Verbindungen aus Rechenzentrumsnetzen nach kurzer Zeit gedrosselt werden. Über diesen Teil lässt sich deshalb nichts sagen.",
+    "mailTableNote": "„Nicht erreichbar“ heißt, dass der Anbieter Verbindungen aus dem Netz des Messservers nicht beantwortet."
   }
 }

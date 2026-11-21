@@ -48,9 +48,6 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
 
   // mail: share of domains (with MX) whose provider negotiates ML-KEM, and how many could be measured
   const mailRows = mail?.reliable ? (ranking?.mail ?? []) : [];
-  const withMx = main?.mail?.withMx ?? null;
-  const mailPqDomains = mailRows.filter((e) => e.answered > 0 && e.pq === e.answered).reduce((a, e) => a + e.n, 0);
-  const mailMeasuredDomains = mailRows.filter((e) => e.answered > 0).reduce((a, e) => a + e.n, 0);
 
   const groupParts = (c: Cell): Part[] => {
     const g = c.web.groups ?? {};
@@ -103,11 +100,7 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
             <div className="grid gap-4 sm:grid-cols-2">
               <StatTile accent value={pf(sh(main.web.pq, main.web.reachable))} label={t('kpi.pq')} sub={t('kpi.pqSub')} />
               <StatTile value={pf(selfPq)} label={t('kpi.self')} sub={t('kpi.selfSub')} />
-              {mailRows.length && withMx ? (
-                <StatTile value={pf(sh(mailPqDomains, withMx))} label={t('kpi.mail')} sub={t('kpi.mailSub', { covered: pf(sh(mailMeasuredDomains, withMx)) })} />
-              ) : (
-                <StatTile value={pf(sh(main.web.tls13, main.web.reachable))} label={t('kpi.tls13')} sub={t('kpi.tls13Sub')} />
-              )}
+              <StatTile value={pf(sh(main.web.tls13, main.web.reachable))} label={t('kpi.tls13')} sub={t('kpi.tls13Sub')} />
               <StatTile value={pf(sh(main.web.cert.pq, main.web.reachable), main.web.cert.pq ? 1 : 0)} label={t('kpi.cert')} sub={t('kpi.certSub')} />
             </div>
           </section>
@@ -133,9 +126,9 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
               })}
             </div>
             <dl className="mt-8 grid gap-4 sm:grid-cols-3">
-              <Fact label={t('groups.capable')} value={pf(sh(main.web.pqCapable - main.web.pq, main.web.reachable), small(sh(main.web.pqCapable - main.web.pq, main.web.reachable)))} />
-              <Fact label={t('groups.pure')} value={pf(sh(main.web.pqPure, main.web.reachable), small(sh(main.web.pqPure, main.web.reachable)))} />
-              <Fact label={t('groups.tls13')} value={pf(sh(main.web.tls13, main.web.reachable))} />
+              <Fact label={t('groups.capable')} value={pf(sh(main.web.pqCapable - main.web.pq, main.web.reachable), small(sh(main.web.pqCapable - main.web.pq, main.web.reachable)))} note={t('groups.capableNote')} />
+              <Fact label={t('groups.pure')} value={pf(sh(main.web.pqPure, main.web.reachable), small(sh(main.web.pqPure, main.web.reachable)))} note={t('groups.pureNote')} />
+              <Fact label={t('groups.tls13')} value={pf(sh(main.web.tls13, main.web.reachable))} note={t('groups.tls13Note')} />
             </dl>
             <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">{t('groupsNote')}</p>
           </section>}
@@ -145,15 +138,18 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
             <SectionTitle label="// 03" title={t('hostingTitle')}>
               <p>{t('hostingIntro')}</p>
             </SectionTitle>
-            <SegmentedBar
-              locale={locale}
-              ariaLabel={t('hostingTitle')}
-              total={main.web.reachable}
-              parts={[
-                { key: 'cdn', label: t('hosting.cdn'), value: main.hosting.cdn, color: SERIES[0] },
-                { key: 'cloud', label: t('hosting.cloud'), value: main.hosting.cloud, color: SERIES[1] },
-                { key: 'other', label: t('hosting.other'), value: hostingOther, color: SERIES[2] },
-              ]}
+            <ShareBars
+              emptyLabel=""
+              data={(['cdn', 'cloud', 'other'] as const).flatMap((h) => {
+                const n = h === 'other' ? hostingOther : main.hosting[h];
+                const pq = h === 'other' ? (main.pqByHosting.other ?? 0) + (main.pqByHosting.unknown ?? 0) : main.pqByHosting[h];
+                if (!n || pq == null) return [];
+                return [{
+                  key: h, label: t('hostingRow', { name: t(`hosting.${h}`), share: pf(sh(n, main.web.reachable)) }),
+                  value: sh(pq, n), valueLabel: pf(sh(pq, n)),
+                  detail: t('providerDetail', { pq: nf.format(pq), n: nf.format(n) }),
+                } satisfies BarDatum];
+              })}
             />
             {ranking && ranking.web.length > 0 && (
               <div className="mt-8 grid gap-8 lg:grid-cols-3">
@@ -175,7 +171,6 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
                 })}
               </div>
             )}
-            {ranking && ranking.web.length > 0 && <p className="mt-4 text-xs text-[var(--color-text-muted)]">{t('providerNote', { min: minCell })}</p>}
           </section>
 
           {/* 04 mail */}
@@ -183,41 +178,58 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
             <SectionTitle label="// 04" title={t('mailTitle')}>
               <p>{t('mailIntro')}</p>
             </SectionTitle>
-            {mailRows.length ? (
-              <>
-                <div className="relative overflow-x-auto rounded-xl border border-[var(--color-border)]">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-[var(--color-bg-base)]/60 text-left font-mono text-[11px] uppercase tracking-wider text-[var(--color-text-muted)]">
-                      <tr>
-                        <th scope="col" className="px-4 py-2">{t('mailTable.provider')}</th>
-                        <th scope="col" className="px-4 py-2 text-right">{t('mailTable.domains')}</th>
-                        <th scope="col" className="px-4 py-2">{t('mailTable.result')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {mailRows.map((e) => (
-                        <tr key={e.name} className="border-t border-[var(--color-border-dim)]">
-                          <td className="px-4 py-2 text-[var(--color-text-base)]">{e.name}</td>
-                          <td className="px-4 py-2 text-right tabular-nums text-[var(--color-text-muted)]">{withMx ? pf(sh(e.n, withMx), 1) : nf.format(e.n)}</td>
-                          <td className="px-4 py-2">
-                            {e.answered === 0 ? (
-                              <span className="font-mono text-xs text-[var(--color-text-muted)]">{t('mailTable.unreachable')}</span>
-                            ) : e.pq === e.answered ? (
-                              <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] text-emerald-400">✔ {e.group ?? 'ML-KEM'}</span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-slate-500/30 bg-slate-500/10 px-2 py-0.5 font-mono text-[11px] text-slate-300">✘ {e.group ?? t('matrix.classic')}</span>
-                            )}
-                          </td>
+            {mailRows.length && main.mail ? (() => {
+              const m = main.mail;
+              const notMeasured = m.errors?.['not-measured'] ?? 0;
+              const unreachable = m.withMx - notMeasured - m.answered;
+              return (
+                <>
+                  <SegmentedBar
+                    locale={locale}
+                    ariaLabel={t('mailTitle')}
+                    total={m.withMx}
+                    parts={[
+                      { key: 'pq', label: t('mailParts.pq'), value: m.pq, color: SERIES[0] },
+                      { key: 'classic', label: t('mailParts.classic'), value: m.answered - m.pq, color: SERIES[1] },
+                      { key: 'unreachable', label: t('mailParts.unreachable'), value: Math.max(0, unreachable), color: SERIES[2] },
+                      { key: 'notMeasured', label: t('mailParts.notMeasured'), value: notMeasured, color: SERIES[3] },
+                    ]}
+                  />
+                  <p className="mt-3 mb-8 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">
+                    {t('mailPartsNote', { notMeasured: pf(sh(notMeasured, m.withMx)), zones: nf.format(mail?.zones ?? 0), measured: String(mail?.measured ?? 0) })}
+                  </p>
+                  <div className="relative overflow-x-auto rounded-xl border border-[var(--color-border)]">
+                    <table className="min-w-full text-sm">
+                      <thead className="bg-[var(--color-bg-base)]/60 text-left font-mono text-[11px] uppercase tracking-wider text-[var(--color-text-muted)]">
+                        <tr>
+                          <th scope="col" className="px-4 py-2">{t('mailTable.provider')}</th>
+                          <th scope="col" className="px-4 py-2 text-right">{t('mailTable.domains')}</th>
+                          <th scope="col" className="px-4 py-2">{t('mailTable.result')}</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <p className="mt-3 text-xs text-[var(--color-text-muted)]">
-                  {t('mailCoverage', { measured: String(mail?.measured ?? 0), covered: pf(sh(mailMeasuredDomains, withMx)) })}
-                </p>
-              </>
-            ) : (
+                      </thead>
+                      <tbody>
+                        {mailRows.map((e) => (
+                          <tr key={e.name} className="border-t border-[var(--color-border-dim)]">
+                            <td className="px-4 py-2 text-[var(--color-text-base)]">{e.name}</td>
+                            <td className="px-4 py-2 text-right tabular-nums text-[var(--color-text-muted)]">{pf(sh(e.n, m.withMx), 1)}</td>
+                            <td className="px-4 py-2">
+                              {e.answered === 0 ? (
+                                <span className="font-mono text-xs text-[var(--color-text-muted)]">{t('mailTable.unreachable')}</span>
+                              ) : e.pq === e.answered ? (
+                                <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] text-emerald-400">✔ {e.group ?? 'ML-KEM'}</span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-slate-500/30 bg-slate-500/10 px-2 py-0.5 font-mono text-[11px] text-slate-300">✘ {e.group ?? t('matrix.classic')}</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="mt-3 text-xs text-[var(--color-text-muted)]">{t('mailTableNote')}</p>
+                </>
+              );
+            })() : (
               <p className="text-[var(--color-text-muted)]">{t('mailNone')}</p>
             )}
           </section>}
@@ -303,11 +315,12 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+function Fact({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <div className="rounded-lg border border-[var(--color-border)] p-4">
       <dt className="text-sm text-[var(--color-text-muted)]">{label}</dt>
       <dd className="mt-1 text-2xl font-bold tabular-nums text-[var(--color-text-base)]">{value}</dd>
+      {note && <dd className="mt-2 text-xs leading-relaxed text-[var(--color-text-muted)]">{note}</dd>}
     </div>
   );
 }

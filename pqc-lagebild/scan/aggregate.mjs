@@ -5,7 +5,9 @@
 
 export const CATEGORIES = ['kritis', 'institutions', 'corporations', 'other'];
 export const HOSTING = ['cdn', 'cloud', 'other'];
-const PROVIDER_TOP = 12;
+const PROVIDER_TOP = 15;
+// Always listed (if ≥ MIN_CELL sites): the hoster this site runs on, so readers can see where it stands.
+const PINNED_PROVIDERS = new Set(['Hostinger']);
 
 /** Negotiated TLS group → bucket shown on the page. */
 export function groupBucket(group) {
@@ -207,7 +209,10 @@ function providerRankings(pool, minCell) {
   }
   const webTop = [];
   for (const h of HOSTING) {
-    webTop.push(...[...web.values()].filter((e) => e.hosting === h && e.n >= minCell).sort((a, b) => b.n - a.n).slice(0, PROVIDER_TOP));
+    const ranked = [...web.values()].filter((e) => e.hosting === h && e.n >= minCell).sort((a, b) => b.n - a.n);
+    const top = ranked.slice(0, PROVIDER_TOP);
+    for (const e of ranked.slice(PROVIDER_TOP)) if (PINNED_PROVIDERS.has(e.name)) top.push(e);
+    webTop.push(...top);
   }
   const mailTop = [...mail.values()].filter((e) => e.n >= minCell).sort((a, b) => b.n - a.n).slice(0, PROVIDER_TOP);
   return { web: webTop, mail: mailTop };

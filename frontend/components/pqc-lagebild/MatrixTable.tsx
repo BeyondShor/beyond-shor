@@ -64,6 +64,9 @@ async function Table({ releases, caption, locale, showOpenssl }: { releases: Mat
   const servers = SERVER_COLS.filter(([k]) => has(k));
   const clients = CLIENT_COLS.filter(([k]) => has(k));
   const labels = { pq: t('matrix.pq'), classic: t('matrix.classic'), na: t('matrix.na') };
+  const cols = [...servers, ...clients].map(([k]) => k);
+  // only explain "–" if the table actually shows one
+  const hasGap = releases.some((r) => cols.some((k) => { const x = r.results?.[k]; return !x || x.status === 'error' || x.status === 'skipped' || x.pq == null; }));
 
   return (
     <div className="relative overflow-x-auto rounded-xl border border-[var(--color-border)]">
@@ -96,7 +99,7 @@ async function Table({ releases, caption, locale, showOpenssl }: { releases: Mat
         </tbody>
       </table>
       <p className="border-t border-[var(--color-border-dim)] px-4 py-2.5 font-mono text-[11px] text-[var(--color-text-muted)]">
-        ✔ = {t('matrix.legendPq')} · ✘ = {t('matrix.legendClassic')} · – = {labels.na}
+        ✔ = {t('matrix.legendPq')} · ✘ = {t('matrix.legendClassic')}{hasGap ? ` · – = ${labels.na}` : ''}
       </p>
     </div>
   );

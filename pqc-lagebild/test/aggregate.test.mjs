@@ -128,3 +128,13 @@ test('EU view uses the uniform classification (euCategory)', () => {
   assert.ok(cells.find((c) => c.view === 'eu' && c.category === 'other'));
   assert.equal(cells.some((c) => c.view === 'eu' && c.category === 'institutions'), false);
 });
+
+test('pinned providers are listed even outside the top ranks', () => {
+  const list = [];
+  for (let p = 0; p < 16; p++) for (let i = 0; i < 40 + p; i++) list.push(obs({ provider: `Hoster${p}` }));
+  for (let i = 0; i < 31; i++) list.push(obs({ provider: 'Hostinger' }));
+  const { providers } = aggregate(list, { minCell: 30 });
+  const names = providers.find((x) => x.view === 'de').web.map((e) => e.name);
+  assert.equal(names.length, 16);
+  assert.ok(names.includes('Hostinger'));
+});

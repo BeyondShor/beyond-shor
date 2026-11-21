@@ -1644,8 +1644,6 @@
       "pqSub": "Share of websites that negotiate a hybrid ML-KEM key exchange with a current browser.",
       "self": "Without CDN",
       "selfSub": "The same share, counting only websites that are not behind a CDN. Here, operators or their hosting providers made the switch themselves.",
-      "mail": "Mail via quantum-safe providers",
-      "mailSub": "Share of domains with a mail server whose provider negotiates ML-KEM during the STARTTLS handshake. Providers could be measured for {covered} of the domains.",
       "tls13": "TLS 1.3",
       "tls13Sub": "The prerequisite for ML-KEM: quantum-safe key exchange is only possible with TLS 1.3.",
       "cert": "Quantum-safe certificates",
@@ -1660,9 +1658,12 @@
       "other": "Other",
       "capable": "Support ML-KEM but pick classical",
       "pure": "Accept pure ML-KEM",
-      "tls13": "Support TLS 1.3"
+      "tls13": "Support TLS 1.3",
+      "capableNote": "Hardly any server prefers a classical method when it supports ML-KEM. Where ML-KEM is missing, support is missing, not the right setting.",
+      "pureNote": "Rarely offered. During the transition, the hybrid method is considered the more cautious choice.",
+      "tls13Note": "ML-KEM requires TLS 1.3, so this is rarely the obstacle."
     },
-    "groupsNote": "X25519 and P-256 are classical methods that a quantum computer could break. \"Support ML-KEM but pick classical\" are servers that can do the hybrid method but prefer a classical one. Pure ML-KEM without a classical component is hardly offered on the web so far; during the transition, hybrid methods are considered the more cautious choice.",
+    "groupsNote": "X25519 and P-256 are classical methods that a quantum computer could break.",
     "category": {
       "all": "All websites",
       "kritis": "Critical infrastructure sectors",
@@ -1671,23 +1672,21 @@
       "other": "Other websites"
     },
     "hostingTitle": "CDN, cloud or own server",
-    "hostingIntro": "Whether a website uses quantum-safe encryption is often decided not by its operator but by the service that accepts the connection. CDNs mostly enable hybrid ML-KEM by default. With traditional hosting providers and self-run servers, someone has to switch it on. The lists show, per provider, how many of the measured websites connect quantum-safely.",
+    "hostingIntro": "Whether a website uses quantum-safe encryption is often decided not by its operator but by the service that accepts the connection. CDNs mostly enable hybrid ML-KEM by default; with traditional hosting providers and self-run servers, someone has to switch it on. The bars show what share of websites in each group connects quantum-safely, broken down by provider below.",
     "hosting": {
       "cdn": "CDN",
       "cloud": "Hyperscale cloud",
       "other": "Hosting providers and own servers"
     },
     "providerDetail": "{pq} of {n} websites in this network",
-    "providerNote": "Assigned by the network of the IP address. Only providers with at least {min} measured websites are listed, never individual websites.",
     "mailTitle": "Mail servers",
-    "mailIntro": "Key exchange between mail servers can be quantum-safe too, if they encrypt via STARTTLS. The largest mail providers are measured, meaning the servers where most of the measured domains receive their email. Each provider is checked once a month.",
+    "mailIntro": "Key exchange between mail servers can be quantum-safe too, if they encrypt via STARTTLS. The largest mail providers are measured, each once a month. The bar splits all domains with a mail server by what was measured at their provider.",
     "mailTable": {
       "provider": "Provider",
       "domains": "Share of domains",
       "result": "Negotiated",
-      "unreachable": "not measurable"
+      "unreachable": "not reachable"
     },
-    "mailCoverage": "The {measured} largest providers were measured; they receive the email of {covered} of the domains. \"Not measurable\" means the provider does not respond to connections from the measurement server's network.",
     "mailNone": "This month, too few mail providers could be reached to show reliable figures.",
     "sigTitle": "Signatures",
     "sigIntro": "Key exchange protects confidentiality. Whether the other side is genuine, however, rests on signatures: in the website's certificate and, for signed zones, in DNS. Here, the migration has not arrived yet, because it needs new standards, certificate authorities and software on all sides.",
@@ -1711,7 +1710,7 @@
     "matrixTitle": "Software out of the box",
     "matrixIntro": "What can operating systems do without any tweaking? For Linux, the packages are installed in fresh containers every month, the servers are started with their default configuration, and it is checked whether they negotiate quantum-safe key exchange. For clients, the check is whether they offer an ML-KEM key on their own. Windows and macOS run on the standard GitHub Actions images.",
     "matrixNote": "Tested in {month}. New releases are added automatically, releases without support are dropped. Hover over a field for details.",
-    "matrixPitfalls": "Three pitfalls: Postfix up to version 3.10 sets its own list of key-exchange groups and therefore offers no ML-KEM even with OpenSSL 3.5; hybrid ML-KEM only became the default in Postfix 3.11. On RHEL 9 and its derivatives as well as Amazon Linux 2023, the system-wide crypto policy does not enable ML-KEM, even though OpenSSL 3.5 is present. And Windows and macOS are tested on GitHub's server and runner images, not on end-user devices.",
+    "matrixPitfalls": "An ✘ only means ML-KEM is not active out of the box. Where OpenSSL 3.5 is present, it can usually be switched on with one line: in nginx via ssl_ecdh_curve, in Apache via SSLOpenSSLConfCmd Groups and in Postfix up to version 3.10 via tls_eecdh_auto_curves (hybrid ML-KEM only became the default in 3.11). On RHEL 9 and its derivatives, the crypto policy DEFAULT:PQ is enough (update-crypto-policies --set DEFAULT:PQ). Windows and macOS are tested on GitHub's server and runner images, not on end-user devices.",
     "matrixNone": "The first software matrix is being created.",
     "matrix": {
       "release": "Release",
@@ -1774,11 +1773,11 @@
       },
       "hosting": {
         "title": "CDN, cloud or own server",
-        "body": "Based on its IP address, each website is assigned to a network, offline, using the iptoasn.com dataset (public domain) and the CloudFront address ranges published by AWS. Networks of CDN and protection services such as Cloudflare, Akamai or Fastly count as CDN; those of Amazon, Google, Microsoft, Oracle and Alibaba as hyperscale cloud; all others as hosting providers and own servers. The provider name comes from the name of the network.\n\n\"Without CDN\" is the share of quantum-safe key exchange among all reachable websites that are not behind a CDN. It shows better than the overall figure how far operators and hosting providers have come on their own. The provider lists only include networks with at least 30 measured websites."
+        "body": "Based on its IP address, each website is assigned to a network, offline, using the iptoasn.com dataset (public domain) and the CloudFront address ranges published by AWS. Networks of CDN and protection services such as Cloudflare, Akamai or Fastly count as CDN; those of Amazon, Google, Microsoft, Oracle and Alibaba as hyperscale cloud; all others as hosting providers and own servers. The provider name comes from the name of the network.\n\n\"Without CDN\" is the share of quantum-safe key exchange among all reachable websites that are not behind a CDN. It shows better than the overall figure how far operators and hosting providers have come on their own. Only publicly bookable providers such as CDNs, clouds and hosting providers are named, never the networks of individual organizations or groups, such as a banking group's IT or municipal data centers."
       },
       "mail": {
         "title": "Mail providers",
-        "body": "For each domain, the mail server with the highest priority is determined (MX record), and domains are grouped by the provider of that mail server. The largest providers, by number of domains, are checked one after another with pauses in between: a connection on port 25, a greeting with EHLO, STARTTLS and the same browser-like handshake as for websites. Then the connection is closed; no email is sent. Each provider thus sees a single connection per month.\n\nA provider's result applies to all of its domains. \"Mail via quantum-safe providers\" refers to all domains with a mail server; domains at smaller providers or with their own mail server are not measured and count as unknown.\n\nMany large mail providers do not answer or reject connections from data-center networks without a matching reverse DNS entry. Such providers are shown as \"not measurable\". For the same reason, measuring every mail server is not possible: it would be throttled within minutes."
+        "body": "For each domain, the mail server with the highest priority is determined (MX record), and domains are grouped by the provider of that mail server. The largest providers, by number of domains, are checked one after another with pauses in between: a connection on port 25, a greeting with EHLO, STARTTLS and the same browser-like handshake as for websites. Then the connection is closed; no email is sent. Each provider thus sees a single connection per month.\n\nA provider's result applies to all of its domains. The breakdown refers to all domains with a mail server; domains at smaller providers or with their own mail server are not measured and are shown as such.\n\nMany large mail providers do not answer or reject connections from data-center networks without a matching reverse DNS entry. Such providers are shown as \"not measurable\". For the same reason, measuring every mail server is not possible: it would be throttled within minutes."
       },
       "privacy": {
         "title": "What is not published",
@@ -1804,6 +1803,15 @@
         "title": "Opt-out and contact",
         "body": "To have a website excluded from the measurement, a message through the contact form is enough. It will be excluded permanently, storing only its hash, not its name."
       }
-    }
+    },
+    "hostingRow": "{name} · {share} of websites",
+    "mailParts": {
+      "pq": "quantum-safe",
+      "classic": "not quantum-safe",
+      "unreachable": "provider not reachable",
+      "notMeasured": "not measured"
+    },
+    "mailPartsNote": "\"Not measured\" ({notMeasured}) are domains at smaller providers or with their own mail server: of {zones} mail zones, only the {measured} largest are checked, because bulk SMTP connections from data-center networks get throttled within minutes. Nothing can be said about this part.",
+    "mailTableNote": "\"Not reachable\" means the provider does not respond to connections from the measurement server's network."
   }
 }
