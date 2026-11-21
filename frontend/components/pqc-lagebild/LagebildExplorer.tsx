@@ -133,8 +133,8 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
               })}
             </div>
             <dl className="mt-8 grid gap-4 sm:grid-cols-3">
-              <Fact label={t('groups.capable')} value={pf(sh(main.web.pqCapable - main.web.pq, main.web.reachable), 1)} />
-              <Fact label={t('groups.pure')} value={pf(sh(main.web.pqPure, main.web.reachable), 1)} />
+              <Fact label={t('groups.capable')} value={pf(sh(main.web.pqCapable - main.web.pq, main.web.reachable), small(sh(main.web.pqCapable - main.web.pq, main.web.reachable)))} />
+              <Fact label={t('groups.pure')} value={pf(sh(main.web.pqPure, main.web.reachable), small(sh(main.web.pqPure, main.web.reachable)))} />
               <Fact label={t('groups.tls13')} value={pf(sh(main.web.tls13, main.web.reachable))} />
             </dl>
             <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">{t('groupsNote')}</p>
@@ -311,6 +311,9 @@ function Fact({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+/** Decimals for small shares, so 0.03 % does not read as 0.0 %. */
+const small = (x: number | null) => (x != null && x > 0 && x < 0.001 ? 2 : 1);
 
 const sum = (o: Record<string, number> | undefined) => Object.values(o ?? {}).reduce((a, b) => a + b, 0);
 

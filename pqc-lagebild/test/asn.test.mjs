@@ -26,5 +26,5 @@ test('hosting classes from AS names, CloudFront ranges override AMAZON', () => {
 test('provider names: curated first, otherwise the cleaned AS name', () => {
   assert.equal(providerName('IONOS-AS This is the joint network for IONOS, Fasthosts, Arsys'), 'IONOS');
   assert.equal(providerName('STRATO STRATO AG'), 'Strato');
-  assert.equal(providerName('EXAMPLEHOST-AS Example Hosting GmbH'), 'EXAMPLEHOST');
+  assert.equal(providerName('EXAMPLE-BANK-IT Some captive network'), null); // never named
 });

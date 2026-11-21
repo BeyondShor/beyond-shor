@@ -54,8 +54,19 @@ const MAIL_PROVIDERS = {
   'yahoodns.net': 'Yahoo', 'messagelabs.com': 'Broadcom (Symantec)', 'barracudanetworks.com': 'Barracuda',
   'aruba.it': 'Aruba', 'ovh.com': 'OVHcloud', 'one.com': 'one.com', 'transip.email': 'TransIP',
   'mittwald.de': 'Mittwald', 'agenturserver.de': 'Mittwald', 'netcup.net': 'netcup', 'infomaniak.ch': 'Infomaniak',
+  'mx.microsoft': 'Microsoft 365', 'mx.cloudflare.net': 'Cloudflare', 'ispgateway.de': 'domainfactory',
+  'secureserver.net': 'GoDaddy', 'antispamcloud.com': 'SpamExperts', 'emailsrvr.com': 'Rackspace',
+  'mailcontrol.com': 'Forcepoint', 'iphmx.com': 'Cisco Secure Email', 'trendmicro.eu': 'Trend Micro',
+  'eu.trendmicro.com': 'Trend Micro', 'sophos.com': 'Sophos', 'one.com.': 'one.com', 'loopia.se': 'Loopia',
+  'seznam.cz': 'Seznam', 'wedos.net': 'WEDOS', 'aruba.it.': 'Aruba', 'register.it': 'Register.it',
+  'home.pl': 'home.pl', 'nazwa.pl': 'nazwa.pl', 'zone.eu': 'Zone', 'hostnet.nl': 'Hostnet', 'transip.nl': 'TransIP',
+  'combell.net': 'Combell', 'mailprotect.be': 'Combell', 'protonmail.ch': 'Proton', 'tutanota.de': 'Tuta',
+  'fastmail.com': 'Fastmail', 'messagingengine.com': 'Fastmail', 'gandi.net': 'Gandi', 'ovh.ca': 'OVHcloud',
+  'webgo.de': 'webgo', 'alfahosting-server.de': 'Alfahosting', 'udag.de': 'united-domains', 'hosteurope.de': 'Host Europe',
 };
-export const mailProviderName = (zone) => (zone ? MAIL_PROVIDERS[zone] ?? zone : null);
+export const KNOWN_MAIL_PROVIDERS = new Set(Object.values(MAIL_PROVIDERS));
+// Only listed (commercial) mail providers are ever named; other zones still count in the totals.
+export const mailProviderName = (zone) => (zone ? MAIL_PROVIDERS[zone] ?? null : null);
 
 /** Reduce a probe result to the few facts we aggregate. Nothing identifying is kept. */
 export function toObservation(record, probe) {

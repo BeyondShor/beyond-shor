@@ -56,15 +56,26 @@ const PROVIDER_NAMES = [
   [/GITHUB/, 'GitHub'], [/VERCEL/, 'Vercel'], [/NETLIFY/, 'Netlify'], [/BUNNY/, 'bunny.net'], [/CDN77|DATACAMP/, 'CDN77'],
   [/G-CORE|GCORE/, 'Gcore'], [/IMPERVA|INCAPSULA/, 'Imperva'], [/SUCURI/, 'Sucuri'], [/MYRA/, 'Myra Security'],
   [/LINK11/, 'Link11'], [/EDGECAST|EDGIO|LIMELIGHT/, 'Edgio'], [/DTAG|DEUTSCHE TELEKOM|T-SYSTEMS/, 'Deutsche Telekom'],
-  [/VODAFONE/, 'Vodafone'], [/IWAY|SWISSCOM/, 'Swisscom'], [/ORANGE/, 'Orange'], [/TELEFONICA/, 'Telefónica'],
+  [/VODAFONE/, 'Vodafone'], [/SWISSCOM/, 'Swisscom'], [/ORANGE/, 'Orange'], [/TELEFONICA/, 'Telefónica'],
+  [/COMBELL/, 'Combell'], [/VSHOSTING/, 'VSHosting'], [/WEDOS/, 'WEDOS'], [/ACTIVE24/, 'Active24'], [/HOME\.PL|HOMEPL/, 'home.pl'],
+  [/NAZWA/, 'nazwa.pl'], [/HOSTNET/, 'Hostnet'], [/ANTAGONIST/, 'Antagonist'], [/LOOPIA/, 'Loopia'], [/ZONE MEDIA|ZONEMEDIA/, 'Zone'],
+  [/WEBGO/, 'webgo'], [/ALFAHOSTING/, 'Alfahosting'], [/SITEGROUND/, 'SiteGround'], [/GODADDY/, 'GoDaddy'],
+  [/NEWFOLD|BLUEHOST|UNIFIED LAYER/, 'Newfold Digital'], [/VULTR|CHOOPA/, 'Vultr'], [/HOSTPOINT/, 'Hostpoint'],
+  [/PROXIMUS/, 'Proximus'], [/\bKPN\b/, 'KPN'], [/\bA1 /, 'A1'], [/SEEWEB/, 'Seeweb'],
 ];
+
+/**
+ * Display name of a publicly bookable provider, or null. Only commercial CDNs, clouds, hosters and
+ * carriers are ever named: captive networks (a banking group's IT, municipal IT, research and state
+ * networks) would let readers infer the posture of specific (critical) organisations.
+ */
+/** Every name providerName() can return (plus CloudFront from the AWS ranges). */
+export const KNOWN_PROVIDERS = new Set([...PROVIDER_NAMES.map(([, n]) => n), 'Amazon CloudFront']);
 
 export function providerName(desc) {
   const D = desc.toUpperCase();
   for (const [re, name] of PROVIDER_NAMES) if (re.test(D)) return name;
-  // "EXAMPLE-AS Example Hosting GmbH" → "EXAMPLE"
-  const first = desc.split(/\s+/)[0].replace(/[-_](AS|NET|NETWORK|HOSTING)?\d*$/i, '').replace(/^AS[-_]?/i, '');
-  return first || desc.slice(0, 30);
+  return null;
 }
 
 export class HostingClassifier {

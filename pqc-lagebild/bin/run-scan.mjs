@@ -106,10 +106,11 @@ async function main() {
     const answered = [...results.values()].filter((r) => r.ok).length;
     const withMx = [...zoneCount.values()].reduce((a, z) => a + z.n, 0);
     const covered = top.reduce((a, [, z]) => a + z.n, 0);
+    const answeredDomains = top.reduce((a, [zone, z]) => a + (results.get(zone)?.ok ? z.n : 0), 0);
     mailMeta = {
-      zones: zoneCount.size, measured: top.length, answered, domainsWithMx: withMx, domainsCovered: covered,
-      // publish mail figures only if most of the measured providers answered
-      reliable: top.length > 0 && answered / top.length >= 0.6,
+      zones: zoneCount.size, measured: top.length, answered, domainsWithMx: withMx, domainsCovered: covered, domainsAnswered: answeredDomains,
+      // publish mail figures only if providers for at least half of the measured domains answered
+      reliable: covered > 0 && answeredDomains / covered >= 0.5,
     };
     log(`mail: ${answered}/${top.length} providers answered, covering ${covered} of ${withMx} domains`);
   }
