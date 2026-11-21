@@ -1625,7 +1625,7 @@
     "sigVerifyLink": "Verify signature →",
     "meta": {
       "measured": "Measured",
-      "sites": "Websites",
+      "sites": "Websites in total",
       "reachable": "reachable via TLS"
     },
     "viewLabel": "View",
@@ -1640,7 +1640,7 @@
     "noCell": "This view does not have figures based on at least {min} reachable websites yet.",
     "sites": "{n} websites",
     "overviewTitle": "Overview",
-    "overviewIntro": "Based on {reachable} of {n} measured websites that were reachable via TLS.",
+    "overviewIntro": "Based on {reachable} of {n} websites in this view that were reachable via TLS.",
     "kpi": {
       "pq": "Quantum-safe key exchange",
       "pqSub": "Share of websites that negotiate a hybrid ML-KEM key exchange with a current browser.",
@@ -1668,7 +1668,7 @@
     "groupsNote": "X25519 and P-256 are classical methods that a quantum computer could break.",
     "category": {
       "all": "All websites",
-      "kritis": "Critical infrastructure sectors",
+      "kritis": "Organizations in critical infrastructure sectors",
       "institutions": "Public institutions",
       "corporations": "Large companies",
       "other": "Other websites"
@@ -1712,7 +1712,7 @@
     "matrixTitle": "Software out of the box",
     "matrixIntro": "What can operating systems do without any tweaking? For Linux, the packages are installed in fresh containers every month, the servers are started with their default configuration, and it is checked whether they negotiate quantum-safe key exchange. For clients, the check is whether they offer an ML-KEM key on their own. Windows and macOS run on the standard GitHub Actions images.",
     "matrixNote": "Tested in {month}. New releases are added automatically, releases without support are dropped. Hover over a field for details.",
-    "matrixPitfalls": "An ✘ only means ML-KEM is not active out of the box. Where OpenSSL 3.5 is present, it can usually be switched on with one line: in nginx via ssl_ecdh_curve, in Apache via SSLOpenSSLConfCmd Groups and in Postfix up to version 3.10 via tls_eecdh_auto_curves (hybrid ML-KEM only became the default in 3.11). On RHEL 9 and its derivatives, the crypto policy DEFAULT:PQ is enough (update-crypto-policies --set DEFAULT:PQ). Windows and macOS are tested on GitHub's server and runner images, not on end-user devices.",
+    "matrixPitfalls": "An ✘ only means ML-KEM is not active out of the box. Where OpenSSL 3.5 is present, it can usually be switched on with one line: in nginx via ssl_ecdh_curve, in Apache via SSLOpenSSLConfCmd Groups and in Postfix up to version 3.10 via tls_eecdh_auto_curves (hybrid ML-KEM only became the default in 3.11). On RHEL 9 and its derivatives, the crypto policy DEFAULT:PQ is enough (update-crypto-policies --set DEFAULT:PQ). Windows and macOS are tested on GitHub's server and runner images, not on end-user devices. According to Apple, URLSession and Network.framework offer hybrid ML-KEM by default starting with iOS, iPadOS, macOS and visionOS 26; of these, only macOS is measured, on the runner image.",
     "matrixNone": "The first software matrix is being created.",
     "matrix": {
       "release": "Release",
@@ -1767,7 +1767,7 @@
       },
       "categories": {
         "title": "Categories",
-        "body": "Each website counts in exactly one category. If it belongs to several, the order is critical infrastructure sectors, public institutions, large companies, other websites.\n\nFollowing Germany's KRITIS regulation (BSI-KritisV) and Annex I of the NIS 2 Directive, critical infrastructure sectors are energy, water, health, finance and insurance, transportation, IT and telecommunications, food and waste management; in the food sector, only larger companies count. Germany's Federal Office for Information Security (BSI) keeps the list of actual critical infrastructure operators confidential for security reasons. The measurement therefore covers organizations from these sectors without knowing whether they exceed the legal thresholds. For the same reason, sectors are not reported individually.\n\nPublic institutions are government agencies and ministries, municipalities, universities and EU bodies. Large companies are companies outside the critical infrastructure sectors that have at least 250 employees according to Wikidata or are publicly listed. Other websites are all remaining domains with a country-code TLD from the Tranco list, mostly small and medium-sized businesses, associations and media."
+        "body": "Each website counts in exactly one category. If it belongs to several, the order is organizations in critical infrastructure sectors, public institutions, large companies, other websites.\n\nFollowing Germany's KRITIS regulation (BSI-KritisV) and Annex I of the NIS 2 Directive, critical infrastructure sectors are energy, water, health, finance and insurance, transportation, IT and telecommunications, food and waste management; in the food sector, only larger companies count. Germany's Federal Office for Information Security (BSI) keeps the list of actual critical infrastructure operators confidential for security reasons. The measurement therefore covers organizations from these sectors without knowing whether they exceed the legal thresholds. For the same reason, sectors are not reported individually.\n\nPublic institutions are government agencies and ministries, municipalities, universities and EU bodies. Large companies are companies outside the critical infrastructure sectors that have at least 250 employees according to Wikidata or are publicly listed. Other websites are all remaining domains with a country-code TLD from the Tranco list, mostly small and medium-sized businesses, associations and media."
       },
       "how": {
         "title": "How it is measured",
@@ -1791,7 +1791,7 @@
       },
       "software": {
         "title": "Software out of the box",
-        "body": "For every supported release of the covered Linux distributions, a fresh container is started every month (rootless Podman). nginx, Apache, Postfix and OpenSSH are installed from the distribution's own repositories and configured only as far as needed to offer TLS: certificate, port and host name, no groups, ciphers or protocol versions. A browser-like client checks what they negotiate. For clients (OpenSSL, curl, Python, OpenSSH), the first ClientHello is captured and checked for an ML-KEM key share. The list of supported releases comes from endoflife.date.\n\nWindows and macOS cannot be tested in containers. They run on the standard GitHub Actions images (Windows Server 2022 and 2025, Windows 11 on ARM, macOS 15 and 26) with the same checks for the bundled clients and, on Windows, a Schannel server. These are server and runner images, not end-user devices; the result reflects the state of the system libraries."
+        "body": "For every supported release of the covered Linux distributions, a fresh container is started every month (rootless Podman). nginx, Apache, Postfix and OpenSSH are installed from the distribution's own repositories and configured only as far as needed to offer TLS: certificate, port and host name, no groups, ciphers or protocol versions. A browser-like client checks what they negotiate. For clients (OpenSSL, curl, Python, OpenSSH), the first ClientHello is captured and checked for an ML-KEM key share. The list of supported releases comes from endoflife.date.\n\nWindows and macOS cannot be tested in containers. They run on the standard GitHub Actions images (Windows Server 2022 and 2025, Windows 11 on ARM, macOS 15 and 26) with the same checks for the bundled clients and, on Windows, a Schannel server. These are server and runner images, not end-user devices; the result reflects the state of the system libraries. Apple states that URLSession and Network.framework offer hybrid ML-KEM by default starting with iOS, iPadOS, macOS and visionOS 26. Of these, only macOS is checked, on the runner image, not iPhone, iPad or Vision Pro."
       },
       "limits": {
         "title": "Limitations",
@@ -1817,6 +1817,10 @@
     "mailScope": "The {measured} largest mail providers are covered; {covered} of the measured domains receive their email there. Smaller providers and self-run mail servers are not included. The bar splits the domains at the large providers by what their provider negotiates.",
     "domains": "{n} domains",
     "zones": "{n} of {of} zones signed",
-    "mailBarLabel": "Domains at the largest providers"
+    "mailBarLabel": "Domains at the largest providers",
+    "overviewSplit": {
+      "eu": "The EU view covers {n} of the {total} websites measured in total, {reachable} of them reachable via TLS. The remaining {extra} websites ({extraReachable} reachable) come only from German directories of government domains and count in the Germany view alone.",
+      "de": "The Germany view covers {n} of the {total} websites measured in total: {fromEu} from the EU-wide sources and {extra} more from German directories of government domains. {reachable} of them were reachable via TLS."
+    }
   }
 }

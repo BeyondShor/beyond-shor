@@ -105,6 +105,7 @@ export default async function PqcLagebildPage({ params }: PageProps) {
               previousMonthLabel={ds.trend ? formatMonth(ds.trend.previousMonth, locale) : null}
               history={historyPoints}
               minCell={ds.minCell}
+              population={{ total: ds.population.total, reachable: ds.population.reachable }}
             />
           ) : (
             <section className="rounded-xl border border-[var(--color-border)] p-6">

@@ -15,6 +15,7 @@ interface Props {
   previousMonthLabel: string | null;
   history: HistoryPoint[];
   minCell: number;
+  population: { total: number; reachable: number } | null;
 }
 
 const CATS = ['all', 'kritis', 'institutions', 'corporations', 'other'] as const;
@@ -23,7 +24,7 @@ const DNSSEC_NAMES: Record<string, string> = {
   '13': 'ECDSA P-256', '14': 'ECDSA P-384', '15': 'Ed25519', '16': 'Ed448',
 };
 
-export default function LagebildExplorer({ cells, providers, mail, trend, previousMonthLabel, history, minCell }: Props) {
+export default function LagebildExplorer({ cells, providers, mail, trend, previousMonthLabel, history, minCell, population }: Props) {
   const t = useTranslations('pqcLagebild');
   const locale = useLocale();
   // German readers care about Germany first, everyone else about the EU.
@@ -41,6 +42,17 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
   const ranking = providers.find((p) => p.view === view && p.region === region) ?? null;
 
   const main = cell();
+
+  // Reconcile the view with the total in the page header: the EU view holds every site from the
+  // uniform sources, the remainder comes only from German directories and belongs to the DE view.
+  const find = (v: View, r: string) => cells.find((c) => c.view === v && c.region === r && c.category === 'all' && c.sector === null) ?? null;
+  const split = (() => {
+    const eu = find('eu', 'EU'), de = find('de', 'DE'), euDe = find('eu', 'DE');
+    if (!main || !population || !eu || !de || !euDe) return null;
+    const extra = population.total - eu.n;
+    if (extra < 0 || de.n - euDe.n !== extra) return null;
+    return { total: population.total, extra, extraReachable: population.reachable - eu.web.reachable, fromEu: euDe.n };
+  })();
   const selfPq = main ? (() => {
     const cdnPq = main.pqByHosting.cdn ?? (main.hosting.cdn === 0 ? 0 : null);
     return cdnPq == null ? null : sh(main.web.pq - cdnPq, main.web.reachable - main.hosting.cdn);
@@ -95,7 +107,12 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
           {/* 01 overview */}
           <section>
             <SectionTitle label="// 01" title={t('overviewTitle')}>
-              <p>{t('overviewIntro', { reachable: nf.format(main.web.reachable), n: nf.format(main.n) })}</p>
+              <p>{split
+                ? t(`overviewSplit.${view}`, {
+                  n: nf.format(main.n), total: nf.format(split.total), reachable: nf.format(main.web.reachable),
+                  extra: nf.format(split.extra), extraReachable: nf.format(split.extraReachable), fromEu: nf.format(split.fromEu),
+                })
+                : t('overviewIntro', { reachable: nf.format(main.web.reachable), n: nf.format(main.n) })}</p>
             </SectionTitle>
             <div className="grid gap-4 sm:grid-cols-2">
               <StatTile accent value={pf(sh(main.web.pq, main.web.reachable))} label={t('kpi.pq')} sub={t('kpi.pqSub')} />
