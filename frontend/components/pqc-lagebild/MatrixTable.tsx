@@ -45,7 +45,7 @@ export default async function MatrixTable({ matrix, locale }: { matrix: MatrixDa
   const releases = [...matrix.releases].sort((a, b) => rank(a.distro) - rank(b.distro) || a.distro.localeCompare(b.distro) || b.version.localeCompare(a.version, undefined, { numeric: true }));
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-[var(--color-border)]">
+    <div className="relative overflow-x-auto rounded-xl border border-[var(--color-border)]">
       <table className="min-w-full text-sm">
         <caption className="sr-only">{t('matrixTitle')}</caption>
         <thead className="bg-[var(--color-bg-base)]/60 text-left">
