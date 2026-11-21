@@ -1680,7 +1680,7 @@
     },
     "providerDetail": "{pq} von {n} Websites in diesem Netz",
     "mailTitle": "Mailserver",
-    "mailIntro": "Auch zwischen Mailservern kann der Schlüsselaustausch quantensicher sein, wenn sie per STARTTLS verschlüsseln. Gemessen werden die größten Mailanbieter, jeder einmal im Monat. Der Balken teilt alle Domains mit Mailserver danach auf, was bei ihrem Anbieter gemessen wurde.",
+    "mailIntro": "Auch zwischen Mailservern kann der Schlüsselaustausch quantensicher sein, wenn sie per STARTTLS verschlüsseln. Gemessen werden die größten Mailanbieter, jeder einmal im Monat.",
     "mailTable": {
       "provider": "Anbieter",
       "domains": "Anteil der Domains",
@@ -1777,7 +1777,7 @@
       },
       "mail": {
         "title": "Mailanbieter",
-        "body": "Für jede Domain wird der Mailserver mit der höchsten Priorität ermittelt (MX-Eintrag). Die Domains werden nach dem Anbieter dieses Mailservers gruppiert. Die größten Anbieter, gemessen an der Zahl der Domains, werden nacheinander und mit Pausen geprüft: Verbindung auf Port 25, Anmeldung mit EHLO, STARTTLS und derselbe browserähnliche Handshake wie bei Websites. Danach wird die Verbindung beendet; es wird keine E-Mail verschickt. Jeder Anbieter erhält so eine einzige Verbindung im Monat.\n\nDas Ergebnis eines Anbieters gilt für alle seine Domains. Die Aufteilung bezieht sich auf alle Domains mit Mailserver. Für Domains bei kleineren Anbietern oder mit eigenem Mailserver wird zusätzlich eine Zufallsstichprobe gemessen (je 120 Domains für Deutschland und die EU); ihr Ergebnis wird mit Schwankungsbreite angegeben und nicht mit den einzeln gezählten Anbietern vermischt.\n\nViele große Mailanbieter beantworten Verbindungen aus Rechenzentrumsnetzen ohne passenden Reverse-DNS-Eintrag nicht oder lehnen sie ab. Solche Anbieter erscheinen als „nicht messbar“. Massenhafte Messungen aller Mailserver sind aus demselben Grund nicht möglich: Sie würden nach kurzer Zeit gedrosselt."
+        "body": "Für jede Domain wird der Mailserver mit der höchsten Priorität ermittelt (MX-Eintrag). Die Domains werden nach dem Anbieter dieses Mailservers gruppiert. Die größten Anbieter, gemessen an der Zahl der Domains, werden nacheinander und mit Pausen geprüft: Verbindung auf Port 25, Anmeldung mit EHLO, STARTTLS und derselbe browserähnliche Handshake wie bei Websites. Danach wird die Verbindung beendet; es wird keine E-Mail verschickt. Jeder Anbieter erhält so eine einzige Verbindung im Monat.\n\nDas Ergebnis eines Anbieters gilt für alle seine Domains. Die Aufteilung bezieht sich nur auf Domains bei diesen großen Anbietern. Domains bei kleineren Anbietern oder mit eigenem Mailserver werden nicht gemessen; welcher Anteil der Domains auf die großen Anbieter entfällt, steht jeweils dabei.\n\nViele große Mailanbieter beantworten Verbindungen aus Rechenzentrumsnetzen ohne passenden Reverse-DNS-Eintrag nicht oder lehnen sie ab. Solche Anbieter erscheinen als „nicht messbar“. Massenhafte Messungen aller Mailserver sind aus demselben Grund nicht möglich: Sie würden nach kurzer Zeit gedrosselt."
       },
       "privacy": {
         "title": "Was nicht veröffentlicht wird",
@@ -1808,12 +1808,10 @@
     "mailParts": {
       "pq": "quantensicher",
       "classic": "nicht quantensicher",
-      "unreachable": "Anbieter nicht erreichbar",
-      "smaller": "kleinere Anbieter und eigene Mailserver"
+      "unreachable": "Anbieter nicht erreichbar"
     },
-    "mailPartsNote": "Gezählt werden die {measured} größten von {zones} Mail-Zonen einzeln. Die übrigen {smaller} der Domains verteilen sich auf zehntausende kleinere Anbieter und eigene Mailserver. Sie alle zu prüfen, würde massenhaft SMTP-Verbindungen erfordern, die aus Rechenzentrumsnetzen nach kurzer Zeit gedrosselt werden.",
     "mailTableNote": "„Nicht erreichbar“ heißt, dass der Anbieter Verbindungen aus dem Netz des Messservers nicht beantwortet.",
     "pqShare": "{share} quantensicher",
-    "mailSample": "Für diesen Teil gibt es eine Zufallsstichprobe von {size} Domains: {pq} handeln quantensicher aus, {classic} klassisch, bei {unreachable} war der Mailserver nicht erreichbar (Schwankungsbreite beim quantensicheren Anteil etwa ±{moe} Prozentpunkte)."
+    "mailScope": "Betrachtet werden die {measured} größten Mailanbieter; bei ihnen empfangen {covered} der gemessenen Domains ihre E-Mails. Kleinere Anbieter und eigene Mailserver gehen nicht ein. Der Balken teilt die Domains bei den großen Anbietern danach auf, was der jeweilige Anbieter aushandelt."
   }
 }

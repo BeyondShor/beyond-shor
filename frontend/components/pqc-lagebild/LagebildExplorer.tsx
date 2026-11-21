@@ -180,42 +180,25 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
             </SectionTitle>
             {mailRows.length && main.mail ? (() => {
               const m = main.mail;
+              // Only domains whose provider is among the measured largest ones count here.
               const notMeasured = m.errors?.['not-measured'] ?? 0;
-              const unreachable = m.withMx - notMeasured - m.answered;
+              const measured = m.withMx - notMeasured;
+              const unreachable = Math.max(0, measured - m.answered);
               return (
                 <>
+                  <p className="mb-4 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">
+                    {t('mailScope', { measured: String(mail?.measured ?? 0), covered: pf(sh(measured, m.withMx)) })}
+                  </p>
                   <SegmentedBar
                     locale={locale}
                     ariaLabel={t('mailTitle')}
-                    total={m.withMx}
+                    total={measured}
                     parts={[
                       { key: 'pq', label: t('mailParts.pq'), value: m.pq, color: SERIES[0] },
                       { key: 'classic', label: t('mailParts.classic'), value: m.answered - m.pq, color: SERIES[1] },
-                      { key: 'unreachable', label: t('mailParts.unreachable'), value: Math.max(0, unreachable), color: SERIES[2] },
-                      { key: 'notMeasured', label: t('mailParts.smaller'), value: notMeasured, color: SERIES[3] },
+                      { key: 'unreachable', label: t('mailParts.unreachable'), value: unreachable, color: SERIES[2] },
                     ]}
                   />
-                  <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">
-                    {t('mailPartsNote', { smaller: pf(sh(notMeasured, m.withMx)), zones: nf.format(mail?.zones ?? 0), measured: String(mail?.measured ?? 0) })}
-                  </p>
-                  {(() => {
-                    const smp = mail?.sample?.[view];
-                    if (!smp || smp.size < 30) return null;
-                    // 95 % margin of error for the quantum-safe share (normal approximation)
-                    const p = smp.pq / smp.size;
-                    const moe = 1.96 * Math.sqrt((p * (1 - p)) / smp.size);
-                    return (
-                      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">
-                        {t('mailSample', {
-                          size: nf.format(smp.size),
-                          pq: pf(p),
-                          classic: pf((smp.answered - smp.pq) / smp.size),
-                          unreachable: pf(smp.unreachable / smp.size),
-                          moe: new Intl.NumberFormat(loc, { maximumFractionDigits: 0 }).format(Math.max(1, moe * 100)),
-                        })}
-                      </p>
-                    );
-                  })()}
                   <div className="mb-8" />
                   <div className="relative overflow-x-auto rounded-xl border border-[var(--color-border)]">
                     <table className="min-w-full text-sm">
@@ -230,7 +213,7 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
                         {mailRows.map((e) => (
                           <tr key={e.name} className="border-t border-[var(--color-border-dim)]">
                             <td className="px-4 py-2 text-[var(--color-text-base)]">{e.name}</td>
-                            <td className="px-4 py-2 text-right tabular-nums text-[var(--color-text-muted)]">{pf(sh(e.n, m.withMx), 1)}</td>
+                            <td className="px-4 py-2 text-right tabular-nums text-[var(--color-text-muted)]">{pf(sh(e.n, measured), 1)}</td>
                             <td className="px-4 py-2">
                               {e.answered === 0 ? (
                                 <span className="font-mono text-xs text-[var(--color-text-muted)]">{t('mailTable.unreachable')}</span>

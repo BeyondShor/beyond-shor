@@ -45,8 +45,7 @@ export interface Cell {
 export interface WebProvider { hosting: 'cdn' | 'cloud' | 'other'; name: string; n: number; pq: number; pqCapable: number }
 export interface MailProvider { name: string; n: number; answered: number; tls: number; pq: number; group: string | null; errors: Record<string, number> }
 export interface ProviderRanking { view: View; region: string; web: WebProvider[]; mail: MailProvider[] }
-export interface MailSample { size: number; poolDomains: number; answered: number; tls: number; pq: number; unreachable: number }
-export interface MailMeta { zones: number; measured: number; answered: number; domainsWithMx: number; domainsCovered: number; reliable: boolean; sample?: Partial<Record<View, MailSample>> }
+export interface MailMeta { zones: number; measured: number; answered: number; domainsWithMx: number; domainsCovered: number; reliable: boolean }
 
 export interface TrendCell {
   view: View; region: string; category: Category;
