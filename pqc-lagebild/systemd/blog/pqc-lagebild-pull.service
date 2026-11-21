@@ -1,0 +1,17 @@
+[Unit]
+Description=PQC-Lagebild: fetch signed results from the scanner and verify them
+Documentation=file:///var/www/beyond-shor/pqc-lagebild/README.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/beyond-shor/pqc-lagebild.env
+ExecStart=/usr/bin/node /var/www/beyond-shor/pqc-lagebild/server/pull.mjs
+Nice=10
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/beyond-shor/pqc-lagebild
+StateDirectory=beyond-shor/pqc-lagebild

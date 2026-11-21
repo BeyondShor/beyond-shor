@@ -1,0 +1,15 @@
+[Unit]
+Description=PQC-Lagebild: daily visitor TLS statistics (F)
+Documentation=file:///var/www/beyond-shor/pqc-lagebild/README.md
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/node /var/www/beyond-shor/pqc-lagebild/server/tls-stats.mjs
+Nice=10
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/var/log/nginx
+ReadWritePaths=/var/lib/beyond-shor/pqc-lagebild
+StateDirectory=beyond-shor/pqc-lagebild

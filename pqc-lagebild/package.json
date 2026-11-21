@@ -1,0 +1,16 @@
+{
+  "name": "pqc-lagebild",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Beyond Shor PQC-Lagebild: monthly, aggregate-only measurement of post-quantum adoption in Germany and the EU, plus a tested matrix of distribution defaults.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@noble/post-quantum": "0.5.4"
+  }
+}

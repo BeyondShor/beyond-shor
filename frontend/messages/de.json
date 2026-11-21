@@ -1599,5 +1599,198 @@
         "handshake": "Erster Server-Flug {tcp} Byte über TCP · über QUIC {quic} von höchstens {limit} Byte vor der Adressbestätigung"
       }
     }
+  },
+  "pqcLagebild": {
+    "pageTitle": "PQC-Lagebild",
+    "metaDescription": "Wie weit ist die Umstellung auf Post-Quanten-Kryptografie in Deutschland und der EU? Monatlich automatisch gemessen, ausschließlich zusammengefasst und mit ML-DSA signiert.",
+    "asOf": "Stand {month}",
+    "intro": "Wie weit ist die Umstellung auf Post-Quanten-Kryptografie in Deutschland und der EU? Einmal im Monat messen wir automatisch, welche Websites beim Verbindungsaufbau bereits quantensicher verschlüsseln, mit welchen Zertifikaten sie sich ausweisen und ob ihre DNS-Zonen signiert sind. Dazu kommt, was gängige Linux-Distributionen ab Werk können.",
+    "introPrivacy": "Wir veröffentlichen nur zusammengefasste Werte nach Kategorie, Sektor und Land, nie Ergebnisse einzelner Websites. Eine Liste der gemessenen Websites wird weder veröffentlicht noch gespeichert.",
+    "methodLink": "So messen wir",
+    "meta": {
+      "measured": "Gemessen",
+      "sites": "Websites",
+      "reachable": "per TLS erreichbar",
+      "signature": "Signatur"
+    },
+    "viewLabel": "Ansicht",
+    "view": {
+      "de": "Deutschland",
+      "eu": "EU"
+    },
+    "viewNote": {
+      "de": "Deutschland-Ansicht: alle Websites mit Bezug zu Deutschland, einschließlich zusätzlicher deutscher Quellen wie Behördenverzeichnissen.",
+      "eu": "EU-Ansicht: nur Quellen, die es für alle 27 Mitgliedstaaten gibt. Dadurch sind die Länder untereinander vergleichbar; Deutschland erscheint hier mit etwas anderen Zahlen als in der Deutschland-Ansicht."
+    },
+    "noCell": "Für diese Ansicht gibt es noch keine Werte mit mindestens {min} erreichbaren Websites.",
+    "overviewTitle": "Die Lage auf einen Blick",
+    "overviewIntro": "Grundlage sind {reachable} per TLS erreichbare Websites von {n} gemessenen.",
+    "kpi": {
+      "pq": "Quantensicherer Schlüsselaustausch",
+      "pqSub": "Anteil der Websites, die mit einem aktuellen Browser einen hybriden ML-KEM-Schlüsselaustausch aushandeln.",
+      "self": "Ohne CDN",
+      "selfSub": "Derselbe Anteil nur für Websites, die nicht hinter einem CDN liegen. Hier haben Betreiber oder Hoster selbst umgestellt.",
+      "mail": "Mailserver mit PQ",
+      "mailSub": "Anteil der per STARTTLS erreichbaren Mailserver mit quantensicherem Schlüsselaustausch ({n} Server-Antworten).",
+      "cert": "Quantensichere Zertifikate",
+      "certSub": "Zertifikate mit ML-DSA oder SLH-DSA. Für das öffentliche Web gibt es sie noch nicht.",
+      "tooFew": "Zu wenige Antworten für einen belastbaren Wert.",
+      "tls13": "TLS 1.3",
+      "tls13Sub": "Voraussetzung für ML-KEM: Nur mit TLS 1.3 lässt sich ein quantensicherer Schlüsselaustausch aushandeln."
+    },
+    "barDetail": "{pq} von {reachable} erreichbaren Websites",
+    "empty": "Für diese Auswahl gibt es keine Gruppe mit genügend Websites.",
+    "categoriesTitle": "Nach Kategorie",
+    "categoriesIntro": "Jede Organisation zählt in genau einer Kategorie, in dieser Rangfolge: KRITIS-Sektoren vor öffentlichen Institutionen vor Konzernen. Übrige Websites sind alle weiteren Domains mit Länderendung aus der Tranco-Liste, darunter vor allem kleine und mittlere Unternehmen.",
+    "suppressedNote": "Gruppen mit weniger als {min} erreichbaren Websites zeigen wir nicht einzeln; sie zählen nur in der übergeordneten Gruppe mit.",
+    "sectorsTitle": "Sektoren im Detail",
+    "sectorsIntro": "KRITIS-Sektoren angelehnt an die BSI-KritisV und die NIS-2-Richtlinie. Die offizielle Liste der KRITIS-Betreiber ist nicht öffentlich; gemessen werden deshalb Organisationen aus diesen Sektoren, unabhängig von Schwellenwerten.",
+    "hostingTitle": "Wer die Verbindung terminiert",
+    "hostingIntro": "Ob eine Website quantensicher verschlüsselt, entscheidet oft nicht ihr Betreiber, sondern der Dienst davor. Bei CDNs ist hybrides ML-KEM meist schon Standard; bei klassischen Hostern und eigener Infrastruktur muss jemand aktiv umstellen.",
+    "hosting": {
+      "cdn": "CDN",
+      "cloud": "Hyperscaler-Cloud",
+      "other": "Hoster und eigene Server"
+    },
+    "hardTitle": "Die harte Hälfte: Signaturen",
+    "hardIntro": "Der Schlüsselaustausch ist der einfache Teil: Er lässt sich auf Server- und Browserseite umstellen, ohne dass jemand anders mitspielen muss. Für Zertifikate und DNSSEC braucht es dagegen neue Standards, Zertifizierungsstellen und Software. Hier steht die Umstellung noch ganz am Anfang.",
+    "certTitle": "Schlüsseltyp der Zertifikate",
+    "certPq": "PQ und andere",
+    "certNote": "Chrome plant für das öffentliche Web keine klassischen X.509-Zertifikate mit PQ-Algorithmen, sondern Merkle Tree Certificates. Bis dahin bleibt dieser Wert nahe null.",
+    "tls13": "TLS 1.3",
+    "pure": "Reines ML-KEM ohne klassischen Anteil",
+    "dnssec": "DNSSEC-signierte Zonen",
+    "dnssecAlgs": "Verwendete DNSSEC-Algorithmen (alle klassisch):",
+    "countriesTitle": "Länder der EU",
+    "countriesIntro": "Anteil mit quantensicherem Schlüsselaustausch je Mitgliedstaat, nur mit Quellen, die es für alle Länder gibt.",
+    "trendTitle": "Entwicklung",
+    "trendPanel": "Von denselben {n} Websites, die im {prev} und jetzt erreichbar waren, nutzten im {prev} {before} einen quantensicheren Schlüsselaustausch, jetzt {now}. {on} haben umgestellt, {off} sind zurück auf klassische Verfahren.",
+    "trendNone": "Die Entwicklung zeigen wir ab der zweiten Messung. Verglichen werden dann nur Websites, die in beiden Monaten gemessen wurden, damit Änderungen an den Listen nicht wie eine Umstellung aussehen.",
+    "historyAria": "Anteil quantensicherer Schlüsselaustausche über die Monate, EU und Deutschland",
+    "noData": {
+      "title": "Die erste Messung läuft",
+      "body": "Sobald die erste monatliche Messung abgeschlossen und ihre Signatur geprüft ist, erscheinen hier die Ergebnisse."
+    },
+    "matrixTitle": "Software ab Werk",
+    "matrixIntro": "Was können aktuelle Linux-Distributionen ohne jede Anpassung? Jeden Monat installieren wir die Pakete in frischen Containern, starten Server mit Standardkonfiguration und prüfen, ob sie quantensicher aushandeln. Bei Clients schauen wir, ob sie von sich aus einen ML-KEM-Schlüssel anbieten.",
+    "matrixNote": "Getestet im {month}. Releases ändern sich automatisch: Neue kommen dazu, Releases ohne Support fallen weg. Details zeigt ein Mouseover über dem jeweiligen Feld.",
+    "matrixNone": "Die erste Software-Matrix wird gerade erstellt.",
+    "matrix": {
+      "release": "Release",
+      "servers": "Server",
+      "clients": "Clients",
+      "pq": "PQ",
+      "classic": "klassisch",
+      "na": "nicht verfügbar",
+      "legendPq": "quantensicher ab Werk",
+      "legendClassic": "nur klassisch"
+    },
+    "visitorsTitle": "Ihre Verbindung",
+    "visitorsIntro": "Und wie sieht es auf Ihrer Seite aus? Diese Verbindung zu Beyond Shor nutzt hybrides ML-KEM, sofern Ihr Browser es anbietet.",
+    "live": {
+      "label": "Diese Verbindung",
+      "loading": "Wird ermittelt …",
+      "pq": "Quantensicher verbunden",
+      "pqBody": "Ihr Browser und Beyond Shor haben {group} ausgehandelt ({protocol}). Aufgezeichnete Daten dieser Verbindung lassen sich auch später mit einem Quantencomputer nicht entschlüsseln.",
+      "classic": "Klassisch verbunden",
+      "classicBody": "Ausgehandelt wurde {group} ({protocol}). Ihr Browser bietet offenbar noch kein ML-KEM an. Aktuelle Versionen von Chrome, Edge, Firefox und Safari tun das standardmäßig.",
+      "unknown": "Nicht ermittelbar",
+      "unknownBody": "Die Gruppe dieser Verbindung ließ sich nicht feststellen, etwa weil ein Proxy die Verbindung aufbricht."
+    },
+    "visitors": {
+      "label": "Alle Besucher dieses Monats",
+      "summary": "der Browser-Verbindungen im {month} waren quantensicher ({n} Verbindungen an {days} Tagen).",
+      "none": "Die Monatsstatistik erscheint nach dem ersten vollständig ausgewerteten Tag.",
+      "groupDetail": "{n} von {total} Verbindungen"
+    },
+    "visitorsPrivacy": "Für diese Statistik protokolliert der Webserver je Verbindung nur Zeitpunkt, TLS-Version, ausgehandelte Gruppe und ob es sich um einen Bot handelt. IP-Adressen, aufgerufene Seiten und Browserkennungen werden dafür nicht gespeichert.",
+    "filesTitle": "Daten und Signaturen",
+    "filesIntro": "Jede Monatsdatei ist mit ML-DSA-65 (FIPS 204) signiert. Der Webserver übernimmt sie nur, wenn die Signatur stimmt; Sie können das hier selbst im Browser nachprüfen.",
+    "files": {
+      "lagebild": "PQC-Lagebild {month}",
+      "matrix": "Software-Matrix {month}"
+    },
+    "filesNone": "Noch keine signierten Daten.",
+    "filesKey": "Öffentlicher Schlüssel des Datensatzes:",
+    "verify": {
+      "button": "Signatur prüfen",
+      "ok": "gültig",
+      "bad": "ungültig",
+      "error": "nicht prüfbar"
+    },
+    "category": {
+      "all": "Alle",
+      "kritis": "KRITIS-Sektoren",
+      "institutions": "Öffentliche Institutionen",
+      "corporations": "Konzerne",
+      "other": "Übrige Websites"
+    },
+    "sector": {
+      "energy": "Energie",
+      "water": "Wasser",
+      "health": "Gesundheit",
+      "finance": "Finanzen und Versicherungen",
+      "transport": "Transport und Verkehr",
+      "ict": "IT und Telekommunikation",
+      "food": "Ernährung",
+      "waste": "Entsorgung",
+      "government": "Verwaltung",
+      "municipality": "Kommunen",
+      "higher-education": "Hochschulen",
+      "eu-body": "EU-Einrichtungen"
+    },
+    "method": {
+      "label": "Methodik",
+      "pageTitle": "PQC-Lagebild: Methodik",
+      "metaDescription": "Wie das PQC-Lagebild von Beyond Shor misst: Quellen, Kategorien, Handshakes, Datenschutz und Grenzen.",
+      "intro": "Diese Seite beschreibt, wie die Zahlen im PQC-Lagebild entstehen, was sie aussagen und was nicht.",
+      "back": "Zum PQC-Lagebild",
+      "sourcesCaption": "Quellen der Messung im {month}",
+      "sourcesSource": "Quelle",
+      "sourcesLicense": "Lizenz",
+      "sourcesCount": "Websites",
+      "minCellNow": "Aktuell: Mindestgröße {min} erreichbare Websites je veröffentlichter Gruppe; {suppressed} Gruppen lagen darunter und sind nur im übergeordneten Wert enthalten.",
+      "what": {
+        "title": "Was wir messen",
+        "body": "Für jede Website prüfen wir drei Dinge: den TLS-Schlüsselaustausch, den Schlüsseltyp des Zertifikats und ob die DNS-Zone mit DNSSEC signiert ist. Mailserver kommen später dazu (siehe „Grenzen“).\n\nQuantensicher ist ein Schlüsselaustausch für uns, wenn ML-KEM beteiligt ist, in der Praxis fast immer hybrid als X25519MLKEM768. Damit sind aufgezeichnete Verbindungen auch gegen spätere Angriffe mit Quantencomputern geschützt (Harvest Now, Decrypt Later). Die Echtheit der Gegenseite beruht dagegen weiter auf klassischen Signaturen; das zeigt der Abschnitt zu Zertifikaten."
+      },
+      "who": {
+        "title": "Welche Websites",
+        "body": "Die Grundgesamtheit setzt sich jeden Monat neu zusammen. Basis sind alle Domains mit der Länderendung eines EU-Mitgliedstaats oder .eu aus der aktuellen Tranco-Liste der eine Million meistgenutzten Domains. Tranco ist eine offene Forschungsliste (Le Pochat et al., NDSS 2019), die die Ranglisten von Chrome UX Report, Cloudflare Radar, Majestic, Cisco Umbrella und Farsight über 30 Tage mittelt. Wir nutzen sie nur zur Auswahl und geben sie nicht weiter.\n\nDazu kommen Organisationen aus Wikidata mit offizieller Website: Unternehmen und Einrichtungen aus den KRITIS-Sektoren, öffentliche Institutionen und große Unternehmen aus allen EU-Mitgliedstaaten. Für Deutschland ergänzen wir öffentlich verfügbare Verzeichnisse von Behörden-Domains.\n\nGemessen wird die Website unter dem Namen, den die Quelle nennt, zuerst ohne, dann mit „www.“. Websites, die keine eigene Seite der Organisation sind, etwa Profile auf sozialen Netzwerken, fallen heraus."
+      },
+      "categories": {
+        "title": "Kategorien und Sektoren",
+        "body": "Jede Website zählt in genau einer Kategorie. Gehört sie zu mehreren, gilt die Rangfolge KRITIS-Sektoren, öffentliche Institutionen, Konzerne, übrige Websites.\n\nKRITIS-Sektoren orientieren sich an der BSI-Kritisverordnung und Anhang I der NIS-2-Richtlinie: Energie, Wasser, Gesundheit, Finanzen und Versicherungen, Transport und Verkehr, IT und Telekommunikation, Ernährung sowie Entsorgung. Im Sektor Ernährung zählen nur größere Unternehmen, weil Wikidata dort sonst vor allem kleine Brauereien und Bäckereien enthält. Die Liste der tatsächlichen KRITIS-Betreiber hält das BSI aus Sicherheitsgründen unter Verschluss. Wir messen deshalb Organisationen aus diesen Sektoren, ohne zu wissen, ob sie die gesetzlichen Schwellenwerte überschreiten.\n\nÖffentliche Institutionen sind Behörden und Ministerien, Kommunen, Hochschulen und Einrichtungen der EU. Konzerne sind Unternehmen außerhalb der KRITIS-Sektoren, die laut Wikidata mindestens 250 Beschäftigte haben oder börsennotiert sind. Übrige Websites sind alle weiteren Domains mit Länderendung aus der Tranco-Liste, überwiegend kleine und mittlere Unternehmen, Vereine und Medien."
+      },
+      "how": {
+        "title": "Wie wir messen",
+        "body": "Für den Schlüsselaustausch bauen wir zwei TLS-Verbindungen auf. Die erste verhält sich wie ein aktueller Browser: Sie bietet X25519MLKEM768 und X25519 mit je einem Schlüssel an, dazu P-256 und P-384. Gezählt wird, was der Server tatsächlich auswählt. Die zweite bietet nur reines ML-KEM (ML-KEM-768 und ML-KEM-1024) an. Aus der ersten Verbindung stammen auch TLS-Version und Zertifikat. Wir senden keine HTTP-Anfrage und rufen keine Inhalte ab.\n\nDNSSEC prüfen wir über die DNSKEY-Einträge der Zone, abgefragt über einen eigenen rekursiven Resolver.\n\nGemessen wird mit Node.js und OpenSSL 3.5 von einem eigenen Server in der EU aus, nicht von diesem Webserver. Pro Website entstehen nur wenige Verbindungen im Monat."
+      },
+      "hosting": {
+        "title": "CDN, Cloud oder eigener Server",
+        "body": "Anhand der IP-Adresse ordnen wir jede Website einem Netzbetreiber zu, offline über den Datensatz von iptoasn.com (Public Domain) und die von AWS veröffentlichten CloudFront-Adressbereiche. Netze von CDN- und Schutzdiensten wie Cloudflare, Akamai oder Fastly gelten als CDN, die von Amazon, Google, Microsoft, Oracle und Alibaba als Hyperscaler-Cloud, alle übrigen als Hoster und eigene Server.\n\nDer Wert „Ohne CDN“ ist der Anteil quantensicherer Schlüsselaustausche unter allen erreichbaren Websites, die nicht hinter einem CDN liegen. Er zeigt besser als der Gesamtwert, wie weit Betreiber und Hoster selbst sind."
+      },
+      "privacy": {
+        "title": "Was wir nicht veröffentlichen",
+        "body": "Wir veröffentlichen keine Ergebnisse einzelner Websites und keine Liste der gemessenen Websites. Die Liste wird bei jedem Lauf aus den Quellen neu aufgebaut, nur im Arbeitsspeicher gehalten und nach der Messung verworfen.\n\nEine Gruppe veröffentlichen wir nur, wenn sie auf mindestens 30 erreichbaren Websites beruht. Kleinere Gruppen gehen nur in den übergeordneten Wert ein. Auch Teilwerte wie DNSSEC oder Mailserver brauchen jeweils mindestens 30 Antworten.\n\nFür den Vergleich mit dem Vormonat speichern wir je Website nur einen verschlüsselten Hashwert (HMAC-SHA-256 mit geheimem Schlüssel) zusammen mit Land, Kategorie und Ergebnis. Einen einfachen Hash könnte jeder mit der öffentlichen Tranco-Liste zurückrechnen; ohne den Schlüssel geht das nicht. Diese Daten werden nach zwei Monaten gelöscht."
+      },
+      "views": {
+        "title": "Deutschland-Ansicht und EU-Ansicht",
+        "body": "Die EU-Ansicht verwendet nur Quellen, die es für alle Mitgliedstaaten gibt: die Tranco-Liste und Wikidata. Nur so sind die Länder untereinander vergleichbar. Domains mit der Endung .eu gehen in den EU-Gesamtwert ein, aber in kein Land.\n\nDie Deutschland-Ansicht nimmt zusätzlich deutsche Verzeichnisse auf und zählt Organisationen mit Sitz in Deutschland unabhängig von ihrer Domain-Endung. Deshalb weichen die Werte für Deutschland in beiden Ansichten etwas voneinander ab."
+      },
+      "limits": {
+        "title": "Grenzen",
+        "body": "Wikidata enthält vor allem größere und bekanntere Organisationen. Die Kategorien beschreiben daher eher die Großen eines Sektors als den Sektor in seiner ganzen Breite. Die Tranco-Liste gewichtet nach Beliebtheit und ändert sich von Monat zu Monat; deshalb vergleichen wir die Entwicklung nur auf Websites, die in beiden Monaten enthalten sind.\n\nWir messen von einem Standort aus und je Name eine IP-Adresse, bevorzugt IPv4. Server, die je nach Standort oder Adresse unterschiedlich konfiguriert sind, erfassen wir so nur teilweise. Server, die nur TLS 1.2 können, sind nie quantensicher, weil ML-KEM TLS 1.3 voraussetzt.\n\nMailserver messen wir noch nicht. Viele große Mailanbieter bremsen Verbindungen von Servern ohne passenden Reverse-DNS-Eintrag aus; die Ergebnisse wären dadurch verzerrt. Die Messung ist vorbereitet und kommt dazu, sobald der Messserver einen eigenen, rückwärts auflösbaren Namen hat.\n\nEin quantensicherer Schlüsselaustausch schützt die Vertraulichkeit aufgezeichneter Verbindungen. Er sagt nichts darüber, wie sicher eine Website sonst ist."
+      },
+      "automation": {
+        "title": "Ablauf und Signatur",
+        "body": "Die Messung startet automatisch am 1. jedes Monats und dauert einige Stunden. Ihr Ergebnis wird auf dem Messserver mit ML-DSA-65 (FIPS 204) signiert. Der Webserver holt die Dateien ab, prüft jede Signatur gegen den hinterlegten öffentlichen Schlüssel und übernimmt nur, was stimmt. Diese Seite prüft beim Anzeigen ein zweites Mal.\n\nSchlägt eine Messung fehl oder fällt sie bei unseren Plausibilitätsprüfungen durch, etwa weil plötzlich deutlich weniger Websites erreichbar sind, bleibt der letzte gültige Stand sichtbar."
+      },
+      "optout": {
+        "title": "Ausschluss und Kontakt",
+        "body": "Möchten Sie eine Website aus der Messung ausnehmen lassen, schreiben Sie uns über das Kontaktformular. Wir schließen sie dann dauerhaft aus; gespeichert wird dafür nur ihr Hashwert, nicht der Name."
+      }
+    },
+    "matrixPitfalls": "Zwei Fallstricke: Postfix bis Version 3.10 setzt eine eigene Liste von Schlüsselaustausch-Gruppen und bietet deshalb auch mit OpenSSL 3.5 kein ML-KEM an; erst ab Postfix 3.11 ist hybrides ML-KEM Standard. Und bei RHEL-kompatiblen Systemen entscheidet die systemweite Crypto-Policy: AlmaLinux 9 bringt zwar OpenSSL 3.5 mit, die Standard-Policy gibt ML-KEM aber nicht frei."
   }
 }

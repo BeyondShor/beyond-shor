@@ -15,6 +15,8 @@ export const routing = defineRouting({
     '/verify':        '/verify',
     '/rbe':          '/rbe',
     '/pki':          '/pki',
+    '/pqc-lagebild':          { de: '/pqc-lagebild',          en: '/pqc-monitor'             },
+    '/pqc-lagebild/methodik': { de: '/pqc-lagebild/methodik', en: '/pqc-monitor/methodology' },
     '/anderswo':   { de: '/anderswo',   en: '/elsewhere'      },
     '/kontakt':    { de: '/kontakt',    en: '/contact'        },
     '/impressum':  { de: '/impressum',  en: '/imprint'        },

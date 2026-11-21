@@ -1599,5 +1599,198 @@
         "handshake": "First server flight {tcp} bytes over TCP · over QUIC {quic} of at most {limit} bytes before address validation"
       }
     }
+  },
+  "pqcLagebild": {
+    "pageTitle": "PQC Monitor",
+    "metaDescription": "How far along is the migration to post-quantum cryptography in Germany and the EU? Measured automatically every month, aggregate-only and signed with ML-DSA.",
+    "asOf": "As of {month}",
+    "intro": "How far along is the migration to post-quantum cryptography in Germany and the EU? Once a month, we automatically measure which websites already use quantum-safe key exchange, which certificates they present and whether their DNS zones are signed. On top of that, we test what common Linux distributions do out of the box.",
+    "introPrivacy": "We only publish aggregate figures by category, sector and country, never results for individual websites. A list of the measured websites is neither published nor stored.",
+    "methodLink": "How we measure",
+    "meta": {
+      "measured": "Measured",
+      "sites": "Websites",
+      "reachable": "reachable via TLS",
+      "signature": "Signature"
+    },
+    "viewLabel": "View",
+    "view": {
+      "de": "Germany",
+      "eu": "EU"
+    },
+    "viewNote": {
+      "de": "Germany view: all websites with a connection to Germany, including additional German sources such as directories of government domains.",
+      "eu": "EU view: only sources that exist for all 27 member states, so countries can be compared with each other. Germany therefore shows slightly different numbers here than in the Germany view."
+    },
+    "noCell": "This view does not have figures based on at least {min} reachable websites yet.",
+    "overviewTitle": "At a glance",
+    "overviewIntro": "Based on {reachable} websites reachable via TLS out of {n} measured.",
+    "kpi": {
+      "pq": "Quantum-safe key exchange",
+      "pqSub": "Share of websites that negotiate a hybrid ML-KEM key exchange with a current browser.",
+      "self": "Without CDN",
+      "selfSub": "The same share, counting only websites that are not behind a CDN. Here, operators or their hosting providers made the switch themselves.",
+      "mail": "Mail servers with PQ",
+      "mailSub": "Share of mail servers reachable via STARTTLS that use quantum-safe key exchange ({n} server responses).",
+      "cert": "Quantum-safe certificates",
+      "certSub": "Certificates with ML-DSA or SLH-DSA. They do not exist for the public web yet.",
+      "tooFew": "Too few responses for a reliable figure.",
+      "tls13": "TLS 1.3",
+      "tls13Sub": "The prerequisite for ML-KEM: quantum-safe key exchange can only be negotiated with TLS 1.3."
+    },
+    "barDetail": "{pq} of {reachable} reachable websites",
+    "empty": "No group in this selection has enough websites.",
+    "categoriesTitle": "By category",
+    "categoriesIntro": "Each organization counts in exactly one category, in this order: critical infrastructure sectors before public institutions before large companies. Other websites are all remaining domains with a country-code TLD from the Tranco list, most of them small and medium-sized businesses.",
+    "suppressedNote": "Groups with fewer than {min} reachable websites are not shown separately; they only count toward the group above them.",
+    "sectorsTitle": "Sectors in detail",
+    "sectorsIntro": "Critical infrastructure sectors follow Germany's KRITIS regulation and the NIS 2 Directive. The official list of critical infrastructure operators is not public, so we measure organizations from these sectors regardless of thresholds.",
+    "hostingTitle": "Who terminates the connection",
+    "hostingIntro": "Whether a website uses quantum-safe key exchange is often decided not by its operator but by the service in front of it. CDNs mostly enable hybrid ML-KEM by default; with traditional hosting providers and self-run servers, someone has to switch it on.",
+    "hosting": {
+      "cdn": "CDN",
+      "cloud": "Hyperscale cloud",
+      "other": "Hosting providers and own servers"
+    },
+    "hardTitle": "The hard half: signatures",
+    "hardIntro": "Key exchange is the easy part: servers and browsers can switch without anyone else having to cooperate. Certificates and DNSSEC, on the other hand, need new standards, certificate authorities and software. Here, the migration has barely begun.",
+    "certTitle": "Certificate key types",
+    "certPq": "PQ and other",
+    "certNote": "For the public web, Chrome does not plan to accept classical X.509 certificates with PQ algorithms and is working on Merkle Tree Certificates instead. Until then, this figure will stay close to zero.",
+    "tls13": "TLS 1.3",
+    "pure": "Pure ML-KEM without a classical component",
+    "dnssec": "DNSSEC-signed zones",
+    "dnssecAlgs": "DNSSEC algorithms in use (all classical):",
+    "countriesTitle": "EU member states",
+    "countriesIntro": "Share with quantum-safe key exchange per member state, using only sources that exist for every country.",
+    "trendTitle": "Development",
+    "trendPanel": "Of the same {n} websites that were reachable both in {prev} and now, {before} used quantum-safe key exchange in {prev} and {now} do now. {on} switched to it, {off} went back to classical key exchange.",
+    "trendNone": "We will show the development starting with the second measurement. Only websites measured in both months will be compared, so that changes to the lists do not look like migration.",
+    "historyAria": "Share of quantum-safe key exchange over the months, EU and Germany",
+    "noData": {
+      "title": "The first measurement is running",
+      "body": "As soon as the first monthly measurement is complete and its signature has been verified, the results will appear here."
+    },
+    "matrixTitle": "Software out of the box",
+    "matrixIntro": "What can current Linux distributions do without any tweaking? Every month, we install the packages in fresh containers, start servers with their default configuration and check whether they negotiate quantum-safe key exchange. For clients, we check whether they offer an ML-KEM key on their own.",
+    "matrixNote": "Tested in {month}. Releases update automatically: new ones are added, releases without support are dropped. Hover over a field for details.",
+    "matrixNone": "The first software matrix is being created.",
+    "matrix": {
+      "release": "Release",
+      "servers": "Servers",
+      "clients": "Clients",
+      "pq": "PQ",
+      "classic": "classical",
+      "na": "not available",
+      "legendPq": "quantum-safe by default",
+      "legendClassic": "classical only"
+    },
+    "visitorsTitle": "Your connection",
+    "visitorsIntro": "And what about your side? This connection to Beyond Shor uses hybrid ML-KEM if your browser offers it.",
+    "live": {
+      "label": "This connection",
+      "loading": "Checking …",
+      "pq": "Quantum-safe connection",
+      "pqBody": "Your browser and Beyond Shor negotiated {group} ({protocol}). Recorded traffic from this connection cannot be decrypted later, not even with a quantum computer.",
+      "classic": "Classical connection",
+      "classicBody": "The negotiated group is {group} ({protocol}). Your browser apparently does not offer ML-KEM yet. Current versions of Chrome, Edge, Firefox and Safari do so by default.",
+      "unknown": "Could not be determined",
+      "unknownBody": "The group of this connection could not be determined, for example because a proxy intercepts the connection."
+    },
+    "visitors": {
+      "label": "All visitors this month",
+      "summary": "of browser connections in {month} were quantum-safe ({n} connections over {days} days).",
+      "none": "The monthly statistics will appear after the first fully evaluated day.",
+      "groupDetail": "{n} of {total} connections"
+    },
+    "visitorsPrivacy": "For these statistics, the web server only logs the time, TLS version, negotiated group and whether the client is a bot for each connection. IP addresses, requested pages and user agents are not stored for this purpose.",
+    "filesTitle": "Data and signatures",
+    "filesIntro": "Each monthly file is signed with ML-DSA-65 (FIPS 204). The web server only accepts it if the signature checks out, and you can verify that yourself in your browser.",
+    "files": {
+      "lagebild": "PQC Monitor {month}",
+      "matrix": "Software matrix {month}"
+    },
+    "filesNone": "No signed data yet.",
+    "filesKey": "Public key of the dataset:",
+    "verify": {
+      "button": "Verify signature",
+      "ok": "valid",
+      "bad": "invalid",
+      "error": "could not verify"
+    },
+    "category": {
+      "all": "All",
+      "kritis": "Critical infrastructure sectors",
+      "institutions": "Public institutions",
+      "corporations": "Large companies",
+      "other": "Other websites"
+    },
+    "sector": {
+      "energy": "Energy",
+      "water": "Water",
+      "health": "Health",
+      "finance": "Finance and insurance",
+      "transport": "Transportation",
+      "ict": "IT and telecommunications",
+      "food": "Food",
+      "waste": "Waste management",
+      "government": "Government",
+      "municipality": "Municipalities",
+      "higher-education": "Higher education",
+      "eu-body": "EU bodies"
+    },
+    "method": {
+      "label": "Methodology",
+      "pageTitle": "PQC Monitor: methodology",
+      "metaDescription": "How the Beyond Shor PQC Monitor measures: sources, categories, handshakes, privacy and limitations.",
+      "intro": "This page explains how the figures in the PQC Monitor come about, what they tell you and what they don't.",
+      "back": "Back to the PQC Monitor",
+      "sourcesCaption": "Sources of the {month} measurement",
+      "sourcesSource": "Source",
+      "sourcesLicense": "License",
+      "sourcesCount": "Websites",
+      "minCellNow": "Currently: at least {min} reachable websites per published group; {suppressed} groups fell below that and only count toward the group above them.",
+      "what": {
+        "title": "What we measure",
+        "body": "For each website, we check three things: the TLS key exchange, the key type of its certificate and whether its DNS zone is signed with DNSSEC. Mail servers will follow (see \"Limitations\").\n\nWe consider a key exchange quantum-safe if ML-KEM is involved, which in practice almost always means the hybrid X25519MLKEM768. It protects recorded connections against later attacks with quantum computers (harvest now, decrypt later). Authenticating the other side, however, still relies on classical signatures; the section on certificates covers that."
+      },
+      "who": {
+        "title": "Which websites",
+        "body": "The population is rebuilt every month. Its basis is every domain with the country-code TLD of an EU member state or .eu from the current Tranco list of the one million most popular domains. Tranco is an open research list (Le Pochat et al., NDSS 2019) that averages the rankings of the Chrome UX Report, Cloudflare Radar, Majestic, Cisco Umbrella and Farsight over 30 days. We only use it to select websites and do not redistribute it.\n\nOn top of that come organizations from Wikidata with an official website: companies and institutions from critical infrastructure sectors, public institutions and large companies from all EU member states. For Germany, we add publicly available directories of government domains.\n\nWe measure each website under the name its source gives, first without and then with \"www.\". Addresses that are not an organization's own website, such as social media profiles, are left out."
+      },
+      "categories": {
+        "title": "Categories and sectors",
+        "body": "Each website counts in exactly one category. If it belongs to several, the order is critical infrastructure sectors, public institutions, large companies, other websites.\n\nCritical infrastructure sectors follow Germany's KRITIS regulation (BSI-KritisV) and Annex I of the NIS 2 Directive: energy, water, health, finance and insurance, transportation, IT and telecommunications, food and waste management. In the food sector, only larger companies count, because otherwise Wikidata would mostly contribute small breweries and bakeries. Germany's Federal Office for Information Security (BSI) keeps the list of actual critical infrastructure operators confidential for security reasons. We therefore measure organizations from these sectors without knowing whether they exceed the legal thresholds.\n\nPublic institutions are government agencies and ministries, municipalities, universities and EU bodies. Large companies are companies outside the critical infrastructure sectors that have at least 250 employees according to Wikidata or are publicly listed. Other websites are all remaining domains with a country-code TLD from the Tranco list, mostly small and medium-sized businesses, associations and media."
+      },
+      "how": {
+        "title": "How we measure",
+        "body": "For key exchange, we open two TLS connections. The first behaves like a current browser: it offers X25519MLKEM768 and X25519 with one key each, plus P-256 and P-384. We count what the server actually picks. The second offers only pure ML-KEM (ML-KEM-768 and ML-KEM-1024). The TLS version and the certificate come from the first connection. We do not send any HTTP request and do not fetch any content.\n\nWe check DNSSEC via the zone's DNSKEY records, queried through our own recursive resolver.\n\nMeasurements run on Node.js with OpenSSL 3.5 from a separate server in the EU, not from this web server. Each website sees only a handful of connections per month."
+      },
+      "hosting": {
+        "title": "CDN, cloud or own server",
+        "body": "Based on its IP address, we assign each website to a network operator, offline, using the iptoasn.com dataset (public domain) and the CloudFront address ranges published by AWS. Networks of CDN and protection services such as Cloudflare, Akamai or Fastly count as CDN; those of Amazon, Google, Microsoft, Oracle and Alibaba as hyperscale cloud; all others as hosting providers and own servers.\n\n\"Without CDN\" is the share of quantum-safe key exchange among all reachable websites that are not behind a CDN. It shows better than the overall figure how far operators and hosting providers have come on their own."
+      },
+      "privacy": {
+        "title": "What we don't publish",
+        "body": "We publish no results for individual websites and no list of the measured websites. The list is rebuilt from the sources on every run, kept in memory only and discarded after the measurement.\n\nWe only publish a group if it rests on at least 30 reachable websites. Smaller groups only count toward the group above them. Partial figures such as DNSSEC or mail servers also need at least 30 responses each.\n\nTo compare with the previous month, we store only a keyed hash per website (HMAC-SHA-256 with a secret key) together with its country, category and result. Anyone could reverse a plain hash using the public Tranco list; without the key, that is not possible. This data is deleted after two months."
+      },
+      "views": {
+        "title": "Germany view and EU view",
+        "body": "The EU view only uses sources that exist for all member states: the Tranco list and Wikidata. That is the only way to compare countries with each other. Domains ending in .eu count toward the EU total but toward no individual country.\n\nThe Germany view also includes German directories and counts organizations based in Germany regardless of their domain ending. That is why the figures for Germany differ slightly between the two views."
+      },
+      "limits": {
+        "title": "Limitations",
+        "body": "Wikidata mostly covers larger, better-known organizations. The categories therefore describe the big players of a sector rather than the sector as a whole. The Tranco list is weighted by popularity and changes from month to month, which is why we only compare the development on websites contained in both months.\n\nWe measure from one location and use one IP address per name, preferring IPv4. Servers configured differently depending on location or address are only partly covered. Servers that only support TLS 1.2 are never quantum-safe, because ML-KEM requires TLS 1.3.\n\nWe do not measure mail servers yet. Many large mail providers throttle connections from servers without a matching reverse DNS entry, which would skew the results. The measurement is ready and will be added once the measurement server has its own reverse-resolvable name.\n\nQuantum-safe key exchange protects the confidentiality of recorded connections. It says nothing about how secure a website is otherwise."
+      },
+      "automation": {
+        "title": "Schedule and signature",
+        "body": "The measurement starts automatically on the 1st of each month and takes a few hours. Its result is signed with ML-DSA-65 (FIPS 204) on the measurement server. The web server fetches the files, verifies each signature against the pinned public key and only accepts what checks out. This page verifies a second time before displaying anything.\n\nIf a measurement fails or does not pass our plausibility checks, for example because suddenly far fewer websites are reachable, the last valid results stay online."
+      },
+      "optout": {
+        "title": "Opt-out and contact",
+        "body": "If you would like a website to be excluded from the measurement, let us know through the contact form. We will exclude it permanently, storing only its hash, not its name."
+      }
+    },
+    "matrixPitfalls": "Two pitfalls: Postfix up to version 3.10 sets its own list of key-exchange groups and therefore offers no ML-KEM even with OpenSSL 3.5; hybrid ML-KEM only became the default in Postfix 3.11. And on RHEL-compatible systems, the system-wide crypto policy decides: AlmaLinux 9 ships OpenSSL 3.5, but its default policy does not enable ML-KEM."
   }
 }

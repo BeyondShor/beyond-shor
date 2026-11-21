@@ -1,0 +1,17 @@
+[Unit]
+Description=PQC-Lagebild B: Software ab Werk (distribution defaults, rootless Podman)
+Documentation=https://beyond-shor.eu/de/pqc-lagebild/methodik
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/var/lib/pqscan
+Environment=PATH=/usr/bin:/bin
+Environment=PQSCAN_MATRIX_CONCURRENCY=2
+ExecStartPre=/usr/bin/mkdir -p /var/lib/pqscan/logs
+ExecStart=/opt/pqscan/node/bin/node /opt/pqscan/app/bin/run-matrix.mjs
+StandardOutput=append:/var/lib/pqscan/logs/matrix.log
+StandardError=append:/var/lib/pqscan/logs/matrix.log
+TimeoutStartSec=4h
+Nice=10
+UMask=0027

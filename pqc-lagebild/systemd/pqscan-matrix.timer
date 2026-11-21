@@ -1,0 +1,11 @@
+[Unit]
+Description=PQC-Lagebild B: monthly software matrix
+
+[Timer]
+# 1st of each month, early morning; catches up after downtime
+OnCalendar=*-*-01 03:40:00 Europe/Berlin
+Persistent=true
+RandomizedDelaySec=15min
+
+[Install]
+WantedBy=timers.target

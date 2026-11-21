@@ -1,0 +1,20 @@
+[Unit]
+Description=PQC-Lagebild: monthly measurement (A)
+Documentation=https://beyond-shor.eu/de/pqc-lagebild/methodik
+
+[Service]
+Type=oneshot
+Environment=PQSCAN_STATE=/var/lib/pqscan
+Environment=PQSCAN_PUBLIC=/srv/pqscan-public
+ExecStartPre=/usr/bin/mkdir -p /var/lib/pqscan/logs
+ExecStart=/opt/pqscan/node/bin/node /opt/pqscan/app/bin/run-scan.mjs
+# also in a file: the operator account cannot read the journal of a system user
+StandardOutput=append:/var/lib/pqscan/logs/scan.log
+StandardError=append:/var/lib/pqscan/logs/scan.log
+# A full run takes a few hours; give it room but not forever.
+TimeoutStartSec=16h
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=yes
+UMask=0027
+MemoryMax=3G

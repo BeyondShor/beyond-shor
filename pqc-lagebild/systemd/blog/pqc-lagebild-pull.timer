@@ -1,0 +1,10 @@
+[Unit]
+Description=PQC-Lagebild: fetch and verify results every six hours
+
+[Timer]
+OnCalendar=*-*-* 00/6:20:00
+RandomizedDelaySec=10m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
