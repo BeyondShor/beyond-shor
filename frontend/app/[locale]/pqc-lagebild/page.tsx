@@ -140,7 +140,7 @@ export default async function PqcLagebildPage({ params }: PageProps) {
                   <>
                     <p className="mt-2 text-4xl font-bold tabular-nums text-[var(--color-text-base)]">{formatPercent(vMonth.browser.pq / vMonth.browser.connections, locale)}</p>
                     <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-muted)]">
-                      {t('visitors.summary', { month: formatMonth(vMonth.month, locale), days: vMonth.days })}
+                      {t('visitors.summary', { month: formatMonth(vMonth.month, locale) })}
                     </p>
                     <div className="mt-5"><ShareBars data={groupBars} emptyLabel="" /></div>
                   </>

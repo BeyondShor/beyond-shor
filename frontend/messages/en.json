@@ -1741,7 +1741,7 @@
     },
     "visitors": {
       "label": "Beyond Shor visitors",
-      "summary": "of browser connections in {month} were quantum-safe (evaluated over {days, plural, one {# day} other {# days}}). The most common negotiated methods:",
+      "summary": "of browser connections in {month} were quantum-safe. The most common negotiated methods:",
       "none": "Starting with the first fully evaluated day, this box shows what share of browser connections this month was quantum-safe and which methods were negotiated.",
       "noGroup": "not determined"
     },
