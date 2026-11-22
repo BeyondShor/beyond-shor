@@ -24,7 +24,7 @@ export interface BarDatum {
   label: string;
   value: number | null; // 0..1
   valueLabel: string;
-  detail: string; // e.g. "1.234 von 5.678 erreichbaren Websites"
+  detail?: string; // e.g. "1.234 von 5.678 erreichbaren Websites"
   highlight?: boolean;
 }
 
@@ -42,7 +42,7 @@ export function ShareBars({ data, emptyLabel }: { data: BarDatum[]; emptyLabel: 
           <div
             className="relative h-2.5 w-full rounded-full bg-[var(--color-bg-elevated)]"
             role="img"
-            aria-label={`${d.label}: ${d.valueLabel} (${d.detail})`}
+            aria-label={d.detail ? `${d.label}: ${d.valueLabel} (${d.detail})` : `${d.label}: ${d.valueLabel}`}
           >
             {d.value != null && d.value > 0 && (
               <div
@@ -51,7 +51,7 @@ export function ShareBars({ data, emptyLabel }: { data: BarDatum[]; emptyLabel: 
               />
             )}
           </div>
-          <p className="mt-1 hidden font-mono text-[11px] text-[var(--color-text-muted)] group-hover:block group-focus-within:block">{d.detail}</p>
+          {d.detail && <p className="mt-1 hidden font-mono text-[11px] text-[var(--color-text-muted)] group-hover:block group-focus-within:block">{d.detail}</p>}
         </li>
       ))}
     </ul>

@@ -9,6 +9,8 @@ test('parseLine reads names, hex codes and the client class', () => {
   assert.equal(parseLine('2026-11-21T00:00:03+00:00 TLSv1.3 X25519 bot').pq, false);
   assert.equal(parseLine('2026-11-21T00:30:00+01:00 TLSv1.3 X25519 bot').date, '2026-11-20'); // UTC day
   assert.equal(parseLine('garbage'), null);
+  assert.equal(parseLine('2026-11-21T00:00:03+00:00 - - browser'), null); // plain HTTP redirect
+  assert.equal(parseLine('2026-11-21T00:00:03+00:00 TLSv1.2 - browser').group, 'none');
 });
 
 test('daily counts and monthly summary', () => {

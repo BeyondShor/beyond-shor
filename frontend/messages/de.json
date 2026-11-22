@@ -1741,9 +1741,9 @@
     },
     "visitors": {
       "label": "Besucher von Beyond Shor",
-      "summary": "der Verbindungen von Browsern im {month} waren quantensicher ({n} Verbindungen an {days} Tagen). Darunter die häufigsten ausgehandelten Verfahren:",
+      "summary": "der Verbindungen von Browsern im {month} waren quantensicher (ausgewertet an {days, plural, one {# Tag} other {# Tagen}}). Darunter die häufigsten ausgehandelten Verfahren:",
       "none": "Ab dem ersten vollständig ausgewerteten Tag steht hier, welcher Anteil der Browser-Verbindungen im laufenden Monat quantensicher war und welche Verfahren dabei ausgehandelt wurden.",
-      "groupDetail": "{n} von {total} Verbindungen"
+      "noGroup": "nicht ermittelt"
     },
     "visitorsPrivacy": "Für diese Statistik protokolliert der Webserver je Verbindung nur Zeitpunkt, TLS-Version, ausgehandeltes Verfahren und ob es sich um einen Bot handelt. IP-Adressen, aufgerufene Seiten und Browserkennungen werden dafür nicht gespeichert.",
     "method": {

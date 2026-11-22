@@ -23,6 +23,8 @@ const ALIASES = { '0x11ec': 'X25519MLKEM768', '0x11eb': 'SecP256r1MLKEM768', '0x
 export function parseLine(line) {
   const [ts, protocol, curve, client] = line.trim().split(' ');
   if (!ts || !/^\d{4}-\d{2}-\d{2}T/.test(ts) || !client) return null;
+  // No TLS at all (plain HTTP on port 80, only redirected to HTTPS): not a visitor connection.
+  if (!protocol || protocol === '-') return null;
   const date = new Date(ts).toISOString().slice(0, 10); // UTC day
   const group = curve === '-' || !curve ? 'none' : (ALIASES[curve.toLowerCase()] ?? curve);
   return { date, protocol, group, pq: PQ_GROUPS.has(curve) || PQ_GROUPS.has(group), client: client === 'bot' ? 'bot' : 'browser' };

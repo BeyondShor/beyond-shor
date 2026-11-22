@@ -1741,9 +1741,9 @@
     },
     "visitors": {
       "label": "Beyond Shor visitors",
-      "summary": "of browser connections in {month} were quantum-safe ({n} connections over {days} days). The most common negotiated methods:",
+      "summary": "of browser connections in {month} were quantum-safe (evaluated over {days, plural, one {# day} other {# days}}). The most common negotiated methods:",
       "none": "Starting with the first fully evaluated day, this box shows what share of browser connections this month was quantum-safe and which methods were negotiated.",
-      "groupDetail": "{n} of {total} connections"
+      "noGroup": "not determined"
     },
     "visitorsPrivacy": "For these statistics, the web server only logs the time, TLS version, negotiated method and whether the client is a bot for each connection. IP addresses, requested pages and user agents are not stored for this purpose.",
     "method": {

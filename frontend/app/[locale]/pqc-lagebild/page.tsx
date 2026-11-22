@@ -57,9 +57,8 @@ export default async function PqcLagebildPage({ params }: PageProps) {
   const vMonth = visitors?.months.at(-1) ?? null;
   const groupBars = vMonth
     ? Object.entries(vMonth.browser.groups).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([g, n]) => ({
-      key: g, label: g, value: n / vMonth.browser.connections,
+      key: g, label: g === 'none' ? t('visitors.noGroup') : g, value: n / vMonth.browser.connections,
       valueLabel: formatPercent(n / vMonth.browser.connections, locale),
-      detail: t('visitors.groupDetail', { n: formatNumber(n, locale), total: formatNumber(vMonth.browser.connections, locale) }),
     }))
     : [];
 
@@ -141,7 +140,7 @@ export default async function PqcLagebildPage({ params }: PageProps) {
                   <>
                     <p className="mt-2 text-4xl font-bold tabular-nums text-[var(--color-text-base)]">{formatPercent(vMonth.browser.pq / vMonth.browser.connections, locale)}</p>
                     <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-muted)]">
-                      {t('visitors.summary', { month: formatMonth(vMonth.month, locale), days: String(vMonth.days), n: formatNumber(vMonth.browser.connections, locale) })}
+                      {t('visitors.summary', { month: formatMonth(vMonth.month, locale), days: vMonth.days })}
                     </p>
                     <div className="mt-5"><ShareBars data={groupBars} emptyLabel="" /></div>
                   </>
