@@ -1,13 +1,28 @@
 /**
  * Small, dependency-free chart primitives for the PQC-Lagebild (plain HTML/SVG).
- * Single-series bars use the site primary; part-to-whole bars use a categorical set
- * validated against the dark surface (#0f172a): blue, orange, aqua, yellow — every
- * adjacent pair clears the CVD and normal-vision floors (dataviz validate_palette.js).
+ * Colours carry one meaning each across the whole page (COLORS below). Validated against
+ * the dark surface (#0f172a) with the dataviz validate_palette.js: lightness band, chroma,
+ * contrast >= 3:1, and every pair that can sit next to each other in a bar clears the CVD
+ * and normal-vision floors. Grey (unreachable) is deliberately achromatic: it means "no answer".
  * Every mark has a text equivalent (aria-label / title / visible value).
  */
 import type { ReactNode } from 'react';
 
-export const SERIES = ['#3987e5', '#d95926', '#199e70', '#c98500'] as const;
+export const COLORS = {
+  pq: '#3987e5',          // quantum-safe (X25519MLKEM768 and every "share quantum-safe" bar/line)
+  classic: '#d95926',     // X25519 / not quantum-safe
+  p256: '#199e70',        // P-256 key exchange
+  other: '#c98500',       // "other" in every breakdown
+  unreachable: '#64748b', // provider did not answer
+  rsa: '#a865d8',         // RSA signatures and keys
+  ecdsa: '#d55181',       // ECDSA signatures and keys
+} as const;
+
+/** Badges and icons for single verdicts (tables, live check): same meaning, same hue as the bars. */
+export const VERDICT = {
+  pq: { icon: '#6da7ec', badge: { borderColor: `${COLORS.pq}66`, background: `${COLORS.pq}1f` } },
+  classic: { icon: '#ec835a', badge: { borderColor: `${COLORS.classic}66`, background: `${COLORS.classic}1a` } },
+} as const;
 
 export function StatTile({ value, label, sub, accent = false }: { value: string; label: string; sub?: ReactNode; accent?: boolean }) {
   return (
@@ -28,7 +43,7 @@ export interface BarDatum {
   highlight?: boolean;
 }
 
-/** Horizontal share bars (one series). Value at the tip, details on hover/focus and for screen readers. */
+/** Horizontal share bars (one series: share quantum-safe, in COLORS.pq). Value at the tip, details on hover/focus and for screen readers. */
 export function ShareBars({ data, emptyLabel }: { data: BarDatum[]; emptyLabel: string }) {
   if (!data.length) return <p className="text-sm text-[var(--color-text-muted)]">{emptyLabel}</p>;
   return (
@@ -46,8 +61,8 @@ export function ShareBars({ data, emptyLabel }: { data: BarDatum[]; emptyLabel: 
           >
             {d.value != null && d.value > 0 && (
               <div
-                className={`absolute inset-y-0 left-0 rounded-full transition-opacity ${d.highlight ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-primary)]/80 group-hover:bg-[var(--color-primary)]'}`}
-                style={{ width: `${Math.max(1, d.value * 100)}%` }}
+                className={`absolute inset-y-0 left-0 rounded-full transition-opacity ${d.highlight ? '' : 'opacity-80 group-hover:opacity-100'}`}
+                style={{ width: `${Math.max(1, d.value * 100)}%`, background: COLORS.pq }}
               />
             )}
           </div>
@@ -61,7 +76,7 @@ export function ShareBars({ data, emptyLabel }: { data: BarDatum[]; emptyLabel: 
 export interface Part { key: string; label: string; value: number; color: string }
 
 /** Tall segmented bar (one whole split into parts) with legend; shares printed inside when they fit. */
-export function SegmentedBar({ parts, total, locale, ariaLabel, legend = true }: { parts: Part[]; total: number; locale: string; ariaLabel: string; legend?: boolean }) {
+export function SegmentedBar({ parts, total, locale, ariaLabel, legend = true, counts = true }: { parts: Part[]; total: number; locale: string; ariaLabel: string; legend?: boolean; counts?: boolean }) {
   const fmt = new Intl.NumberFormat(locale === 'de' ? 'de-DE' : 'en-US', { style: 'percent', maximumFractionDigits: 0 });
   const visible = parts.filter((p) => p.value > 0);
   const described = parts.map((p) => `${p.label} ${total ? fmt.format(p.value / total) : '–'}`).join(', ');
@@ -75,7 +90,7 @@ export function SegmentedBar({ parts, total, locale, ariaLabel, legend = true }:
               key={p.key}
               className="flex h-full items-center rounded-[4px] px-2 font-mono text-[11px] font-semibold text-white"
               style={{ width: `${s * 100}%`, background: p.color, minWidth: 2 }}
-              title={`${p.label}: ${fmt.format(s)} (${new Intl.NumberFormat(locale === 'de' ? 'de-DE' : 'en-US').format(p.value)})`}
+              title={counts ? `${p.label}: ${fmt.format(s)} (${new Intl.NumberFormat(locale === 'de' ? 'de-DE' : 'en-US').format(p.value)})` : `${p.label}: ${fmt.format(s)}`}
             >
               {s >= 0.08 ? fmt.format(s) : ''}
             </div>
@@ -87,7 +102,7 @@ export function SegmentedBar({ parts, total, locale, ariaLabel, legend = true }:
           <li key={p.key} className="flex items-center gap-1.5">
             <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: p.color }} aria-hidden="true" />
             <span>{p.label}</span>
-            {(!total || p.value / total < 0.08) && <span className="tabular-nums">{total ? fmt.format(p.value / total) : '–'}</span>}
+            {(!total || p.value / total < 0.08) && <span className="tabular-nums">{!total ? '–' : p.value / total < 0.005 ? `< ${fmt.format(0.01)}` : fmt.format(p.value / total)}</span>}
           </li>
         ))}
       </ul>}
@@ -96,7 +111,7 @@ export function SegmentedBar({ parts, total, locale, ariaLabel, legend = true }:
 }
 
 export interface LinePoint { x: string; y: number | null }
-export interface LineSeries { key: string; label: string; color: string; points: LinePoint[] }
+export interface LineSeries { key: string; label: string; color: string; dashed?: boolean; points: LinePoint[] }
 
 /** Share over months (0..1), one axis, 2px lines, end labels. Needs at least two months. */
 export function LineChart({ series, xLabels, locale, ariaLabel }: { series: LineSeries[]; xLabels: string[]; locale: string; ariaLabel: string }) {
@@ -125,7 +140,7 @@ export function LineChart({ series, xLabels, locale, ariaLabel }: { series: Line
         const last = s.points.at(-1);
         return (
           <g key={s.key}>
-            <polyline points={pts.map((p) => p.join(',')).join(' ')} fill="none" stroke={s.color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+            <polyline points={pts.map((p) => p.join(',')).join(' ')} fill="none" stroke={s.color} strokeWidth={2} strokeDasharray={s.dashed ? '6 4' : undefined} strokeLinejoin="round" strokeLinecap="round" />
             {s.points.map((p, i) => p.y == null ? null : (
               <circle key={i} cx={x(i)} cy={y(p.y)} r={4} fill={s.color} stroke="var(--color-bg-surface)" strokeWidth={2}>
                 <title>{`${s.label} · ${xLabels[i]}: ${fmt.format(p.y)}`}</title>
@@ -141,12 +156,16 @@ export function LineChart({ series, xLabels, locale, ariaLabel }: { series: Line
   );
 }
 
-export function Legend({ items }: { items: { label: string; color: string }[] }) {
+export function Legend({ items }: { items: { label: string; color: string; dashed?: boolean }[] }) {
   return (
     <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-[var(--color-text-muted)]">
       {items.map((i) => (
         <li key={i.label} className="flex items-center gap-1.5">
-          <span className="inline-block h-0.5 w-4 rounded" style={{ background: i.color }} aria-hidden="true" />
+          <span
+            className="inline-block h-0 w-4 border-t-2"
+            style={{ borderColor: i.color, borderTopStyle: i.dashed ? 'dashed' : 'solid' }}
+            aria-hidden="true"
+          />
           {i.label}
         </li>
       ))}

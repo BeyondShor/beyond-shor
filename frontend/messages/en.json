@@ -1698,6 +1698,7 @@
     "sigCaNote": "The method the certificate authority used to sign the certificate.",
     "sigDnssecTitle": "DNSSEC",
     "sigDnssecNote": "{signed} of zones are signed. Algorithms in use:",
+    "sigVariantOther": "other",
     "sigOutlook": "All measured methods are classical. For the public web, Chrome does not plan to accept X.509 certificates with ML-DSA and is working on Merkle Tree Certificates instead, to be rolled out from 2027. For DNSSEC, there are only research proposals so far.",
     "countriesTitle": "EU member states",
     "countriesIntro": "Share of websites with quantum-safe key exchange per member state.",
@@ -1741,9 +1742,8 @@
     },
     "visitors": {
       "label": "Beyond Shor visitors",
-      "summary": "of browser connections in {month} were quantum-safe. The most common negotiated methods:",
-      "none": "Starting with the first fully evaluated day, this box shows what share of browser connections this month was quantum-safe and which methods were negotiated.",
-      "noGroup": "not determined"
+      "summary": "of browser connections in {month} were quantum-safe. Negotiated methods:",
+      "none": "Starting with the first fully evaluated day, this box shows what share of browser connections this month was quantum-safe and which methods were negotiated."
     },
     "visitorsPrivacy": "For these statistics, the web server only logs the time, TLS version, negotiated method and whether the client is a bot for each connection. IP addresses, requested pages and user agents are not stored for this purpose.",
     "method": {

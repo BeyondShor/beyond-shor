@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import type { MatrixDataset, MatrixRelease, MatrixResult } from '@/lib/pqc-lagebild';
+import { VERDICT } from './charts';
 
 // Column order and labels; a column is shown only if some release in the table has it.
 const SERVER_COLS: [string, string][] = [
@@ -36,11 +37,11 @@ function ResultCell({ r, labels }: { r: MatrixResult | undefined; labels: { pq: 
     return <span className="text-[var(--color-text-muted)]" title={r ? detail(r) : labels.na}>–<span className="sr-only">{labels.na}</span></span>;
   }
   return r.pq ? (
-    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10 font-mono text-[11px] text-emerald-400" title={detail(r)}>
+    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border font-mono text-[11px]" style={{ ...VERDICT.pq.badge, color: VERDICT.pq.icon }} title={detail(r)}>
       ✔<span className="sr-only"> {labels.pq}</span>
     </span>
   ) : (
-    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-slate-500/30 bg-slate-500/10 font-mono text-[11px] text-slate-300" title={detail(r)}>
+    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border font-mono text-[11px]" style={{ ...VERDICT.classic.badge, color: VERDICT.classic.icon }} title={detail(r)}>
       ✘<span className="sr-only"> {labels.classic}</span>
     </span>
   );

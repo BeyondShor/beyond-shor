@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { Cell, MailMeta, ProviderRanking, TrendCell, View } from '@/lib/pqc-lagebild';
-import { ShareBars, SegmentedBar, StatTile, SectionTitle, LineChart, Legend, SERIES, type BarDatum, type Part } from './charts';
+import { ShareBars, SegmentedBar, StatTile, SectionTitle, LineChart, Legend, COLORS, VERDICT, type BarDatum, type Part } from './charts';
 
 export interface HistoryPoint { month: string; label: string; eu: number | null; de: number | null }
 
@@ -65,10 +65,10 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
     const g = c.web.groups ?? {};
     const other = Object.entries(g).filter(([k]) => !['X25519MLKEM768', 'X25519', 'P-256'].includes(k)).reduce((a, [, v]) => a + v, 0);
     return [
-      { key: 'mlkem', label: 'X25519MLKEM768', value: g.X25519MLKEM768 ?? 0, color: SERIES[0] },
-      { key: 'x25519', label: 'X25519', value: g.X25519 ?? 0, color: SERIES[1] },
-      { key: 'p256', label: 'P-256', value: g['P-256'] ?? 0, color: SERIES[2] },
-      { key: 'other', label: t('groups.other'), value: other, color: SERIES[3] },
+      { key: 'mlkem', label: 'X25519MLKEM768', value: g.X25519MLKEM768 ?? 0, color: COLORS.pq },
+      { key: 'x25519', label: 'X25519', value: g.X25519 ?? 0, color: COLORS.classic },
+      { key: 'p256', label: 'P-256', value: g['P-256'] ?? 0, color: COLORS.p256 },
+      { key: 'other', label: t('groups.other'), value: other, color: COLORS.other },
     ];
   };
 
@@ -212,9 +212,9 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
                     ariaLabel={t('mailTitle')}
                     total={measured}
                     parts={[
-                      { key: 'pq', label: t('mailParts.pq'), value: m.pq, color: SERIES[0] },
-                      { key: 'classic', label: t('mailParts.classic'), value: m.answered - m.pq, color: SERIES[1] },
-                      { key: 'unreachable', label: t('mailParts.unreachable'), value: unreachable, color: SERIES[2] },
+                      { key: 'pq', label: t('mailParts.pq'), value: m.pq, color: COLORS.pq },
+                      { key: 'classic', label: t('mailParts.classic'), value: m.answered - m.pq, color: COLORS.classic },
+                      { key: 'unreachable', label: t('mailParts.unreachable'), value: unreachable, color: COLORS.unreachable },
                     ]}
                   />
                   <div className="mb-8" />
@@ -236,9 +236,9 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
                               {e.answered === 0 ? (
                                 <span className="font-mono text-xs text-[var(--color-text-muted)]">{t('mailTable.unreachable')}</span>
                               ) : e.pq === e.answered ? (
-                                <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] text-emerald-400">✔ {e.group ?? 'ML-KEM'}</span>
+                                <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 font-mono text-[11px] text-[var(--color-text-base)]" style={VERDICT.pq.badge}><span style={{ color: VERDICT.pq.icon }}>✔</span> {e.group ?? 'ML-KEM'}</span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-slate-500/30 bg-slate-500/10 px-2 py-0.5 font-mono text-[11px] text-slate-300">✘ {e.group ?? t('matrix.classic')}</span>
+                                <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 font-mono text-[11px] text-[var(--color-text-base)]" style={VERDICT.classic.badge}><span style={{ color: VERDICT.classic.icon }}>✘</span> {e.group ?? t('matrix.classic')}</span>
                               )}
                             </td>
                           </tr>
@@ -263,12 +263,12 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
               {sum(main.web.certKeys) > 0 && <div>
                 <SigHead title={t('sigKeysTitle')} count={t('sites', { n: nf.format(sum(main.web.certKeys)) })} />
                 <p className="mb-4 text-sm text-[var(--color-text-muted)]">{t('sigKeysNote')}</p>
-                <SegmentedBar locale={locale} ariaLabel={t('sigKeysTitle')} total={sum(main.web.certKeys)} parts={topParts(Object.entries(main.web.certKeys ?? {}), t('groups.other'))} />
+                <SigBar entries={Object.entries(main.web.certKeys ?? {})} ariaLabel={t('sigKeysTitle')} />
               </div>}
               {sum(main.web.certSigs) > 0 && <div>
                 <SigHead title={t('sigCaTitle')} count={t('sites', { n: nf.format(sum(main.web.certSigs)) })} />
                 <p className="mb-4 text-sm text-[var(--color-text-muted)]">{t('sigCaNote')}</p>
-                <SegmentedBar locale={locale} ariaLabel={t('sigCaTitle')} total={sum(main.web.certSigs)} parts={topParts(Object.entries(main.web.certSigs ?? {}), t('groups.other'))} />
+                <SigBar entries={Object.entries(main.web.certSigs ?? {})} ariaLabel={t('sigCaTitle')} />
               </div>}
               <div>
                 <SigHead title={t('sigDnssecTitle')} count={main.dns ? t('zones', { n: nf.format(main.dns.signed), of: nf.format(main.dns.answered) }) : undefined} />
@@ -276,7 +276,7 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
                   {main.dns ? t('sigDnssecNote', { signed: pf(sh(main.dns.signed, main.dns.answered)) }) : t('kpi.tooFew')}
                 </p>
                 {main.dns && main.dns.signed > 0 && (
-                  <SegmentedBar locale={locale} ariaLabel={t('sigDnssecTitle')} total={sum(main.dns.algorithms)} parts={dnssecParts(main.dns.algorithms, t('groups.other'))} />
+                  <SigBar entries={dnssecEntries(main.dns.algorithms)} ariaLabel={t('sigDnssecTitle')} />
                 )}
               </div>
               <p className="max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">{t('sigOutlook')}</p>
@@ -316,14 +316,14 @@ export default function LagebildExplorer({ cells, providers, mail, trend, previo
             )}
             {history.length >= 2 && (
               <div className="mt-8 space-y-3">
-                <Legend items={[{ label: t('view.eu'), color: SERIES[0] }, { label: t('view.de'), color: SERIES[1] }]} />
+                <Legend items={[{ label: t('view.eu'), color: COLORS.pq }, { label: t('view.de'), color: COLORS.pq, dashed: true }]} />
                 <LineChart
                   locale={locale}
                   ariaLabel={t('historyAria')}
                   xLabels={history.map((h) => h.label)}
                   series={[
-                    { key: 'eu', label: 'EU', color: SERIES[0], points: history.map((h) => ({ x: h.month, y: h.eu })) },
-                    { key: 'de', label: 'DE', color: SERIES[1], points: history.map((h) => ({ x: h.month, y: h.de })) },
+                    { key: 'eu', label: 'EU', color: COLORS.pq, points: history.map((h) => ({ x: h.month, y: h.eu })) },
+                    { key: 'de', label: 'DE', color: COLORS.pq, dashed: true, points: history.map((h) => ({ x: h.month, y: h.de })) },
                   ]}
                 />
               </div>
@@ -368,21 +368,53 @@ const small = (x: number | null) => (x != null && x > 0 && x < 0.001 ? 2 : 1);
 
 const sum = (o: Record<string, number> | undefined) => Object.values(o ?? {}).reduce((a, b) => a + b, 0);
 
-/** At most four parts (validated palette): the three largest plus "other". */
-function topParts(entries: [string, number][], otherLabel: string): Part[] {
-  const sorted = entries.filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
-  const head = sorted.slice(0, 3);
-  const rest = sorted.slice(3).reduce((a, [, v]) => a + v, 0);
-  const parts: Part[] = head.map(([k, v], i) => ({ key: k, label: k, value: v, color: SERIES[i] }));
-  if (rest > 0) parts.push({ key: 'other', label: otherLabel, value: rest, color: SERIES[3] });
-  return parts;
-}
+type SigFamily = 'rsa' | 'ecdsa' | 'other';
+const sigFamily = (name: string): SigFamily => (name.startsWith('RSA') ? 'rsa' : name.startsWith('ECDSA') ? 'ecdsa' : 'other');
 
-function dnssecParts(algs: Record<string, number>, otherLabel: string): Part[] {
+function dnssecEntries(algs: Record<string, number>): [string, number][] {
   const merged: Record<string, number> = {};
   for (const [a, n] of Object.entries(algs)) {
     const name = DNSSEC_NAMES[a] ?? `#${a}`;
     merged[name] = (merged[name] ?? 0) + n;
   }
-  return topParts(Object.entries(merged), otherLabel);
+  return Object.entries(merged);
+}
+
+/**
+ * Signature bar: one colour per algorithm family (RSA, ECDSA, other), in the same order in all
+ * three bars, so a colour means the same thing everywhere. Key sizes and variants are listed below the bar as text.
+ */
+function SigBar({ entries, ariaLabel }: { entries: [string, number][]; ariaLabel: string }) {
+  const t = useTranslations('pqcLagebild');
+  const locale = useLocale();
+  const pct = new Intl.NumberFormat(locale === 'de' ? 'de-DE' : 'en-US', { style: 'percent', maximumFractionDigits: 1 });
+  const fmtShare = (x: number) => (x > 0 && x < 0.001 ? `< ${pct.format(0.001)}` : pct.format(x));
+  const total = entries.reduce((a, [, v]) => a + v, 0);
+  const families: SigFamily[] = ['rsa', 'ecdsa', 'other'];
+  const byFamily = Object.fromEntries(families.map((f) => [f, entries.filter(([k, v]) => v > 0 && sigFamily(k) === f).sort((a, b) => b[1] - a[1])])) as Record<SigFamily, [string, number][]>;
+  const label = { rsa: 'RSA', ecdsa: 'ECDSA', other: t('groups.other') };
+  const parts: Part[] = families
+    .map((f) => ({ key: f, label: label[f], value: byFamily[f].reduce((a, [, v]) => a + v, 0), color: COLORS[f] }))
+    .filter((p) => p.value > 0)
+  const variant = (f: SigFamily, name: string) => {
+    if (f === 'other') return name;
+    const rest = name.replace(/^(RSA|ECDSA)[-/ ]?/, '');
+    if (rest === 'other') return t('sigVariantOther');
+    return /^\d+$/.test(rest) ? `${rest} Bit` : rest;
+  };
+  const details = parts.filter((p) => byFamily[p.key as SigFamily].length > 1 || p.key === 'other');
+  return (
+    <>
+      <SegmentedBar locale={locale} ariaLabel={ariaLabel} total={total} parts={parts} />
+      {details.length > 0 && (
+        <ul className="mt-2 space-y-0.5 font-mono text-[11px] leading-relaxed text-[var(--color-text-muted)]">
+          {details.map((p) => (
+            <li key={p.key}>
+              {p.label}: {byFamily[p.key as SigFamily].map(([k, v]) => `${variant(p.key as SigFamily, k)} ${fmtShare(v / total)}`).join(' · ')}
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
 }

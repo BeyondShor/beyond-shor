@@ -10,7 +10,7 @@ import LagebildExplorer, { type HistoryPoint } from '@/components/pqc-lagebild/L
 import MatrixTable from '@/components/pqc-lagebild/MatrixTable';
 import LiveConnection from '@/components/pqc-lagebild/LiveConnection';
 import LagebildSignatureBadge from '@/components/pqc-lagebild/LagebildSignatureBadge';
-import { SectionTitle, ShareBars } from '@/components/pqc-lagebild/charts';
+import { SectionTitle, SegmentedBar, COLORS, type Part } from '@/components/pqc-lagebild/charts';
 
 // Data arrives once a month from the pull job; re-read the directory at most hourly.
 export const revalidate = 3600;
@@ -55,12 +55,19 @@ export default async function PqcLagebildPage({ params }: PageProps) {
   });
 
   const vMonth = visitors?.months.at(-1) ?? null;
-  const groupBars = vMonth
-    ? Object.entries(vMonth.browser.groups).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([g, n]) => ({
-      key: g, label: g === 'none' ? t('visitors.noGroup') : g, value: n / vMonth.browser.connections,
-      valueLabel: formatPercent(n / vMonth.browser.connections, locale),
-    }))
-    : [];
+  // Same colours as the key-exchange bars in section 02.
+  const groupParts: Part[] = (() => {
+    if (!vMonth) return [];
+    const g = vMonth.browser.groups;
+    const p256 = (g['P-256'] ?? 0) + (g.prime256v1 ?? 0) + (g.secp256r1 ?? 0);
+    const known = (g.X25519MLKEM768 ?? 0) + (g.X25519 ?? 0) + p256;
+    return [
+      { key: 'mlkem', label: 'X25519MLKEM768', value: g.X25519MLKEM768 ?? 0, color: COLORS.pq },
+      { key: 'x25519', label: 'X25519', value: g.X25519 ?? 0, color: COLORS.classic },
+      { key: 'p256', label: 'P-256', value: p256, color: COLORS.p256 },
+      { key: 'other', label: t('groups.other'), value: vMonth.browser.connections - known, color: COLORS.other },
+    ].filter((p) => p.value > 0);
+  })();
 
 
   return (
@@ -142,7 +149,7 @@ export default async function PqcLagebildPage({ params }: PageProps) {
                     <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-muted)]">
                       {t('visitors.summary', { month: formatMonth(vMonth.month, locale) })}
                     </p>
-                    <div className="mt-5"><ShareBars data={groupBars} emptyLabel="" /></div>
+                    <div className="mt-5"><SegmentedBar locale={locale} ariaLabel={t('visitors.label')} total={vMonth.browser.connections} parts={groupParts} counts={false} /></div>
                   </>
                 ) : (
                   <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-muted)]">{t('visitors.none')}</p>

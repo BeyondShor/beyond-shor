@@ -1698,6 +1698,7 @@
     "sigCaNote": "Mit diesem Verfahren hat die Zertifizierungsstelle das Zertifikat unterschrieben.",
     "sigDnssecTitle": "DNSSEC",
     "sigDnssecNote": "{signed} der Zonen sind signiert. Verwendete Algorithmen:",
+    "sigVariantOther": "andere",
     "sigOutlook": "Alle gemessenen Verfahren sind klassisch. Chrome plant für das öffentliche Web keine X.509-Zertifikate mit ML-DSA, sondern Merkle Tree Certificates, die ab 2027 eingeführt werden sollen. Für DNSSEC gibt es bisher nur Forschungsvorschläge.",
     "countriesTitle": "Länder der EU",
     "countriesIntro": "Anteil der Websites mit quantensicherem Schlüsselaustausch je Mitgliedstaat.",
@@ -1741,9 +1742,8 @@
     },
     "visitors": {
       "label": "Besucher von Beyond Shor",
-      "summary": "der Verbindungen von Browsern im {month} waren quantensicher. Darunter die häufigsten ausgehandelten Verfahren:",
-      "none": "Ab dem ersten vollständig ausgewerteten Tag steht hier, welcher Anteil der Browser-Verbindungen im laufenden Monat quantensicher war und welche Verfahren dabei ausgehandelt wurden.",
-      "noGroup": "nicht ermittelt"
+      "summary": "der Verbindungen von Browsern im {month} waren quantensicher. Ausgehandelte Verfahren:",
+      "none": "Ab dem ersten vollständig ausgewerteten Tag steht hier, welcher Anteil der Browser-Verbindungen im laufenden Monat quantensicher war und welche Verfahren dabei ausgehandelt wurden."
     },
     "visitorsPrivacy": "Für diese Statistik protokolliert der Webserver je Verbindung nur Zeitpunkt, TLS-Version, ausgehandeltes Verfahren und ob es sich um einen Bot handelt. IP-Adressen, aufgerufene Seiten und Browserkennungen werden dafür nicht gespeichert.",
     "method": {
