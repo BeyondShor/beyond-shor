@@ -7,9 +7,8 @@
  *  - Incorrect shared-secret semantics (encap ≠ decap)
  *  - HKDF + AES-GCM round-trip correctness
  *
- * McEliece and FrodoKEM are intentionally skipped here because they require
- * WASM initialisation and McEliece keygen takes 10–30 s. Both are covered
- * by Playwright E2E tests that run the full playground in a real browser.
+ * The McEliece and FrodoKEM protocol runs are covered by Playwright E2E tests
+ * (McEliece keygen takes 10–30 s); only their sizes are pinned here, at the end.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -207,5 +206,35 @@ describe('HKDF-SHA256 + AES-256-GCM (hybrid key derivation)', () => {
     await expect(
       globalThis.crypto.subtle.decrypt({ name: 'AES-GCM', iv }, serverKey, ciphertextBuf)
     ).rejects.toThrow();
+  });
+});
+
+// ── Sizes quoted in the playground texts ──────────────────────────────────────
+// The descriptions name exact byte counts for McEliece and FrodoKEM. If a library
+// upgrade changes them (e.g. McEliece moving to the round 4 format with a
+// 208-byte ciphertext), these tests fail and the texts need updating too.
+
+describe('sizes quoted in the playground', () => {
+  it('Classic McEliece 8192128 (mceliece package, round 3 format)', async () => {
+    const { mceliece } = await import('mceliece');
+    expect(await mceliece.publicKeyBytes).toBe(1_357_824);
+    expect(await mceliece.privateKeyBytes).toBe(14_080);
+    expect(await mceliece.cyphertextBytes).toBe(240);
+    expect(await mceliece.bytes).toBe(32);
+  });
+
+  it('FrodoKEM-1344-AES (liboqs, salted ISO version)', async () => {
+    const { createFrodoKEM1344AES } = await import('@oqs/liboqs-js');
+    const kem = await createFrodoKEM1344AES();
+    try {
+      const { publicKey, secretKey } = kem.generateKeyPair();
+      const { ciphertext, sharedSecret } = kem.encapsulate(publicKey);
+      expect(publicKey.byteLength).toBe(21_520);
+      expect(secretKey.byteLength).toBe(43_088);
+      expect(ciphertext.byteLength).toBe(21_696);
+      expect(sharedSecret.byteLength).toBe(32);
+    } finally {
+      kem.destroy();
+    }
   });
 });

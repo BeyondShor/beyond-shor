@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import type {
   KemAlgorithm,
@@ -17,6 +17,7 @@ import {
   type KemRunShareState, type KemBenchmarkShareState,
 } from '@/lib/share-state';
 import { computeFullStats, type FullStats } from '@/lib/stats';
+import { useFormatBytes, SizeSummary } from '@/components/PlaygroundSizes';
 
 // ── Timing constants ────────────────────────────────────────────────────────
 
@@ -72,12 +73,6 @@ function fromHex(hex: string): Uint8Array {
 
 function isValidHex(s: string): boolean {
   return s.length > 0 && /^[0-9a-fA-F]+$/.test(s) && s.length % 2 === 0;
-}
-
-function formatBytes(n: number): string {
-  if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
-  if (n >= 1024)        return `${(n / 1024).toFixed(1)} KB`;
-  return `${n} B`;
 }
 
 function fmtMs(ms: number | undefined): string {
@@ -153,6 +148,7 @@ interface HexFieldProps {
   label:           string;
   bytes:           Uint8Array;
   isPrivate:       boolean;
+  hint?:           string;             // what the size includes, e.g. the GCM tag
   alwaysExpanded?: boolean;
   variant?:        'normal' | 'wrong'; // 'wrong' = tamper cascade, shown in red
   onReset?:        () => void;         // called when user resets a tamper edit → clears cascade
@@ -162,7 +158,7 @@ interface HexFieldProps {
   tamperActive?:   boolean;
 }
 
-function HexField({ label, bytes, isPrivate, alwaysExpanded = false,
+function HexField({ label, bytes, isPrivate, hint, alwaysExpanded = false,
   variant = 'normal', onReset, tamperField, onTamper, tamperActive = false }: HexFieldProps) {
   const [expanded,   setExpanded]   = useState(alwaysExpanded);
   const [copied,     setCopied]     = useState(false);
@@ -170,6 +166,7 @@ function HexField({ label, bytes, isPrivate, alwaysExpanded = false,
   const [hexError,   setHexError]   = useState(false);
   const { attackerMode } = useAttackerContext();
   const t = useTranslations('playground');
+  const fmtBytes = useFormatBytes();
 
   const hex = toHex(bytes);
   const needsTruncate = !alwaysExpanded && hex.length > 32 + 16 + 3;
@@ -183,6 +180,10 @@ function HexField({ label, bytes, isPrivate, alwaysExpanded = false,
   const isEditing   = tamperActive && tamperField && editHex !== null;
   const currentHex  = editHex ?? hex;
 
+  // Tampering changes bytes, not the length: a value of the wrong length is
+  // rejected by the libraries before any cryptography happens
+  const lengthError = editHex !== null && isValidHex(editHex) && editHex.length !== hex.length;
+
   function handleEdit(val: string) {
     const clean = val.replace(/\s/g, '');
     setEditHex(clean);
@@ -192,6 +193,7 @@ function HexField({ label, bytes, isPrivate, alwaysExpanded = false,
   function handleTamperSubmit() {
     if (!tamperField || !onTamper || !editHex) return;
     if (!isValidHex(editHex)) { setHexError(true); return; }
+    if (editHex.length !== hex.length) return;
     if (editHex === hex) { setEditHex(null); return; } // nothing changed — close edit mode silently
     onTamper(tamperField, fromHex(editHex), editHex);
   }
@@ -210,7 +212,7 @@ function HexField({ label, bytes, isPrivate, alwaysExpanded = false,
           <span className="font-mono text-[0.65rem] text-red-400/70 leading-none">👁</span>
         )}
         <span className="font-mono text-xs text-[var(--color-text-muted)]">{label}</span>
-        <span className="font-mono text-xs text-[var(--color-text-muted)]">{formatBytes(bytes.length)}</span>
+        <span className="font-mono text-xs text-[var(--color-text-base)] tabular-nums">{fmtBytes(bytes.length)}</span>
         <div className="ml-auto flex items-center gap-1">
           {tamperActive && tamperField && editHex === null && (
             <button onClick={() => { setEditHex(hex); setExpanded(true); }}
@@ -237,6 +239,8 @@ function HexField({ label, bytes, isPrivate, alwaysExpanded = false,
         </div>
       </div>
 
+      {hint && <span className="font-mono text-xs text-[var(--color-text-muted)] leading-relaxed">{hint}</span>}
+
       {isEditing ? (
         <div className="flex flex-col gap-1">
           <textarea
@@ -249,11 +253,12 @@ function HexField({ label, bytes, isPrivate, alwaysExpanded = false,
             spellCheck={false}
           />
           <div className="flex items-center gap-2">
-            <button onClick={handleTamperSubmit} disabled={hexError}
+            <button onClick={handleTamperSubmit} disabled={hexError || lengthError}
               className="font-mono text-xs px-3 py-1 rounded border border-amber-500/40 text-amber-400 hover:border-amber-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               {t('tamperButton')}
             </button>
-            {hexError && <span className="font-mono text-xs text-red-400/70">{t('invalidHexInput')}</span>}
+            {hexError && <span className="font-mono text-xs text-red-400">{t('invalidHexInput')}</span>}
+            {lengthError && <span className="font-mono text-xs text-red-400">{t('tamperLengthError', { n: bytes.length })}</span>}
           </div>
         </div>
       ) : (
@@ -372,6 +377,7 @@ function Spinner({ className }: { className?: string }) {
 
 function RaceCard({ kem, entry }: { kem: KemAlgorithm; entry: RaceEntry }) {
   const t = useTranslations('playground');
+  const formatBytes = useFormatBytes();
   const isRunning = entry.phase === 'running';
   const isDone    = entry.phase === 'done';
   const isWaiting = entry.phase === 'waiting';
@@ -416,9 +422,9 @@ function RaceCard({ kem, entry }: { kem: KemAlgorithm; entry: RaceEntry }) {
             </span>
           )}
           {entry.pubKeyBytes !== undefined && (
-            <span className="font-mono text-xs text-[var(--color-text-dim)] mt-0.5">
-              {t('racePubKey', { size: formatBytes(entry.pubKeyBytes) })}
-              {entry.ciphertextBytes !== undefined && ` · ${t('raceCiphertext', { size: formatBytes(entry.ciphertextBytes) })}`}
+            <span className="flex flex-col font-mono text-xs text-[var(--color-text-muted)] mt-0.5">
+              <span>{t('racePubKey', { size: formatBytes(entry.pubKeyBytes) })}</span>
+              {entry.ciphertextBytes !== undefined && <span>{t('raceCiphertext', { size: formatBytes(entry.ciphertextBytes) })}</span>}
             </span>
           )}
         </div>
@@ -839,6 +845,7 @@ function StatsTable({ kem, kg, ec, dc, pubKeyBytes, ciphertextBytes, ssBytes }: 
 }) {
   const [open, setOpen] = useState(false);
   const t = useTranslations('playground');
+  const formatBytes = useFormatBytes();
   const isMc    = kem === 'mceliece';
   const isFrodo = kem === 'frodokem';
   const clr     = isMc ? 'text-amber-400' : isFrodo ? 'text-violet-400' : 'text-[var(--color-primary)]';
@@ -847,14 +854,14 @@ function StatsTable({ kem, kg, ec, dc, pubKeyBytes, ciphertextBytes, ssBytes }: 
   return (
     <div className={`rounded-lg border overflow-hidden ${border}`}>
       <button onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-white/2 transition-colors">
+        className="w-full flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2.5 text-left hover:bg-white/2 transition-colors">
         <span className={`font-mono text-xs font-semibold ${clr}`}>{KEM_DISPLAY_NAMES[kem]}</span>
-        <div className="flex items-center gap-3 font-mono text-xs text-[var(--color-text-muted)]">
-          <span className="hidden sm:inline tabular-nums opacity-70">
-            <AbbrevTooltip abbrev="PK" full="Public Key" /> {formatBytes(pubKeyBytes)} · <AbbrevTooltip abbrev="CT" full="Ciphertext" /> {formatBytes(ciphertextBytes)} · <AbbrevTooltip abbrev="SS" full="Shared Secret" /> {formatBytes(ssBytes)}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-[var(--color-text-muted)]">
+          <span className="tabular-nums">
+            <AbbrevTooltip abbrev="pk" full="Public Key" /> {formatBytes(pubKeyBytes)} · <AbbrevTooltip abbrev="ct" full="Ciphertext" /> {formatBytes(ciphertextBytes)} · <AbbrevTooltip abbrev="ss" full="Shared Secret" /> {formatBytes(ssBytes)}
           </span>
-          <span className="tabular-nums">Keygen {fmt2(kg.median)} <span className="opacity-50">med</span></span>
-          <span>{open ? '−' : '+'}</span>
+          <span className="tabular-nums">Keygen {fmt2(kg.median)} <span className="opacity-70">med</span></span>
+          <span aria-hidden="true">{open ? '−' : '+'}</span>
         </div>
       </button>
       {open && (
@@ -1075,6 +1082,7 @@ function stepsFromShare(shared: KemRunShareState): PlaygroundSteps {
 
 export default function HybridPlayground({ snippetHtmls, realWorldItems, initialState }: HybridPlaygroundProps) {
   const t = useTranslations('playground');
+  const locale = useLocale();
 
   // A shared run or benchmark is the starting state; PlaygroundWrapper remounts
   // this component (key) when a different one arrives.
@@ -1295,6 +1303,7 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
 
   function handleShare() {
     if (!steps[1] || !steps[2] || !steps[3] || !steps[4] || !steps[5] || !steps[6]) return;
+    if (steps[1].kem === 'mceliece') return;
     const state: KemRunShareState = {
       v: 1, mode: 'encryption', type: 'run', kem: steps[1].kem,
       s1: {
@@ -1479,6 +1488,7 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
                 <RaceCard key={k} kem={k} entry={race[k] ?? { phase: 'waiting' }} />
               ))}
             </div>
+            <p className="font-mono text-xs text-[var(--color-text-muted)] leading-relaxed">{t('raceNote')}</p>
           </div>
         )}
 
@@ -1551,7 +1561,10 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
                   {t(tamperMode ? 'tamperToggleActive' : 'tamperToggle')}
                 </button>
                 <div className="ml-auto flex gap-2">
-                  <button onClick={handleShare} className="font-mono text-xs px-3 py-1.5 rounded-lg border border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors">
+                  {/* A McEliece run does not fit into a URL: the public key alone is 1.36 MB */}
+                  <button onClick={handleShare} disabled={s1?.kem === 'mceliece'}
+                    title={s1?.kem === 'mceliece' ? t('shareTooLarge') : undefined}
+                    className="font-mono text-xs px-3 py-1.5 rounded-lg border border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-[var(--color-glass-border)] disabled:hover:text-[var(--color-text-muted)]">
                     {shareCopied ? t('shareCopied') : t('shareButton')}
                   </button>
                   <button
@@ -1589,8 +1602,8 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
                     <span className="font-mono text-xs text-[var(--color-text-muted)] border-b border-[var(--color-glass-border)] pb-1">
                       {t('x25519Section')}
                     </span>
-                    <HexField label={t('keyClient')} bytes={s1.clientX25519Priv} isPrivate={true} />
-                    <HexField label={t('keyClient')} bytes={s1.clientX25519Pub}  isPrivate={false} />
+                    <HexField label={t('keyPrivate')} bytes={s1.clientX25519Priv} isPrivate={true} />
+                    <HexField label={t('keyPublic')}  bytes={s1.clientX25519Pub}  isPrivate={false} />
                   </div>
                 }
                 right={
@@ -1599,8 +1612,8 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
                       <span className="font-mono text-xs text-[var(--color-text-muted)] border-b border-[var(--color-glass-border)] pb-1">
                         {t('x25519Section')}
                       </span>
-                      <HexField label={t('keyServer')} bytes={s1.serverX25519Priv} isPrivate={true} />
-                      <HexField label={t('keyServer')} bytes={s1.serverX25519Pub}  isPrivate={false} />
+                      <HexField label={t('keyPrivate')} bytes={s1.serverX25519Priv} isPrivate={true} />
+                      <HexField label={t('keyPublic')}  bytes={s1.serverX25519Pub}  isPrivate={false} />
                     </div>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-baseline justify-between border-b border-[var(--color-glass-border)] pb-1">
@@ -1609,11 +1622,12 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
                         </span>
                         <span title={t('keygenTimeTitle')}
                           className={`font-mono text-xs ${s1.kemKeygenMs > 1000 ? 'text-amber-400' : 'text-emerald-400'}`}>
-                          {t('keygenTime', { ms: Math.round(s1.kemKeygenMs).toLocaleString() })}
+                          {t('keygenTime', { ms: Math.round(s1.kemKeygenMs).toLocaleString(locale === 'de' ? 'de-DE' : 'en-US') })}
                         </span>
                       </div>
-                      <HexField label={t('keyServer')} bytes={s1.kemServerPriv} isPrivate={true} />
-                      <HexField label={t('keyServer')} bytes={s1.kemServerPub}  isPrivate={false} />
+                      <HexField label={t('keyPrivate')} bytes={s1.kemServerPriv} isPrivate={true}
+                        hint={s1.kem === 'mlkem' ? t('hintMlKemSk') : s1.kem === 'frodokem' ? t('hintFrodoSk') : undefined} />
+                      <HexField label={t('keyPublic')}  bytes={s1.kemServerPub}  isPrivate={false} />
                     </div>
                   </>
                 }
@@ -1659,10 +1673,10 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
                     {tamperRunning && tamperReplay?.field === 'kemCiphertext' && !tamperReplay.step3 && (
                       <Spinner className="text-amber-400 mt-1" />
                     )}
-                    <span className="font-mono text-[0.6rem] text-[var(--color-text-dim)] text-center">
+                    <span className="font-mono text-xs text-[var(--color-text-muted)] text-center">
                       {t('encapTime', { ms: Math.round(s3.encapMs) })}
                     </span>
-                    <span className="font-mono text-[0.6rem] text-[var(--color-text-dim)] text-center">
+                    <span className="font-mono text-xs text-[var(--color-text-muted)] text-center">
                       {t('decapTime', { ms: Math.round(s3.decapMs) })}
                     </span>
                   </div>
@@ -1738,8 +1752,12 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
                             <span className="font-mono text-xs">{t('step3PfsMcElieceCombined')}</span>
                           </li>
                           <li className="flex gap-2 items-start">
-                            <span className="text-[var(--color-text-dim)] flex-shrink-0 font-mono text-xs">i</span>
-                            <span className="font-mono text-xs text-[var(--color-text-dim)]">{t('step3PfsMcElieceDemoNote')}</span>
+                            <span className="text-amber-400 flex-shrink-0 font-mono">⚠</span>
+                            <span className="font-mono text-xs text-amber-300/80">{t('step3PfsMcElieceQuantum')}</span>
+                          </li>
+                          <li className="flex gap-2 items-start">
+                            <span className="text-[var(--color-text-muted)] flex-shrink-0 font-mono text-xs">i</span>
+                            <span className="font-mono text-xs text-[var(--color-text-muted)]">{t('step3PfsMcElieceDemoNote')}</span>
                           </li>
                         </ul>
                       </div>
@@ -1812,6 +1830,7 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
                 <HexField label={t('aesIv')} bytes={s5.iv} isPrivate={false} alwaysExpanded
                   tamperField="iv" onTamper={handleTamper} tamperActive={tamperMode} onReset={handleTamperReset} />
                 <HexField label={t('aesCiphertext')} bytes={s5.ciphertext} isPrivate={false}
+                  hint={t('hintAesCt', { pt: s5.ciphertext.length - 16 })}
                   tamperField="aesCiphertext" onTamper={handleTamper} tamperActive={tamperMode} onReset={handleTamperReset} />
               </StepCard>
             )}
@@ -1856,6 +1875,39 @@ export default function HybridPlayground({ snippetHtmls, realWorldItems, initial
                   </div>
                 )}
               </StepCard>
+            )}
+
+            {/* Exact sizes of this run */}
+            {phase === 'done' && s1 && s3 && s4 && s5 && (
+              <SizeSummary
+                title={t('sizeTitle')}
+                intro={t('sizeIntro')}
+                groups={[
+                  {
+                    title: t('sizeWireTitle'),
+                    total: t('sizeTotal'),
+                    rows: [
+                      { label: t('sizeRowX25519PkClient'), bytes: s1.clientX25519Pub.length },
+                      { label: t('sizeRowX25519PkServer'), bytes: s1.serverX25519Pub.length },
+                      { label: t('sizeRowKemPk', { kem: KEM_DISPLAY_NAMES[s1.kem] }), bytes: s1.kemServerPub.length },
+                      { label: t('sizeRowKemCt', { kem: KEM_DISPLAY_NAMES[s1.kem] }), bytes: s3.kemCiphertext.length },
+                      { label: t('sizeRowSalt'), bytes: s4.hkdfSalt.length },
+                      { label: t('sizeRowIv'), bytes: s5.iv.length },
+                      { label: t('sizeRowAesCt'), bytes: s5.ciphertext.length },
+                    ],
+                  },
+                  {
+                    title: t('sizeLocalTitle'),
+                    rows: [
+                      { label: t('sizeRowX25519Sk'), bytes: s1.clientX25519Priv.length },
+                      { label: t('sizeRowKemSk', { kem: KEM_DISPLAY_NAMES[s1.kem] }), bytes: s1.kemServerPriv.length },
+                      { label: t('sizeRowSecret'), bytes: s3.kemSecret.length },
+                      { label: t('sizeRowCombined'), bytes: s4.combinedKey.length },
+                    ],
+                  },
+                ]}
+                note={t('sizeTlsNote')}
+              />
             )}
 
             {/* Real-World context */}

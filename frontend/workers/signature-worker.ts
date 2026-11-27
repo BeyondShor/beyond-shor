@@ -22,6 +22,7 @@ let savedState: {
   message:   Uint8Array;
   signature: Uint8Array;
   dsa:       DsaAlgorithm;
+  slh:       SlhDsa | null;
 } | null = null;
 
 async function getSlhDsa(variant: 'slhdsa128s' | 'slhdsa128f') {
@@ -35,11 +36,14 @@ async function sha256(msg: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(buf);
 }
 
+type SlhDsa = Awaited<ReturnType<typeof getSlhDsa>>;
+
 async function doVerify(
   dsa: DsaAlgorithm,
   sig: Uint8Array,
   msg: Uint8Array,
   pub: Uint8Array,
+  slh: SlhDsa | null,
 ): Promise<boolean> {
   try {
     if (dsa === 'ecdsa') {
@@ -50,12 +54,14 @@ async function doVerify(
       return p256.verify(sig, msgHash, pub, { prehash: false });
     }
     if (dsa === 'mldsa65') return ml_dsa65.verify(sig, msg, pub);
-    const algo = await getSlhDsa(dsa as 'slhdsa128s' | 'slhdsa128f');
-    return algo.verify(sig, msg, pub);
+    return slh!.verify(sig, msg, pub);
   } catch { return false; }
 }
 
 async function run(message: string, dsa: DsaAlgorithm) {
+  // SLH-DSA is imported on demand; loading the module is not part of any timing
+  const slh = dsa === 'slhdsa128s' || dsa === 'slhdsa128f' ? await getSlhDsa(dsa) : null;
+
   // ── Step 1: Key generation ────────────────────────────────────────────────
   let secretKey: Uint8Array;
   let publicKey: Uint8Array;
@@ -69,8 +75,7 @@ async function run(message: string, dsa: DsaAlgorithm) {
     secretKey = kp.secretKey;
     publicKey = kp.publicKey;
   } else {
-    const algo = await getSlhDsa(dsa as 'slhdsa128s' | 'slhdsa128f');
-    const kp = algo.keygen();
+    const kp = slh!.keygen();
     secretKey = kp.secretKey;
     publicKey = kp.publicKey;
   }
@@ -96,8 +101,7 @@ async function run(message: string, dsa: DsaAlgorithm) {
   } else if (dsa === 'mldsa65') {
     signature = ml_dsa65.sign(msgBytes, secretKey);
   } else {
-    const algo = await getSlhDsa(dsa as 'slhdsa128s' | 'slhdsa128f');
-    signature = algo.sign(msgBytes, secretKey);
+    signature = slh!.sign(msgBytes, secretKey);
   }
   const signMs = now() - t1;
 
@@ -105,11 +109,11 @@ async function run(message: string, dsa: DsaAlgorithm) {
   post({ type: 'sig-step2', data: step2 });
 
   // Preserve state for tamper replays
-  savedState = { publicKey, message: msgBytes, signature, dsa };
+  savedState = { publicKey, message: msgBytes, signature, dsa, slh };
 
   // ── Step 3: Verify ────────────────────────────────────────────────────────
   const t2 = now();
-  const valid = await doVerify(dsa, signature, msgBytes, publicKey);
+  const valid = await doVerify(dsa, signature, msgBytes, publicKey, slh);
   const verifyMs = now() - t2;
 
   const step3: SigStep3Data = { valid, verifyMs };
@@ -125,7 +129,7 @@ async function tamper(field: 'message' | 'signature', bytes: Uint8Array) {
   const sig = field === 'signature' ? bytes : savedState.signature;
 
   const t = now();
-  const valid = await doVerify(savedState.dsa, sig, msg, savedState.publicKey);
+  const valid = await doVerify(savedState.dsa, sig, msg, savedState.publicKey, savedState.slh);
   const verifyMs = now() - t;
 
   post({ type: 'tamper-sig-step3', valid, verifyMs });

@@ -169,25 +169,66 @@ function NoiseBar({ noise, label }: { noise: number; label: (pct: number) => str
   );
 }
 
-function Btn({ onClick, disabled, busy, variant = 'outline', children }: {
-  onClick: () => void; disabled?: boolean; busy?: boolean; variant?: 'primary' | 'outline' | 'danger'; children: ReactNode;
+// nextLabel marks the button the guide bar points to: highlighted, with a short marker next to it
+function Btn({ onClick, disabled, busy, variant = 'outline', nextLabel, children }: {
+  onClick: () => void; disabled?: boolean; busy?: boolean; variant?: 'primary' | 'outline' | 'danger';
+  nextLabel?: string; children: ReactNode;
 }) {
+  const isNext = !!nextLabel;
   const cls = {
     primary: 'bg-[var(--color-primary)] px-5 font-semibold text-[var(--color-bg-base)] hover:opacity-90',
-    outline: 'border border-[var(--color-glass-border)] px-4 text-[var(--color-text-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]',
+    outline: isNext
+      ? 'border border-[var(--color-primary)] bg-[var(--color-primary)]/10 px-4 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/20'
+      : 'border border-[var(--color-glass-border)] px-4 text-[var(--color-text-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]',
     danger:  'border border-red-500/40 px-4 text-red-400/80 hover:border-red-500/70 hover:text-red-300',
   }[variant];
+  const ring = isNext ? 'ring-2 ring-[var(--color-primary)]/50 ring-offset-2 ring-offset-[var(--color-bg-surface)]' : '';
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled || busy}
-      className={`inline-flex items-center gap-2 rounded-lg py-2.5 font-mono text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${cls}`}
-    >
-      {busy && <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />}
-      {children}
-    </button>
+    <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+      <button
+        onClick={onClick}
+        disabled={disabled || busy}
+        data-rbe-next={isNext ? '' : undefined}
+        className={`inline-flex items-center gap-2 rounded-lg py-2.5 font-mono text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${cls} ${ring}`}
+      >
+        {busy && <span className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />}
+        {children}
+      </button>
+      {/* on narrow screens the marker would wrap below the button; the ring is enough there */}
+      {isNext && !busy && <span className="hidden sm:inline font-mono text-xs text-[var(--color-primary)]">{nextLabel}</span>}
+    </span>
   );
 }
+
+function DoneNote({ children }: { children: ReactNode }) {
+  return <p className="font-mono text-xs text-emerald-400">{children}</p>;
+}
+
+// ── Guidance: the next action in the intended order ───────────────────────────
+
+type Next =
+  | { kind: 'setup' | 'audit' | 'attack' }
+  | { kind: 'keygen' | 'register'; who: UserName }
+  | { kind: 'encrypt' | 'hsk' | 'dec1' | 'dec2'; who: Recipient };
+
+function nextAction(s: RbeState): Next | null {
+  if (!s.seed) return { kind: 'setup' };
+  for (const who of USER_NAMES) {
+    if (!s.users[who].keys) return { kind: 'keygen', who };
+    if (!s.users[who].registered) return { kind: 'register', who };
+  }
+  // The audit is optional: once encryption has started, it is no longer suggested
+  if (!s.audit && !s.ct.bob && !s.ct.alice) return { kind: 'audit' };
+  for (const who of ['bob', 'alice'] as const) if (!s.ct[who]) return { kind: 'encrypt', who };
+  for (const who of ['bob', 'alice'] as const) {
+    if (!s.dec[who].hsk) return { kind: 'hsk', who };
+    if (!s.dec[who].ctReg) return { kind: 'dec1', who };
+    if (s.dec[who].message === null) return { kind: 'dec2', who };
+  }
+  return s.attack ? null : { kind: 'attack' };
+}
+
+const nextId = (n: Next | null) => (n ? ('who' in n ? `${n.kind}:${n.who}` : n.kind) : '');
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -321,6 +362,31 @@ export default function RbePlayground() {
   const bothDecoded = s.dec.bob.message !== null && s.dec.alice.message !== null;
   const noiseLabel = (pct: number) => t('noiseLabel', { pct: fmt(pct, 1) });
 
+  const next = nextAction(s);
+  const marker = t('nextMarker');
+  // the marker string, if this action is the suggested next one
+  const nx = (id: string) => (nextId(next) === id ? marker : undefined);
+  const nextText = (n: Next) => {
+    switch (n.kind) {
+      case 'setup':    return t('nextSetup');
+      case 'keygen':   return t('nextKeyGen', { name: DISPLAY[n.who] });
+      case 'register': return t('nextRegister', { name: DISPLAY[n.who] });
+      case 'audit':    return t('nextAudit');
+      case 'encrypt':  return t('nextEncrypt', { name: DISPLAY[n.who] });
+      case 'hsk':      return t('nextHsk', { name: DISPLAY[n.who] });
+      case 'dec1':     return t('nextDec1', { name: DISPLAY[n.who] });
+      case 'dec2':     return t('nextDec2', { name: DISPLAY[n.who] });
+      case 'attack':   return t('nextAttack');
+    }
+  };
+  const jumpToNext = () => {
+    const el = document.querySelector<HTMLElement>('[data-rbe-next]');
+    if (!el) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+  };
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -330,12 +396,38 @@ export default function RbePlayground() {
           {t('errorLabel')} {s.error}
         </div>
       )}
-      {s.busy && (
-        <div className="flex items-center gap-3 rounded-lg border border-[var(--color-primary)]/20 bg-[var(--color-primary)]/5 px-4 py-2.5" aria-live="polite">
-          <span className="w-3.5 h-3.5 rounded-full border-2 border-[var(--color-primary)] border-t-transparent animate-spin flex-shrink-0" />
-          <span className="font-mono text-sm text-[var(--color-primary)]">{s.busyLabel}</span>
-        </div>
-      )}
+      {/* Guide bar: stays below the site header and always says what comes next */}
+      <div className="sticky top-16 z-30 flex items-center gap-3 rounded-lg border border-[var(--color-primary)]/30 bg-[var(--color-bg-base)]/95 px-3 py-2 sm:px-4 sm:py-2.5 backdrop-blur" aria-live="polite">
+        {s.busy ? (
+          <>
+            <span className="w-3.5 h-3.5 rounded-full border-2 border-[var(--color-primary)] border-t-transparent animate-spin flex-shrink-0" />
+            <span className="font-mono text-sm text-[var(--color-primary)]">{s.busyLabel}</span>
+          </>
+        ) : next ? (
+          <>
+            <span className="min-w-0 flex-1 font-mono text-sm leading-snug">
+              <span className="text-xs text-[var(--color-text-muted)]">{t('guideNext')}</span>{' '}
+              <span className="text-[var(--color-text-base)]">{nextText(next)}</span>
+            </span>
+            <button
+              onClick={jumpToNext}
+              className="shrink-0 font-mono text-xs px-2.5 py-1 rounded border border-[var(--color-primary)]/40 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors cursor-pointer"
+            >
+              {t('guideJump')}
+            </button>
+          </>
+        ) : (
+          <>
+            <span className="min-w-0 flex-1 font-mono text-sm text-emerald-400">{t('guideDone')}</span>
+            <button
+              onClick={reset}
+              className="shrink-0 font-mono text-xs px-2.5 py-1 rounded border border-[var(--color-glass-border)] text-[var(--color-text-muted)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors cursor-pointer"
+            >
+              {t('resetDemo')}
+            </button>
+          </>
+        )}
+      </div>
 
       {/* ── Intro ── */}
       <Card>
@@ -344,6 +436,7 @@ export default function RbePlayground() {
           <p>{t('intro1')}</p>
           <p>{rich('intro2')}</p>
           <p>{rich('intro3')}</p>
+          <p>{rich('introGuide')}</p>
         </div>
       </Card>
 
@@ -352,7 +445,9 @@ export default function RbePlayground() {
         <StepTitle n={0} title={t('step0Title')} done={hasSetup} doneLbl={t('stepDone')} />
         <p className="text-sm text-[var(--color-text-muted)] leading-relaxed">{rich('step0Text', { blocks: P.ell + 1 })}</p>
         <Formula tex={`R_q = \\mathbb{Z}_q[X]/(X^{${P.nR}}+1),\\quad q = ${P.q.toLocaleString('en').replace(/,/g, '\\,')},\\qquad A = [A_0 \\mid \\dots \\mid A_{${P.ell}}] \\in R_q^{${P.n}\\times ${DV.width}}`} />
-        <Btn variant="primary" onClick={doSetup} disabled={hasSetup} busy={s.busy}>{t('step0Btn')}</Btn>
+        {hasSetup
+          ? <DoneNote>{t('doneSetup')}</DoneNote>
+          : <Btn variant="primary" onClick={doSetup} busy={s.busy} nextLabel={nx('setup')}>{t('step0Btn')}</Btn>}
         {s.seed && s.crsPreview && (
           <div className="mt-5 space-y-3">
             <ValueBox label={t('step0Seed')} value={s.seed} />
@@ -386,13 +481,13 @@ export default function RbePlayground() {
                   {t('identityLabel', { id: IDENTITY[u], bits: bits(IDENTITY[u]) })}
                 </p>
                 {!s.users[u].keys ? (
-                  <Btn onClick={() => doKeyGen(u)} busy={s.busy}>{t('userBtnKeyGen')}</Btn>
+                  <Btn onClick={() => doKeyGen(u)} busy={s.busy} nextLabel={nx(`keygen:${u}`)}>{t('userBtnKeyGen')}</Btn>
                 ) : (
                   <div className="space-y-2">
                     <ValueBox label={t('userSkLabel')} value={centeredPreview(s.users[u].keys!.sk, 3)} secret />
                     <ValueBox label={t('userPkLabel')} value={centeredPreview(s.users[u].keys!.pk, 3)} />
                     {!s.users[u].registered && (
-                      <Btn onClick={() => doRegister(u)} busy={s.busy}>{t('userBtnRegister')}</Btn>
+                      <Btn onClick={() => doRegister(u)} busy={s.busy} nextLabel={nx(`register:${u}`)}>{t('userBtnRegister')}</Btn>
                     )}
                   </div>
                 )}
@@ -406,7 +501,7 @@ export default function RbePlayground() {
                 <>
                   <Callout variant="success">{rich('step13Done', { max: P.nMax, k: P.n * P.k })}</Callout>
                   {!s.audit ? (
-                    <Btn onClick={doAudit} busy={s.busy}>{t('auditBtn')}</Btn>
+                    <Btn onClick={doAudit} busy={s.busy} nextLabel={nx('audit')}>{t('auditBtn')}</Btn>
                   ) : (
                     <Callout variant={s.audit.match ? 'success' : 'danger'}>
                       {s.audit.match ? rich('auditMatch', { ms: fmt(s.audit.ms) }) : rich('auditMismatch')}
@@ -452,9 +547,11 @@ export default function RbePlayground() {
                       {t('bytesLeft', { used, max: MAX_BYTES })}
                     </span>
                   </label>
-                  <Btn variant="primary" onClick={() => doEncrypt(to)} disabled={!!ct || used === 0} busy={s.busy}>
-                    {t(to === 'bob' ? 'btnEncryptBob' : 'btnEncryptAlice')}
-                  </Btn>
+                  {!ct && (
+                    <Btn variant="primary" onClick={() => doEncrypt(to)} disabled={used === 0} busy={s.busy} nextLabel={nx(`encrypt:${to}`)}>
+                      {t(to === 'bob' ? 'btnEncryptBob' : 'btnEncryptAlice')}
+                    </Btn>
+                  )}
                   {ct && (
                     <div className="space-y-2">
                       <p className="font-mono text-xs text-amber-300/90">{t('ctBoundTo', { id: IDENTITY[to], bits: bits(IDENTITY[to]) })}</p>
@@ -490,7 +587,7 @@ export default function RbePlayground() {
                 <div key={to} className="rounded-lg border border-[var(--color-glass-border)] p-4 space-y-4 bg-[var(--color-bg-base)]">
                   <span className="font-mono text-sm font-semibold text-[var(--color-text-base)]">{DISPLAY[to]}</span>
                   <div className="space-y-2">
-                    <Btn onClick={() => doFetchHsk(to)} disabled={!!d.hsk} busy={s.busy}>{t('decBtnFetchHsk')}</Btn>
+                    {!d.hsk && <Btn onClick={() => doFetchHsk(to)} busy={s.busy} nextLabel={nx(`hsk:${to}`)}>{t('decBtnFetchHsk')}</Btn>}
                     {d.hsk && (
                       <p className="font-mono text-xs text-[var(--color-text-muted)]">
                         {t('hskSummary', { name: to, rows: d.hsk.rows, cols: d.hsk.cols, norm: fmt(d.hskNorm ?? 0) })}
@@ -500,14 +597,14 @@ export default function RbePlayground() {
                   {d.hsk && (
                     <div className="space-y-2">
                       <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">{rich('decStep1Text')}</p>
-                      <Btn onClick={() => doDecStep1(to)} disabled={!!d.ctReg} busy={s.busy}>{t('decBtnStep1')}</Btn>
+                      {!d.ctReg && <Btn onClick={() => doDecStep1(to)} busy={s.busy} nextLabel={nx(`dec1:${to}`)}>{t('decBtnStep1')}</Btn>}
                       {d.ctReg && <ValueBox label={t('decStep1Result', { name: to })} value={centeredPreview(d.ctReg, 4)} />}
                     </div>
                   )}
                   {d.ctReg && (
                     <div className="space-y-2">
                       <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">{rich('decStep2Text')}</p>
-                      <Btn variant="primary" onClick={() => doDecStep2(to)} disabled={d.message !== null} busy={s.busy}>{t('decBtnStep2')}</Btn>
+                      {d.message === null && <Btn variant="primary" onClick={() => doDecStep2(to)} busy={s.busy} nextLabel={nx(`dec2:${to}`)}>{t('decBtnStep2')}</Btn>}
                       {d.message !== null && (
                         <div className="space-y-2">
                           <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/8 px-3 py-2">
@@ -535,7 +632,7 @@ export default function RbePlayground() {
             <p>{rich('step6Text1')}</p>
             <p>{rich('step6Text2')}</p>
           </div>
-          <Btn variant="danger" onClick={doAttack} disabled={!!s.attack} busy={s.busy}>{t('btnAttack')}</Btn>
+          {!s.attack && <Btn variant="danger" onClick={doAttack} busy={s.busy} nextLabel={nx('attack')}>{t('btnAttack')}</Btn>}
           {s.attack && (
             <div className="mt-4 space-y-3">
               <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-4 py-3">

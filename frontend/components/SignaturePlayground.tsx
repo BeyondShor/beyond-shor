@@ -16,6 +16,7 @@ import {
   type SigRunShareState, type SigBenchmarkShareState,
 } from '@/lib/share-state';
 import { computeFullStats, type FullStats } from '@/lib/stats';
+import { useFormatBytes, SizeSummary } from '@/components/PlaygroundSizes';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -40,12 +41,6 @@ function fromHex(hex: string): Uint8Array {
 
 function isValidHex(s: string): boolean {
   return s.length > 0 && /^[0-9a-fA-F]+$/.test(s) && s.length % 2 === 0;
-}
-
-function formatBytes(n: number): string {
-  if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
-  if (n >= 1024)        return `${(n / 1024).toFixed(1)} KB`;
-  return `${n} B`;
 }
 
 function truncateHex(hex: string, head = 32, tail = 16): string {
@@ -230,6 +225,7 @@ interface SigHexFieldProps {
   label:           string;
   bytes:           Uint8Array;
   isPrivate:       boolean;
+  hint?:           string;   // encoding of the value, e.g. compressed point or r ‖ s
   alwaysExpanded?: boolean;
   variant?:        'normal' | 'wrong';
   tamperField?:    SigTamperField;
@@ -239,7 +235,7 @@ interface SigHexFieldProps {
 }
 
 function SigHexField({
-  label, bytes, isPrivate, alwaysExpanded = false,
+  label, bytes, isPrivate, hint, alwaysExpanded = false,
   variant = 'normal', tamperField, onTamper, tamperActive = false, onReset,
 }: SigHexFieldProps) {
   const [expanded,  setExpanded]  = useState(alwaysExpanded);
@@ -248,6 +244,7 @@ function SigHexField({
   const [hexError,  setHexError]  = useState(false);
   const { attackerMode } = useAttackerContext();
   const t = useTranslations('playground');
+  const formatBytes = useFormatBytes();
 
   const hex = toHex(bytes);
   const needsTruncate = !alwaysExpanded && hex.length > 32 + 16 + 3;
@@ -290,7 +287,7 @@ function SigHexField({
           <span className="font-mono text-[0.65rem] text-red-400/70 leading-none">👁</span>
         )}
         <span className="font-mono text-xs text-[var(--color-text-muted)]">{label}</span>
-        <span className="font-mono text-xs text-[var(--color-text-muted)]">{formatBytes(bytes.length)}</span>
+        <span className="font-mono text-xs text-[var(--color-text-base)] tabular-nums">{formatBytes(bytes.length)}</span>
         <div className="ml-auto flex items-center gap-1">
           {tamperActive && tamperField && editHex === null && (
             <button onClick={() => { setEditHex(hex); setExpanded(true); }}
@@ -316,6 +313,8 @@ function SigHexField({
           </button>
         </div>
       </div>
+
+      {hint && <span className="font-mono text-xs text-[var(--color-text-muted)] leading-relaxed">{hint}</span>}
 
       {isEditing ? (
         <div className="flex flex-col gap-1">
@@ -377,6 +376,7 @@ function SigTextField({
   const [copied,   setCopied]   = useState(false);
   const { attackerMode } = useAttackerContext();
   const t = useTranslations('playground');
+  const formatBytes = useFormatBytes();
 
   const text = new TextDecoder().decode(bytes);
 
@@ -409,7 +409,7 @@ function SigTextField({
           <span className="font-mono text-[0.65rem] text-red-400/70 leading-none">👁</span>
         )}
         <span className="font-mono text-xs text-[var(--color-text-muted)]">{label}</span>
-        <span className="font-mono text-xs text-[var(--color-text-muted)]">{formatBytes(bytes.length)}</span>
+        <span className="font-mono text-xs text-[var(--color-text-base)] tabular-nums">{formatBytes(bytes.length)}</span>
         <div className="ml-auto flex items-center gap-1">
           {tamperActive && tamperField && editText === null && (
             <button onClick={() => setEditText(text)}
@@ -525,6 +525,7 @@ function StepCard({ number, title, desc, children }: {
 
 function SigRaceCard({ dsa, entry }: { dsa: DsaAlgorithm; entry: SigRaceEntry }) {
   const t = useTranslations('playground');
+  const formatBytes = useFormatBytes();
   const isRunning = entry.phase === 'running';
   const isDone    = entry.phase === 'done';
   const isWaiting = entry.phase === 'waiting';
@@ -569,9 +570,9 @@ function SigRaceCard({ dsa, entry }: { dsa: DsaAlgorithm; entry: SigRaceEntry })
             </span>
           )}
           {entry.pubKeyBytes !== undefined && (
-            <span className="font-mono text-xs text-[var(--color-text-dim)] mt-0.5">
-              {t('sigRacePubKey', { size: formatBytes(entry.pubKeyBytes) })}
-              {entry.sigBytes !== undefined && ` · ${t('sigRaceSigSize', { size: formatBytes(entry.sigBytes) })}`}
+            <span className="flex flex-col font-mono text-xs text-[var(--color-text-muted)] mt-0.5">
+              <span>{t('sigRacePubKey', { size: formatBytes(entry.pubKeyBytes) })}</span>
+              {entry.sigBytes !== undefined && <span>{t('sigRaceSigSize', { size: formatBytes(entry.sigBytes) })}</span>}
             </span>
           )}
         </div>
@@ -840,20 +841,21 @@ function SigStatsTable({ dsa, kg, sg, vr, pubKeyBytes, secKeyBytes, sigBytes }: 
 }) {
   const [open, setOpen] = useState(false);
   const t = useTranslations('playground');
+  const formatBytes = useFormatBytes();
   const clr    = getDsaTextColor(dsa);
   const border = getDsaBorderColor(dsa);
 
   return (
     <div className={`rounded-lg border overflow-hidden ${border}`}>
       <button onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-white/2 transition-colors">
+        className="w-full flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2.5 text-left hover:bg-white/2 transition-colors">
         <span className={`font-mono text-xs font-semibold ${clr}`}>{DSA_DISPLAY_NAMES[dsa]}</span>
-        <div className="flex items-center gap-3 font-mono text-xs text-[var(--color-text-muted)]">
-          <span className="hidden sm:inline tabular-nums opacity-70">
-            <AbbrevTooltip abbrev="PK" full="Public Key" /> {formatBytes(pubKeyBytes)} · <AbbrevTooltip abbrev="SK" full="Secret Key" /> {formatBytes(secKeyBytes)} · <AbbrevTooltip abbrev="Sig" full="Signature" /> {formatBytes(sigBytes)}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-[var(--color-text-muted)]">
+          <span className="tabular-nums">
+            <AbbrevTooltip abbrev="pk" full="Public Key" /> {formatBytes(pubKeyBytes)} · <AbbrevTooltip abbrev="sk" full="Secret Key" /> {formatBytes(secKeyBytes)} · <AbbrevTooltip abbrev="sig" full="Signature" /> {formatBytes(sigBytes)}
           </span>
-          <span className="tabular-nums">Keygen {fmt2(kg.median)} <span className="opacity-50">med</span></span>
-          <span>{open ? '−' : '+'}</span>
+          <span className="tabular-nums">Keygen {fmt2(kg.median)} <span className="opacity-70">med</span></span>
+          <span aria-hidden="true">{open ? '−' : '+'}</span>
         </div>
       </button>
       {open && (
@@ -1378,7 +1380,7 @@ export default function SignaturePlayground({ snippetHtmls, realWorldItems, init
           <p className="mono-label text-[var(--color-primary)] mb-2">{t('sigLabel')}</p>
           <h1 className="text-3xl sm:text-4xl font-bold text-[var(--color-text-base)]">{t('sigTitle')}</h1>
           <p className="mt-4 text-[var(--color-text-muted)] leading-relaxed">{t('sigIntro')}</p>
-          <p className="mt-2 font-mono text-xs text-[var(--color-text-dim)] leading-relaxed">{t('sigXmssLmsNote')}</p>
+          <p className="mt-2 font-mono text-xs text-[var(--color-text-muted)] leading-relaxed">{t('sigXmssLmsNote')}</p>
         </header>
 
         <div className="flex flex-col gap-8">
@@ -1478,6 +1480,7 @@ export default function SignaturePlayground({ snippetHtmls, realWorldItems, init
                   <SigRaceCard key={d} dsa={d} entry={race[d] ?? { phase: 'waiting' }} />
                 ))}
               </div>
+              <p className="font-mono text-xs text-[var(--color-text-muted)] leading-relaxed">{t('sigRaceNote')}</p>
             </div>
           )}
 
@@ -1569,9 +1572,11 @@ export default function SignaturePlayground({ snippetHtmls, realWorldItems, init
                 }
                 left={
                   <div className="flex flex-col gap-3">
-                    <SigHexField label={t('sigSecretKey')} bytes={step1.secretKey} isPrivate={true} />
-                    <SigHexField label={t('sigPublicKey')} bytes={step1.publicKey} isPrivate={false} />
-                    <span className="font-mono text-xs text-[var(--color-text-dim)]">
+                    <SigHexField label={t('sigSecretKey')} bytes={step1.secretKey} isPrivate={true}
+                      hint={step1.dsa === 'mldsa65' ? t('hintMlDsaSk') : step1.dsa === 'ecdsa' ? undefined : t('hintSlhDsaSk')} />
+                    <SigHexField label={t('sigPublicKey')} bytes={step1.publicKey} isPrivate={false}
+                      hint={step1.dsa === 'ecdsa' ? t('hintEcdsaPk') : undefined} />
+                    <span className="font-mono text-xs text-[var(--color-text-muted)]">
                       {`keygen: ${fmtMs(step1.keygenMs)}`}
                     </span>
                   </div>
@@ -1579,7 +1584,7 @@ export default function SignaturePlayground({ snippetHtmls, realWorldItems, init
                 right={
                   <div className="flex flex-col gap-3">
                     <SigHexField label={t('sigPublicKey')} bytes={step1.publicKey} isPrivate={false} />
-                    <span className="font-mono text-xs text-[var(--color-text-dim)]">{t('sigVerifierReceivedPubKey')}</span>
+                    <span className="font-mono text-xs text-[var(--color-text-muted)]">{t('sigVerifierReceivedPubKey')}</span>
                   </div>
                 }
               />
@@ -1621,12 +1626,13 @@ export default function SignaturePlayground({ snippetHtmls, realWorldItems, init
                       label={t('sigSignature')}
                       bytes={step2.signature}
                       isPrivate={false}
+                      hint={step1?.dsa === 'ecdsa' ? t('hintEcdsaSig') : undefined}
                       tamperField="signature"
                       onTamper={handleTamper}
                       tamperActive={tamperActive}
                       onReset={() => setTamperResult(null)}
                     />
-                    <span className="font-mono text-xs text-[var(--color-text-dim)]">
+                    <span className="font-mono text-xs text-[var(--color-text-muted)]">
                       {`sign: ${fmtMs(step2.signMs)}`}
                     </span>
                   </div>
@@ -1636,7 +1642,7 @@ export default function SignaturePlayground({ snippetHtmls, realWorldItems, init
                     <SigTextField label={t('sigMessage')}   bytes={step2.message}    isPrivate={false} />
                     {/* Verifier side: note that they must also recompute the hash for ECDSA */}
                     {step2.messageHash && (
-                      <span className="font-mono text-xs text-[var(--color-text-dim)] italic">
+                      <span className="font-mono text-xs text-[var(--color-text-muted)] italic">
                         {t('sigMessageHashVerifierNote')}
                       </span>
                     )}
@@ -1665,10 +1671,35 @@ export default function SignaturePlayground({ snippetHtmls, realWorldItems, init
                 }`}>
                   {displayResult.valid ? t('sigResultValid') : t('sigResultInvalid')}
                 </div>
-                <span className="font-mono text-xs text-[var(--color-text-dim)]">
+                <span className="font-mono text-xs text-[var(--color-text-muted)]">
                   {`verify: ${fmtMs(displayResult.verifyMs)}`}
                 </span>
               </StepCard>
+            )}
+
+            {/* Exact sizes of this run */}
+            {phase === 'done' && step1 && step2 && (
+              <SizeSummary
+                title={t('sizeTitle')}
+                intro={t('sizeIntro')}
+                groups={[
+                  {
+                    title: t('sizeWireTitle'),
+                    rows: [
+                      { label: t('sigSizeRowPk'),  bytes: step1.publicKey.length },
+                      { label: t('sigSizeRowMsg'), bytes: step2.message.length },
+                      { label: t('sigSizeRowSig'), bytes: step2.signature.length },
+                    ],
+                  },
+                  {
+                    title: t('sizeLocalTitle'),
+                    rows: [
+                      { label: t('sigSizeRowSk'), bytes: step1.secretKey.length },
+                      ...(step2.messageHash ? [{ label: t('sigSizeRowHash'), bytes: step2.messageHash.length }] : []),
+                    ],
+                  },
+                ]}
+              />
             )}
           </div>
 

@@ -99,7 +99,8 @@ async function run(plaintext: string, kem: KemAlgorithm) {
 
   } else if (kem === 'mceliece') {
     const { mceliece } = await import('mceliece');
-    await new Promise<void>(r => setTimeout(r, 20));
+    // Resolves once the WASM module is initialised, so the timer measures keygen only
+    await mceliece.publicKeyBytes;
     const t0 = performance.now();
     const { publicKey, privateKey } = await mceliece.keyPair();
     kemKeygenMs   = performance.now() - t0;
@@ -119,9 +120,10 @@ async function run(plaintext: string, kem: KemAlgorithm) {
   } else {
     // FrodoKEM-1344-AES
     const { createFrodoKEM1344AES } = await import('@oqs/liboqs-js');
-    const t0 = performance.now();
+    // Loading the WASM modules is not part of key generation, so it stays outside the timer
     const aliceFrodo = await createFrodoKEM1344AES();
     const bobFrodo   = await createFrodoKEM1344AES();
+    const t0 = performance.now();
     const { publicKey, secretKey } = aliceFrodo.generateKeyPair();
     kemKeygenMs   = performance.now() - t0;
     kemServerPub  = publicKey;
@@ -271,7 +273,13 @@ async function handleTamper(field: TamperField, bytes: Uint8Array) {
     if (msg.type === 'start') {
       await run(msg.plaintext, msg.kem);
     } else if (msg.type === 'tamper') {
-      await handleTamper(msg.field, msg.bytes);
+      try {
+        await handleTamper(msg.field, msg.bytes);
+      } catch {
+        // A library rejected the manipulated input outright (e.g. wrong length).
+        // The run itself stays intact; the UI shows this as a failed decryption.
+        post({ type: 'tamper-step6', errorKey: 'tamperRejected' });
+      }
     }
   } catch (err) {
     post({ type: 'error', message: err instanceof Error ? err.message : String(err) });
