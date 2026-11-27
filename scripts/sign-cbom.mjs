@@ -16,7 +16,9 @@
  * On publish, the corrections in shorsight/corrections.json are applied to the
  * scan: places where ShorSight's assessment is wrong or outdated. Every corrected
  * component carries a 'beyond-shor:correction' property saying what was changed,
- * so the signed CBOM never passes off an edit as scanner output.
+ * so the signed CBOM never passes off an edit as scanner output. A false positive
+ * ({ "remove": true }) is dropped together with every reference to it, and the
+ * document records it as a 'beyond-shor:removed' metadata property.
  *
  * The signed message is the exact UTF-8 byte sequence of cbom.json — nothing is
  * added, nothing is hashed first. frontend/components/SignatureVerifier.tsx
@@ -71,11 +73,15 @@ function applyCorrections(cbom) {
   try { fixes = JSON.parse(readFileSync(FIXES, 'utf8')).components ?? {}; }
   catch { return; }
 
-  for (const [ref, { set, reason }] of Object.entries(fixes)) {
+  for (const [ref, { set, remove, reason }] of Object.entries(fixes)) {
     const comp = cbom.components.find((c) => c['bom-ref'] === ref);
     if (!comp) {
       console.error(`Error: correction for ${ref}, but the scan has no such component.`);
       process.exit(1);
+    }
+    if (remove) {
+      removeComponent(cbom, comp, reason);
+      continue;
     }
     const changed = [];
     for (const [path, value] of Object.entries(set)) {
@@ -100,6 +106,31 @@ function applyCorrections(cbom) {
     ];
     console.log(`✏️   Corrected ${ref}: ${changed.join('; ')}`);
   }
+}
+
+/** Drop a false positive and every reference to it; the document keeps a note why. */
+function removeComponent(cbom, comp, reason) {
+  const ref = comp['bom-ref'];
+  if (!reason) { console.error(`Error: removing ${ref} needs a reason.`); process.exit(1); }
+  cbom.components = cbom.components.filter((c) => c !== comp);
+  const without = (list) => (list ? list.filter((r) => r !== ref) : list);
+  cbom.dependencies = (cbom.dependencies ?? [])
+    .filter((d) => d.ref !== ref)
+    .map((d) => ({
+      ...d,
+      ...(d.dependsOn && { dependsOn: without(d.dependsOn) }),
+      ...(d.provides && { provides: without(d.provides) }),
+    }));
+  // anything else still pointing at it (e.g. a vulnerability) would dangle — refuse
+  if (JSON.stringify(cbom).includes(JSON.stringify(ref))) {
+    console.error(`Error: ${ref} is still referenced after removing it; extend removeComponent.`);
+    process.exit(1);
+  }
+  cbom.metadata.properties = [
+    ...(cbom.metadata.properties ?? []),
+    { name: 'beyond-shor:removed', value: `${ref} (${comp.name}): ${reason}` },
+  ];
+  console.log(`🗑️   Removed ${ref}: ${reason}`);
 }
 
 // ─── Publish (optional) ───────────────────────────────────────────────────────

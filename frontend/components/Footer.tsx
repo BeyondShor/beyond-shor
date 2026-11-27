@@ -30,7 +30,7 @@ export default function Footer() {
         aria-hidden="true"
       />
       {/* Legal links */}
-      <div className="mx-auto max-w-6xl px-4 pt-6 pb-2 sm:px-6 flex justify-center gap-6 border-b border-[var(--color-glass-border)]">
+      <div className="mx-auto max-w-6xl px-4 pt-6 pb-2 sm:px-6 flex flex-wrap justify-center gap-x-6 gap-y-3 border-b border-[var(--color-glass-border)]">
         {/* locale-aware link */}
         <Link href="/kontakt" className={linkClass('/kontakt')} aria-current={pathname === '/kontakt' ? 'page' : undefined}>
           {t('contact')}

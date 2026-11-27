@@ -86,8 +86,8 @@ function centeredPreview(w: WireMat, count = 4): string {
 }
 
 // Size of a matrix when packed at 26 bits per coefficient
-function kib(...ws: WireMat[]): string {
-  const coeffs = ws.reduce((s, w) => s + w.rows * w.cols * P.nR, 0);
+function kib(...mats: WireMat[]): string {
+  const coeffs = mats.reduce((s, w) => s + w.rows * w.cols * P.nR, 0);
   return ((coeffs * Math.ceil(Math.log2(P.q))) / 8 / 1024).toFixed(0);
 }
 

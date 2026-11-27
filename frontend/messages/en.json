@@ -818,6 +818,10 @@
       "ec-p256": "Accepted: ECDSA P-256 appears only in the playgrounds: as the classical reference in the signature benchmark, in the classical PKI profiles and as the ACME account key. It protects nothing on the site.",
       "classic-mceliece": "Accepted: Classic McEliece appears only in the playground, for comparison and with a reference to the BSI advisory. No data is protected with it."
     },
+    "embedNote": "At desktop width, ShorSight’s own interface is embedded below, reduced to the inventory and risk management views.",
+    "compactNote": "On small screens this page shows a compact rendering of the same result, because ShorSight’s own interface does not fit there.",
+    "embedLabel": "// shorsight · read-only",
+    "embedTitle": "ShorSight: cryptography inventory and risk management of beyond-shor.eu",
     "detailNote": "Clicking an entry shows the evidence, with a link to the exact line in the repository. Risk management follows BSI Standard 200-3 and uses Mosca’s inequality to measure urgency.",
     "findingAccepted": "No migration deadline.",
     "allRisksAccepted": "Every risk of this asset is deliberately accepted. Shelf life, migration time and replacement deadline therefore don't apply."
