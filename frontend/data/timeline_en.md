@@ -148,10 +148,10 @@ Research as of November 2026.
 
 ---
 
-### 2026 (September)
+### 2026 (October)
 **Title:** BSI Advises Against Classic McEliece
 **Category:** HISTORY
-**Description:** After several cryptanalysis papers in 2026, including a method that distinguishes McEliece public keys from random data, the German BSI advises on September 29 against using Classic McEliece in new applications. No practical attack on the recommended parameters is known, and in hybrid mode at least the security of the classical scheme is preserved. ML-KEM and FrodoKEM are not affected.
+**Description:** After several cryptanalysis papers in 2026, including a method that distinguishes McEliece public keys from random data, the German BSI advises on October 1, in a note dated September 29, against using Classic McEliece in new applications. No practical attack on the recommended parameters is known, and in hybrid mode at least the security of the classical scheme is preserved. ML-KEM and FrodoKEM are not affected.
 **Caveat:** Some of the papers have not been peer-reviewed yet, and the concrete cost estimates differ. The BSI plans to revise its assessment in the next edition of TR-02102-1 in early 2027.
 
 ---

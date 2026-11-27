@@ -148,10 +148,10 @@ Stand der Recherche: November 2026.
 
 ---
 
-### 2026 (September)
+### 2026 (Oktober)
 **Titel:** BSI rät von Classic McEliece ab
 **Kategorie:** HISTORY
-**Beschreibung:** Nach mehreren Kryptoanalyse-Arbeiten aus dem Jahr 2026, darunter ein Verfahren, das öffentliche McEliece-Schlüssel von Zufallsdaten unterscheidet, rät das BSI am 29. September davon ab, Classic McEliece in neuen Anwendungen einzusetzen. Ein praktischer Angriff auf die empfohlenen Parameter ist nicht bekannt, und im Hybridbetrieb bleibt mindestens die Sicherheit des klassischen Verfahrens erhalten. ML-KEM und FrodoKEM sind nicht betroffen.
+**Beschreibung:** Nach mehreren Kryptoanalyse-Arbeiten aus dem Jahr 2026, darunter ein Verfahren, das öffentliche McEliece-Schlüssel von Zufallsdaten unterscheidet, rät das BSI am 1. Oktober in einem Hinweis (Stand 29. September) davon ab, Classic McEliece in neuen Anwendungen einzusetzen. Ein praktischer Angriff auf die empfohlenen Parameter ist nicht bekannt, und im Hybridbetrieb bleibt mindestens die Sicherheit des klassischen Verfahrens erhalten. ML-KEM und FrodoKEM sind nicht betroffen.
 **Caveat:** Ein Teil der Arbeiten ist noch nicht begutachtet, und die konkreten Kostenschätzungen gehen auseinander. Das BSI will seine Bewertung in der nächsten Fassung der TR-02102-1 Anfang 2027 überarbeiten.
 
 ---
