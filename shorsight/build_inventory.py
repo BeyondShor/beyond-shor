@@ -58,6 +58,8 @@ EMBED = """<style>
   html.embedded body{min-height:0;background-attachment:scroll}
   /* the drawer is moved along with the parent's scroll; only the slide may animate */
   html.embedded #detail{transition:transform .2s}
+  /* long URLs in an assessment (e.g. the BSI note on McEliece) would run out of the drawer */
+  #detail{overflow-wrap:anywhere}
   /* on a phone the frame runs edge to edge; the site's 16px gutter replaces ShorSight's 24px */
   @media(max-width:639px){html.embedded header{padding:12px 16px} html.embedded main{padding:16px}}
 </style>
