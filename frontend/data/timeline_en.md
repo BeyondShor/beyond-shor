@@ -5,7 +5,7 @@ Each entry contains: year, title, category, short description and optional cavea
 Categories: HISTORY | STANDARD | HARDWARE | REGULATION | ESTIMATE | INDUSTRY
 Order and number of entries must match timeline_de.md
 (scripts/migrate-timeline.mjs pairs DE and EN entries by position).
-Research as of October 2026.
+Research as of November 2026.
 
 ---
 
@@ -28,7 +28,7 @@ Research as of October 2026.
 ### 2015 (August)
 **Title:** NSA Announces the Switch
 **Category:** HISTORY
-**Description:** The NSA announces that it will replace its algorithms for US national security systems (Suite B) with quantum-resistant ones. Organisations that had not yet moved to Suite B were told to hold off on major investments. For the first time, the topic becomes a political question.
+**Description:** The NSA announces that it will replace its algorithms for US national security systems (Suite B) with quantum-resistant ones. Organizations that had not yet moved to Suite B were told to hold off on major investments. For the first time, the topic becomes a political question.
 
 ---
 
@@ -144,14 +144,14 @@ Research as of October 2026.
 **Title:** Elliptic Curves Get Cheaper to Break
 **Category:** ESTIMATE
 **Description:** Google Quantum AI estimates that the discrete logarithm on 256-bit curves could be computed with fewer than 500,000 physical qubits, about twenty times fewer than previously assumed. A day later, researchers from Caltech and Oratomic show that on neutral atoms with more efficient error-correcting codes, 10,000 to 26,000 qubits might be enough for Shor's algorithm.
-**Caveat:** Both are estimates. Google did not publish its circuits but backs their size with a zero-knowledge proof, and the atom architecture has yet to be built.
+**Caveat:** Both are estimates. Google did not publish its circuits but backs their size with a zero-knowledge proof (the first version had a flaw and was replaced in April; the numbers did not change), and the atom architecture has yet to be built.
 
 ---
 
-### 2026 (October)
+### 2026 (September)
 **Title:** BSI Advises Against Classic McEliece
 **Category:** HISTORY
-**Description:** After several cryptanalysis papers in 2026, including a method that distinguishes McEliece public keys from random data, the German BSI advises on 1 October against using Classic McEliece in new applications. No practical attack on the recommended parameters is known, and in hybrid mode at least the security of the classical scheme is preserved. ML-KEM and FrodoKEM are not affected.
+**Description:** After several cryptanalysis papers in 2026, including a method that distinguishes McEliece public keys from random data, the German BSI advises on September 29 against using Classic McEliece in new applications. No practical attack on the recommended parameters is known, and in hybrid mode at least the security of the classical scheme is preserved. ML-KEM and FrodoKEM are not affected.
 **Caveat:** Some of the papers have not been peer-reviewed yet, and the concrete cost estimates differ. The BSI plans to revise its assessment in the next edition of TR-02102-1 in early 2027.
 
 ---
@@ -167,7 +167,7 @@ Research as of October 2026.
 ### 2027 (December)
 **Title:** Cyber Resilience Act Fully Applies
 **Category:** REGULATION
-**Description:** From 11 December 2027, all obligations of the Cyber Resilience Act apply. The regulation has been in force since 10 December 2024, and the reporting obligations for exploited vulnerabilities and severe incidents have applied since 11 September 2026. Among other things, products with digital elements must then protect data with state-of-the-art encryption.
+**Description:** From December 11, 2027, all obligations of the Cyber Resilience Act apply. The regulation has been in force since December 10, 2024, and the reporting obligations for exploited vulnerabilities and severe incidents have applied since September 11, 2026. Among other things, products with digital elements must then protect data with state-of-the-art encryption.
 **Caveat:** The CRA does not mention post-quantum cryptography explicitly. Whether and when PQC counts as state of the art is a matter of interpretation. The BSI and EU deadlines suggest, however, that the question will soon come up for long-lived products.
 
 ---
@@ -190,15 +190,15 @@ Research as of October 2026.
 ### 2029
 **Title:** Gartner: Asymmetric Cryptography Unsafe
 **Category:** ESTIMATE
-**Description:** Gartner expects asymmetric cryptography to be considered unsafe by 2029 and fully breakable by 2034. Organisations should therefore start migrating now.
+**Description:** Gartner expects asymmetric cryptography to be considered unsafe by 2029 and fully breakable by 2034. Organizations should therefore start migrating now.
 
 ---
 
 ### 2030
-**Title:** NIST: RSA-2048 & Co. Get Deprecated
+**Title:** NIST: RSA and ECC Get Deprecated
 **Category:** REGULATION
-**Description:** Under the draft NIST IR 8547 (November 2024), RSA and ECC at 112-bit security, such as RSA-2048, are deprecated after 2030. They should then no longer be chosen for new systems.
-**Caveat:** IR 8547 is still a draft (as of October 2026). The US federal government is already planning with these dates, though.
+**Description:** In the final version of NIST IR 8547 (October 2026), all quantum-vulnerable public-key algorithms, i.e. RSA, ECDSA, EdDSA and (EC)DH, are deprecated after 2030, regardless of key size. The November 2024 draft had planned this only for parameters at 112-bit security such as RSA-2048. The algorithms remain allowed until 2035, but anyone who keeps using them has to weigh the risk deliberately.
+**Caveat:** For the US federal government's most sensitive systems, Executive Order 14412 (June 2026) sets earlier deadlines: post-quantum key establishment by the end of 2030 and post-quantum signatures by the end of 2031.
 
 ---
 
@@ -247,7 +247,7 @@ Research as of October 2026.
 ### 2035
 **Title:** US: RSA and ECC to Be Phased Out Entirely
 **Category:** REGULATION
-**Description:** The NSM-10 memorandum (May 2022) sets 2035 as the goal for the US federal government to mitigate quantum risk as far as feasible. In line with this, the draft NIST IR 8547 plans to disallow quantum-vulnerable algorithms such as RSA and ECC entirely after 2035. The BSI deadline for classical signatures without PQC also ends that year.
+**Description:** The NSM-10 memorandum (May 2022) sets 2035 as the goal for the US federal government to mitigate quantum risk as far as feasible. In line with this, the final version of NIST IR 8547 (October 2026) disallows quantum-vulnerable algorithms such as RSA and ECC entirely after 2035. The BSI deadline for classical signatures without PQC also ends that year.
 
 ---
 
@@ -261,4 +261,4 @@ Research as of October 2026.
 ### ~2040
 **Title:** BSI: Upper Bound of the CRQC Window
 **Category:** ESTIMATE
-**Description:** In its study on the state of quantum computer development (as of late 2024), the German BSI considers a cryptographically relevant quantum computer likely within about 16 years, i.e. by around 2040. Breakthroughs, for instance in new error-correcting codes or hardware such as neutral atoms, could shorten that window to under ten years.
+**Description:** In the current version of its study on the state of quantum computer development (version 2.2, December 2025), the German BSI conservatively estimates that, as of 2025, a cryptographically relevant quantum computer is likely within 15 years, i.e. by around 2040. If the demonstrators for new error-correcting codes (qLDPC codes) now being built perform well, it could be only about ten years.

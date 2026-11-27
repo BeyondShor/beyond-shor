@@ -79,7 +79,7 @@ export default async function PqcLagebildPage({ params }: PageProps) {
           </p>
           <h1 className="text-3xl sm:text-4xl font-bold text-[var(--color-text-base)]">{t('pageTitle')}</h1>
           <div className="mt-4 space-y-3">
-            <p className="text-[var(--color-text-muted)] leading-relaxed">{t('intro', { n: formatNumber(ds?.population.total ?? 175000, locale) })}</p>
+            <p className="text-[var(--color-text-muted)] leading-relaxed">{t('intro', { n: formatNumber(Math.round((ds?.population.total ?? 175000) / 1000) * 1000, locale) })}</p>
             <p className="text-[var(--color-text-muted)] leading-relaxed">{t('introPrivacy')}</p>
           </div>
           {ds && (

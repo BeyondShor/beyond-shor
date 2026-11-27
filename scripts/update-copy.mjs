@@ -3,7 +3,8 @@
  *
  * Writes the copy from scripts/content/site-copy.mjs into Strapi:
  *   - Playground page (DE/EN): descriptions of the encryption "real world" items,
- *     matched by name (names and links are kept as they are)
+ *     matched by name (names and links are kept as they are), and the complete
+ *     list of signature "real world" items (written as is)
  *
  * Usage:
  *   STRAPI_API_TOKEN=$(grep STRAPI_SIGN_TOKEN .env | cut -d= -f2) node scripts/update-copy.mjs [--dry-run]
@@ -12,7 +13,7 @@
  *   --dry-run   print old → new without writing anything
  */
 
-import { REAL_WORLD } from './content/site-copy.mjs';
+import { REAL_WORLD, SIG_REAL_WORLD } from './content/site-copy.mjs';
 
 const STRAPI_URL = process.env.STRAPI_URL ?? 'http://localhost:1337';
 const API_TOKEN  = process.env.STRAPI_API_TOKEN;
@@ -61,12 +62,14 @@ async function updatePlayground(locale) {
   });
   const missing = Object.keys(copy).filter((name) => !data.realWorldItems.some((i) => i.name === name));
   if (missing.length) console.log(`  not in Strapi (skipped): ${missing.join(', ')}`);
+
+  const sigRealWorldItems = SIG_REAL_WORLD[locale];
+  const before = (data.sigRealWorldItems ?? []).map((i) => i.name).join(', ') || '(none)';
+  console.log(`  signature items: ${before}\n      → ${sigRealWorldItems.map((i) => i.name).join(', ')}`);
   if (DRY_RUN) return;
 
-  await api('PUT', `playground-page?locale=${locale}`, {
-    realWorldItems,
-    sigRealWorldItems: (data.sigRealWorldItems ?? []).map(strip),
-  });
+  // playground-page has no draft & publish, so a PUT simply updates the single type
+  await api('PUT', `playground-page?locale=${locale}`, { realWorldItems, sigRealWorldItems });
   console.log('  ✓ written');
 }
 

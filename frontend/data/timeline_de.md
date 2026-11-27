@@ -5,7 +5,7 @@ Jeder Eintrag enthält: Jahr, Titel, Kategorie, Kurzbeschreibung und optionalen 
 Kategorien: HISTORY | STANDARD | HARDWARE | REGULATION | ESTIMATE | INDUSTRY
 Reihenfolge und Anzahl der Einträge müssen mit timeline_en.md übereinstimmen
 (scripts/migrate-timeline.mjs ordnet DE und EN über die Position zu).
-Stand der Recherche: Oktober 2026.
+Stand der Recherche: November 2026.
 
 ---
 
@@ -144,14 +144,14 @@ Stand der Recherche: Oktober 2026.
 **Titel:** Elliptische Kurven werden billiger zu brechen
 **Kategorie:** ESTIMATE
 **Beschreibung:** Google Quantum AI schätzt, dass sich der diskrete Logarithmus auf 256-Bit-Kurven mit weniger als 500.000 physischen Qubits berechnen ließe, rund zwanzigmal weniger als bisher angenommen. Einen Tag später zeigen Forschende von Caltech und Oratomic, dass auf neutralen Atomen mit effizienteren Fehlerkorrekturcodes schon 10.000 bis 26.000 Qubits für Shors Algorithmus reichen könnten.
-**Caveat:** Beides sind Schätzungen. Google hat die Schaltkreise nicht veröffentlicht, sondern belegt ihre Größe mit einem Zero-Knowledge-Beweis, und die Atom-Architektur muss erst noch gebaut werden.
+**Caveat:** Beides sind Schätzungen. Google hat die Schaltkreise nicht veröffentlicht, sondern belegt ihre Größe mit einem Zero-Knowledge-Beweis (die erste Fassung hatte eine Lücke und wurde im April ersetzt, an den Zahlen änderte das nichts), und die Atom-Architektur muss erst noch gebaut werden.
 
 ---
 
-### 2026 (Oktober)
+### 2026 (September)
 **Titel:** BSI rät von Classic McEliece ab
 **Kategorie:** HISTORY
-**Beschreibung:** Nach mehreren Kryptoanalyse-Arbeiten aus dem Jahr 2026, darunter ein Verfahren, das öffentliche McEliece-Schlüssel von Zufallsdaten unterscheidet, rät das BSI am 1. Oktober davon ab, Classic McEliece in neuen Anwendungen einzusetzen. Ein praktischer Angriff auf die empfohlenen Parameter ist nicht bekannt, und im Hybridbetrieb bleibt mindestens die Sicherheit des klassischen Verfahrens erhalten. ML-KEM und FrodoKEM sind nicht betroffen.
+**Beschreibung:** Nach mehreren Kryptoanalyse-Arbeiten aus dem Jahr 2026, darunter ein Verfahren, das öffentliche McEliece-Schlüssel von Zufallsdaten unterscheidet, rät das BSI am 29. September davon ab, Classic McEliece in neuen Anwendungen einzusetzen. Ein praktischer Angriff auf die empfohlenen Parameter ist nicht bekannt, und im Hybridbetrieb bleibt mindestens die Sicherheit des klassischen Verfahrens erhalten. ML-KEM und FrodoKEM sind nicht betroffen.
 **Caveat:** Ein Teil der Arbeiten ist noch nicht begutachtet, und die konkreten Kostenschätzungen gehen auseinander. Das BSI will seine Bewertung in der nächsten Fassung der TR-02102-1 Anfang 2027 überarbeiten.
 
 ---
@@ -195,10 +195,10 @@ Stand der Recherche: Oktober 2026.
 ---
 
 ### 2030
-**Titel:** NIST: RSA-2048 & Co. werden abgekündigt
+**Titel:** NIST: RSA und ECC werden abgekündigt
 **Kategorie:** REGULATION
-**Beschreibung:** Nach dem Entwurf von NIST IR 8547 (November 2024) gelten RSA und ECC mit 112 Bit Sicherheit, etwa RSA-2048, nach 2030 als abgekündigt (deprecated). Für neue Systeme sollen sie dann nicht mehr gewählt werden.
-**Caveat:** IR 8547 ist noch ein Entwurf (Stand Oktober 2026). Die US-Bundesverwaltung plant aber bereits mit diesen Daten.
+**Beschreibung:** In der finalen Fassung von NIST IR 8547 (Oktober 2026) gelten alle quantenanfälligen Public-Key-Verfahren nach 2030 als abgekündigt (deprecated), also RSA, ECDSA, EdDSA und (EC)DH, unabhängig von der Schlüssellänge. Der Entwurf von November 2024 hatte das nur für Parameter mit 112 Bit Sicherheit wie RSA-2048 vorgesehen. Erlaubt bleiben die Verfahren bis 2035, wer sie weiter nutzt, muss das Risiko aber bewusst abwägen.
+**Caveat:** Für die sensibelsten Systeme der US-Bundesverwaltung gelten nach der Executive Order 14412 (Juni 2026) frühere Fristen: Post-Quanten-Schlüsselaustausch bis Ende 2030, Post-Quanten-Signaturen bis Ende 2031.
 
 ---
 
@@ -247,7 +247,7 @@ Stand der Recherche: Oktober 2026.
 ### 2035
 **Titel:** USA: RSA und ECC sollen ganz wegfallen
 **Kategorie:** REGULATION
-**Beschreibung:** Das Memorandum NSM-10 (Mai 2022) gibt der US-Bundesverwaltung 2035 als Ziel vor, das Quantenrisiko so weit wie möglich zu beseitigen. Passend dazu sieht der NIST-Entwurf IR 8547 vor, quantenanfällige Verfahren wie RSA und ECC nach 2035 ganz zu untersagen (disallowed). Im selben Jahr endet auch die BSI-Frist für klassische Signaturen ohne PQC.
+**Beschreibung:** Das Memorandum NSM-10 (Mai 2022) gibt der US-Bundesverwaltung 2035 als Ziel vor, das Quantenrisiko so weit wie möglich zu beseitigen. Passend dazu untersagt NIST in der finalen Fassung von IR 8547 (Oktober 2026) quantenanfällige Verfahren wie RSA und ECC nach 2035 ganz (disallowed). Im selben Jahr endet auch die BSI-Frist für klassische Signaturen ohne PQC.
 
 ---
 
@@ -261,4 +261,4 @@ Stand der Recherche: Oktober 2026.
 ### ~2040
 **Titel:** BSI: obere Grenze des CRQC-Fensters
 **Kategorie:** ESTIMATE
-**Beschreibung:** In seiner Studie zum Entwicklungsstand von Quantencomputern (Stand Ende 2024) hält das BSI einen kryptografisch relevanten Quantencomputer innerhalb von etwa 16 Jahren für wahrscheinlich, also bis ungefähr 2040. Durchbrüche, etwa bei neuen Fehlerkorrekturcodes oder bei Hardware wie neutralen Atomen, könnten das Fenster auf unter zehn Jahre verkürzen.
+**Beschreibung:** In der aktuellen Fassung seiner Studie zum Entwicklungsstand von Quantencomputern (Version 2.2, Dezember 2025) schätzt das BSI konservativ, dass ein kryptografisch relevanter Quantencomputer ab 2025 innerhalb von 15 Jahren wahrscheinlich ist, also bis etwa 2040. Bewähren sich die Demonstratoren für neue Fehlerkorrekturcodes (qLDPC-Codes), die gerade entstehen, könnten es auch nur etwa zehn Jahre sein.

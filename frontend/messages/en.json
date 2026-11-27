@@ -238,7 +238,7 @@
     "kemMcEliece": "Classic McEliece 8192128",
     "kemFrodoKem": "FrodoKEM-1344-AES",
     "mcElieceWarning": "Note: Classic McEliece key generation is very compute-heavy and takes 10 to 30 seconds.",
-    "mcElieceBsiNote": "Since October 2026, the BSI has advised against using Classic McEliece in new applications. It stays here for comparison. <a>More on that</a>",
+    "mcElieceBsiNote": "Since September 29, 2026, the BSI has advised against using Classic McEliece in new applications. It stays here for comparison. <a>More on that</a>",
     "mcElieceGenerating": "// Classic McEliece keygen running…",
     "mcElieceGeneratingNote": "Depending on your device this takes 10 to 30 seconds. The page has not frozen, McEliece key generation is just expensive.",
     "step1Title": "Key Generation",
@@ -248,7 +248,7 @@
     "step3Title": "ML-KEM-1024 — Post-Quantum Encapsulation",
     "step3Desc": "Lattice-based scheme from NIST FIPS 203, derived from Kyber-1024. Unlike Diffie-Hellman, the client encapsulates a random secret under the server's public key. Only the server can decapsulate it with its private key. ML-KEM-1024 is the strongest variant and reaches security category 5 (comparable to AES-256).",
     "step3TitleMcEliece": "Classic McEliece 8192128 — Code-Based Encapsulation",
-    "step3DescMcEliece": "Code-based scheme using binary Goppa codes, introduced by Robert McEliece in 1978. That makes it one of the oldest public-key schemes there is. Its biggest drawback is the public key of 1,357,824 bytes (about 1.36 MB). The ciphertext, on the other hand, is tiny: 240 bytes in this implementation, which still follows the round 3 version; the current specification (round 4) needs only 208 bytes. No practical attack is known. New cryptanalysis published in 2026 has, however, noticeably lowered its security estimates, and since October 2026 the German BSI advises against using Classic McEliece in new applications.",
+    "step3DescMcEliece": "Code-based scheme using binary Goppa codes, introduced by Robert McEliece in 1978. That makes it one of the oldest public-key schemes there is. Its biggest drawback is the public key of 1,357,824 bytes (about 1.36 MB). The ciphertext, on the other hand, is tiny: 240 bytes in this implementation, which still follows the round 3 version; the current specification (round 4) needs only 208 bytes. No practical attack is known. New cryptanalysis published in 2026 has, however, noticeably lowered its security estimates, and since September 29, 2026, the German BSI has advised against using Classic McEliece in new applications.",
     "step3TitleFrodoKem": "FrodoKEM-1344-AES — Plain-LWE Encapsulation",
     "step3DescFrodoKem": "Lattice-based scheme that was an alternate candidate in round 3 of the NIST process and was not standardized by NIST. The German BSI recommends it nonetheless, and ISO standardization is under way. As with ML-KEM, the client encapsulates a random secret under the server's public key. The difference is the foundation: FrodoKEM uses unstructured LWE instead of Module-LWE. Without the extra algebraic structure, attackers have less to work with, but keys and ciphertext get large (public key 21,520 bytes, ciphertext 21,696 bytes). Like Classic McEliece 8192128, FrodoKEM-1344-AES reaches security category 5.",
     "step4Title": "HKDF-SHA256 — Hybrid Key",
@@ -796,7 +796,7 @@
     "rationale": {
       "aes-256-gcm": "Authenticated encryption; the 256-bit key keeps at least 128-bit security under Grover.",
       "aes-gcm": "AES-GCM authenticated encryption; the key size (128/192/256) is not statically determinable.",
-      "classic-mceliece": "Code-based post-quantum KEM with very large public keys. New structural attacks from 2026 put its estimated security below the claimed levels, and since October 2026 the BSI has advised against new deployments. It stays in the playground for comparison only.",
+      "classic-mceliece": "Code-based post-quantum KEM with very large public keys. New structural attacks from 2026 put its estimated security below the claimed levels, and since September 29, 2026, the BSI has advised against new deployments. It stays in the playground for comparison only.",
       "ec-p256": "ECDSA over the NIST P-256 curve (signing and verification in the signature and PKI playgrounds); broken by Shor’s algorithm.",
       "frodokem-1344-aes": "Conservative lattice-based (LWE) post-quantum KEM, 1344 parameter set with AES as the internal PRF; NIST level 5.",
       "hkdf": "HMAC-based key derivation (RFC 5869); sound for deriving keys from high-entropy input.",
@@ -1835,7 +1835,7 @@
       },
       "mail": {
         "title": "Mail providers",
-        "body": "For each domain, the mail server with the highest priority is determined (MX record), and domains are grouped by the provider of that mail server. The largest providers, by number of domains, are checked one after another with pauses in between: a connection on port 25, a greeting with EHLO, STARTTLS and the same browser-like handshake as for websites. Then the connection is closed; no email is sent. Each provider thus sees a single connection per month.\n\nA provider's result applies to all of its domains. The breakdown only covers domains at these large providers. Domains at smaller providers or with their own mail server are not measured; the share of domains the large providers account for is always given.\n\nMany large mail providers do not answer or reject connections from data-center networks without a matching reverse DNS entry. Such providers are shown as \"not measurable\". For the same reason, measuring every mail server is not possible: it would be throttled within minutes."
+        "body": "For each domain, the mail server with the highest priority is determined (MX record), and domains are grouped by the provider of that mail server. The largest providers, by number of domains, are checked one after another with pauses in between: a connection on port 25, a greeting with EHLO, STARTTLS and the same browser-like handshake as for websites. Then the connection is closed; no email is sent. Each provider thus sees a single connection per month.\n\nA provider's result applies to all of its domains. The breakdown only covers domains at these large providers. Domains at smaller providers or with their own mail server are not measured; the share of domains the large providers account for is always given.\n\nMany large mail providers do not answer or reject connections from data-center networks without a matching reverse DNS entry. Such providers are shown as \"not reachable\". For the same reason, measuring every mail server is not possible: it would be throttled within minutes."
       },
       "privacy": {
         "title": "What is not published",

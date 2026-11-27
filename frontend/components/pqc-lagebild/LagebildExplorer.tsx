@@ -19,9 +19,12 @@ interface Props {
 }
 
 const CATS = ['all', 'kritis', 'institutions', 'corporations', 'other'] as const;
+// IANA DNSSEC algorithm numbers (all assigned signing algorithms)
 const DNSSEC_NAMES: Record<string, string> = {
-  '5': 'RSA/SHA-1', '7': 'RSA/SHA-1', '8': 'RSA/SHA-256', '10': 'RSA/SHA-512',
+  '1': 'RSA/MD5', '3': 'DSA/SHA-1', '5': 'RSA/SHA-1', '6': 'DSA/SHA-1', '7': 'RSA/SHA-1',
+  '8': 'RSA/SHA-256', '10': 'RSA/SHA-512', '12': 'GOST R 34.10-2001',
   '13': 'ECDSA P-256', '14': 'ECDSA P-384', '15': 'Ed25519', '16': 'Ed448',
+  '17': 'SM2/SM3', '23': 'GOST R 34.10-2012',
 };
 
 export default function LagebildExplorer({ cells, providers, mail, trend, previousMonthLabel, history, minCell, population }: Props) {
@@ -400,7 +403,8 @@ function SigBar({ entries, ariaLabel }: { entries: [string, number][]; ariaLabel
     if (f === 'other') return name;
     const rest = name.replace(/^(RSA|ECDSA)[-/ ]?/, '');
     if (rest === 'other') return t('sigVariantOther');
-    return /^\d+$/.test(rest) ? `${rest} Bit` : rest;
+    if (!/^\d+$/.test(rest)) return rest;
+    return locale === 'de' ? `${rest} Bit` : `${rest}-bit`;
   };
   const details = parts.filter((p) => byFamily[p.key as SigFamily].length > 1 || p.key === 'other');
   return (

@@ -212,8 +212,10 @@ export function formatMonth(month: string, locale: string): string {
 
 /** DNSSEC algorithm numbers (IANA) → short names. None of today's algorithms is post-quantum. */
 export const DNSSEC_ALGORITHMS: Record<string, string> = {
-  '5': 'RSA/SHA-1', '7': 'RSA/SHA-1-NSEC3', '8': 'RSA/SHA-256', '10': 'RSA/SHA-512',
+  '1': 'RSA/MD5', '3': 'DSA/SHA-1', '5': 'RSA/SHA-1', '6': 'DSA/SHA-1-NSEC3', '7': 'RSA/SHA-1-NSEC3',
+  '8': 'RSA/SHA-256', '10': 'RSA/SHA-512', '12': 'GOST R 34.10-2001',
   '13': 'ECDSA P-256', '14': 'ECDSA P-384', '15': 'Ed25519', '16': 'Ed448',
+  '17': 'SM2/SM3', '23': 'GOST R 34.10-2012',
 };
 
 /** TLS group names nginx/OpenSSL report → display names; PQ groups flagged. */
