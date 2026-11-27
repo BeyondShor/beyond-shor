@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:f97c90bf-a526-44d8-be38-2f6b26bf04f3",
+  "serialNumber": "urn:uuid:72a931b1-f08a-487a-86b2-46fb157d4cc6",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-27T14:08:17.508626+00:00",
+    "timestamp": "2026-11-27T14:29:55.190733+00:00",
     "tools": {
       "components": [
         {
@@ -30,7 +30,7 @@
       },
       {
         "name": "crypto:provenance",
-        "value": "{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"9695d6c5d395eff4469d8c26d04ab66b11a950ae\", \"pathPrefix\": \"\"}"
+        "value": "{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"52c3d81664941b7fe05eccb2d935bed73c992b6c\", \"pathPrefix\": \"\"}"
       },
       {
         "name": "crypto:sink",
@@ -376,7 +376,7 @@
         },
         {
           "name": "crypto:rationale",
-          "value": "Code-based post-quantum KEM with very large public keys. BSI (Hinweise zu Classic McEliece, 2026-09-29): recent structural (key-recovery/distinguisher) cryptanalysis of binary Goppa codes erodes the security margin; no practical attack on the TR-02102-1 parameter sets yet, but not to be used in new developments; hybrid use only, TR-02102-1 revision expected early 2027. Shor/Grover do not apply. https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Krypto/Hinweis_Classic_McEliece.pdf"
+          "value": "Code-based post-quantum KEM with very large public keys. BSI (Hinweise zu Classic McEliece, dated 2026-09-29, published 2026-10-01): recent structural (key-recovery/distinguisher) cryptanalysis of binary Goppa codes erodes the security margin; no practical attack on the TR-02102-1 parameter sets yet, but not to be used in new developments; hybrid use only, TR-02102-1 revision expected early 2027. Shor/Grover do not apply. https://www.bsi.bund.de/SharedDocs/Downloads/DE/BSI/Krypto/Hinweis_Classic_McEliece.pdf"
         },
         {
           "name": "crypto:library",
