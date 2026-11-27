@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:f046119b-2aff-409c-a7e1-96024669b3e7",
+  "serialNumber": "urn:uuid:f97c90bf-a526-44d8-be38-2f6b26bf04f3",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-27T11:33:41.185567+00:00",
+    "timestamp": "2026-11-27T14:08:17.508626+00:00",
     "tools": {
       "components": [
         {
@@ -30,7 +30,7 @@
       },
       {
         "name": "crypto:provenance",
-        "value": "{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"910a7e906ff01d4e94fe5a19c6e9d264a31df8c4\", \"pathPrefix\": \"\"}"
+        "value": "{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"9695d6c5d395eff4469d8c26d04ab66b11a950ae\", \"pathPrefix\": \"\"}"
       },
       {
         "name": "crypto:sink",
@@ -38,7 +38,7 @@
       },
       {
         "name": "crypto:sink",
-        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/update-copy.mjs\", \"line\": 33}"
+        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/update-copy.mjs\", \"line\": 34}"
       },
       {
         "name": "crypto:sink",
@@ -150,7 +150,7 @@
           "algorithmFamily": "AES",
           "parameterSetIdentifier": "256",
           "mode": "gcm",
-          "nistQuantumSecurityLevel": 1,
+          "nistQuantumSecurityLevel": 5,
           "cryptoFunctions": [
             "keyderive"
           ]
@@ -395,7 +395,7 @@
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
-          "primitive": "key-agree",
+          "primitive": "signature",
           "parameterSetIdentifier": "256",
           "ellipticCurve": "nist/P-256",
           "cryptoFunctions": [
@@ -539,219 +539,11 @@
         },
         {
           "name": "crypto:rationale",
-          "value": "NIST P-256 elliptic curve (use not inferred from a bare curve constant); broken by Shor's algorithm."
+          "value": "NIST P-256 elliptic curve (key agreement unless the source shows only signing; the curve alone does not say); broken by Shor's algorithm."
         },
         {
           "name": "crypto:library",
           "value": "@noble/curves"
-        },
-        {
-          "name": "crypto:source",
-          "value": "beyond-shor"
-        }
-      ]
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "crypto/ecdsa",
-      "name": "ECDSA",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "signature",
-          "algorithmFamily": "ECDSA",
-          "cryptoFunctions": [
-            "unknown"
-          ]
-        },
-        "oid": "1.2.840.10045.4.3.2"
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "beyond-shor::pqc-lagebild/scan/probe.mjs",
-            "line": 46,
-            "additionalContext": "else if (type === 'ec') key = 'ecdsa';",
-            "symbol": "asymmetricKeyType:ECDSA"
-          }
-        ]
-      },
-      "properties": [
-        {
-          "name": "crypto:quantumStatus",
-          "value": "unsafe"
-        },
-        {
-          "name": "crypto:classicalStatus",
-          "value": "secure"
-        },
-        {
-          "name": "crypto:family",
-          "value": "asymmetric"
-        },
-        {
-          "name": "crypto:name",
-          "value": "ECDSA"
-        },
-        {
-          "name": "crypto:confidence",
-          "value": "resolved"
-        },
-        {
-          "name": "crypto:rationale",
-          "value": "Elliptic-curve signatures of unspecified curve; broken by Shor's algorithm."
-        },
-        {
-          "name": "crypto:library",
-          "value": "Node.js crypto"
-        },
-        {
-          "name": "crypto:source",
-          "value": "beyond-shor"
-        }
-      ]
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "crypto/ed25519",
-      "name": "Ed25519",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "signature",
-          "algorithmFamily": "EdDSA",
-          "parameterSetIdentifier": "256",
-          "ellipticCurve": "other/Ed25519",
-          "cryptoFunctions": [
-            "unknown"
-          ]
-        },
-        "oid": "1.3.101.112"
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "beyond-shor::pqc-lagebild/scan/probe.mjs",
-            "line": 47,
-            "additionalContext": "else if (type === 'ed25519' || type === 'ed448') key = 'eddsa';",
-            "symbol": "asymmetricKeyType:Ed25519"
-          },
-          {
-            "location": "beyond-shor::frontend/lib/pqc-lagebild.ts",
-            "line": 216,
-            "additionalContext": "'13': 'ECDSA P-256', '14': 'ECDSA P-384', '15': 'Ed25519', '16': 'Ed448',",
-            "symbol": "JWA:Ed25519"
-          },
-          {
-            "location": "beyond-shor::frontend/components/pqc-lagebild/LagebildExplorer.tsx",
-            "line": 24,
-            "additionalContext": "'13': 'ECDSA P-256', '14': 'ECDSA P-384', '15': 'Ed25519', '16': 'Ed448',",
-            "symbol": "JWA:Ed25519"
-          }
-        ]
-      },
-      "properties": [
-        {
-          "name": "crypto:quantumStatus",
-          "value": "unsafe"
-        },
-        {
-          "name": "crypto:classicalStatus",
-          "value": "secure"
-        },
-        {
-          "name": "crypto:family",
-          "value": "asymmetric"
-        },
-        {
-          "name": "crypto:name",
-          "value": "Ed25519"
-        },
-        {
-          "name": "crypto:confidence",
-          "value": "resolved"
-        },
-        {
-          "name": "crypto:rationale",
-          "value": "EdDSA over Curve25519; strong classically, broken by Shor."
-        },
-        {
-          "name": "crypto:library",
-          "value": "Node.js crypto"
-        },
-        {
-          "name": "crypto:source",
-          "value": "beyond-shor"
-        }
-      ]
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "crypto/ed448",
-      "name": "Ed448",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "signature",
-          "algorithmFamily": "EdDSA",
-          "parameterSetIdentifier": "448",
-          "ellipticCurve": "other/Ed448",
-          "cryptoFunctions": [
-            "unknown"
-          ]
-        },
-        "oid": "1.3.101.113"
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "beyond-shor::pqc-lagebild/scan/probe.mjs",
-            "line": 47,
-            "additionalContext": "else if (type === 'ed25519' || type === 'ed448') key = 'eddsa';",
-            "symbol": "asymmetricKeyType:Ed448"
-          },
-          {
-            "location": "beyond-shor::frontend/lib/pqc-lagebild.ts",
-            "line": 216,
-            "additionalContext": "'13': 'ECDSA P-256', '14': 'ECDSA P-384', '15': 'Ed25519', '16': 'Ed448',",
-            "symbol": "JWA:Ed448"
-          },
-          {
-            "location": "beyond-shor::frontend/components/pqc-lagebild/LagebildExplorer.tsx",
-            "line": 24,
-            "additionalContext": "'13': 'ECDSA P-256', '14': 'ECDSA P-384', '15': 'Ed25519', '16': 'Ed448',",
-            "symbol": "JWA:Ed448"
-          }
-        ]
-      },
-      "properties": [
-        {
-          "name": "crypto:quantumStatus",
-          "value": "unsafe"
-        },
-        {
-          "name": "crypto:classicalStatus",
-          "value": "secure"
-        },
-        {
-          "name": "crypto:family",
-          "value": "asymmetric"
-        },
-        {
-          "name": "crypto:name",
-          "value": "Ed448"
-        },
-        {
-          "name": "crypto:confidence",
-          "value": "resolved"
-        },
-        {
-          "name": "crypto:rationale",
-          "value": "EdDSA over Curve448; strong classically, broken by Shor."
-        },
-        {
-          "name": "crypto:library",
-          "value": "Node.js crypto"
         },
         {
           "name": "crypto:source",
@@ -1027,12 +819,6 @@
       "evidence": {
         "occurrences": [
           {
-            "location": "beyond-shor::frontend/lib/pki/meta.ts",
-            "line": 30,
-            "additionalContext": "id: 'mldsa44', name: 'ML-DSA-44', short: 'ML-DSA-44', oid: OID.mlDsa44,",
-            "symbol": "JWA:ML-DSA-44"
-          },
-          {
             "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
             "line": 110,
             "additionalContext": "case 'mldsa44': return ml_dsa44.verify(sig, msg, publicKey);",
@@ -1191,12 +977,6 @@
             "line": 121,
             "additionalContext": "return ml_dsa65.verify(Buffer.from(sigHex.trim(), 'hex'), bytes, Buffer.from(pubHex, 'hex'));",
             "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.verify"
-          },
-          {
-            "location": "beyond-shor::frontend/lib/pki/meta.ts",
-            "line": 34,
-            "additionalContext": "id: 'mldsa65', name: 'ML-DSA-65', short: 'ML-DSA-65', oid: OID.mlDsa65,",
-            "symbol": "JWA:ML-DSA-65"
           },
           {
             "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
@@ -1440,65 +1220,6 @@
         {
           "name": "crypto:library",
           "value": "@noble/post-quantum"
-        },
-        {
-          "name": "crypto:source",
-          "value": "beyond-shor"
-        }
-      ]
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "crypto/rsa",
-      "name": "RSA",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "pke",
-          "cryptoFunctions": [
-            "unknown"
-          ]
-        },
-        "oid": "1.2.840.113549.1.1.1"
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "beyond-shor::pqc-lagebild/scan/probe.mjs",
-            "line": 45,
-            "additionalContext": "if (type === 'rsa' || type === 'rsa-pss') key = 'rsa';",
-            "symbol": "asymmetricKeyType:RSA"
-          }
-        ]
-      },
-      "properties": [
-        {
-          "name": "crypto:quantumStatus",
-          "value": "unsafe"
-        },
-        {
-          "name": "crypto:classicalStatus",
-          "value": "secure"
-        },
-        {
-          "name": "crypto:family",
-          "value": "asymmetric"
-        },
-        {
-          "name": "crypto:name",
-          "value": "RSA"
-        },
-        {
-          "name": "crypto:confidence",
-          "value": "resolved"
-        },
-        {
-          "name": "crypto:rationale",
-          "value": "RSA of unspecified key size; classically secure at >=2048 bits but broken by Shor's algorithm."
-        },
-        {
-          "name": "crypto:library",
-          "value": "Node.js crypto"
         },
         {
           "name": "crypto:source",
@@ -2477,15 +2198,6 @@
       "ref": "crypto/ec-p256"
     },
     {
-      "ref": "crypto/ecdsa"
-    },
-    {
-      "ref": "crypto/ed25519"
-    },
-    {
-      "ref": "crypto/ed448"
-    },
-    {
       "ref": "crypto/frodokem-1344-aes"
     },
     {
@@ -2505,9 +2217,6 @@
     },
     {
       "ref": "crypto/ml-kem-768"
-    },
-    {
-      "ref": "crypto/rsa"
     },
     {
       "ref": "crypto/sha-256"
@@ -2570,12 +2279,8 @@
       "provides": [
         "crypto/aes-256-gcm",
         "crypto/aes-gcm",
-        "crypto/ecdsa",
-        "crypto/ed25519",
-        "crypto/ed448",
         "crypto/hkdf",
         "crypto/hmac",
-        "crypto/rsa",
         "crypto/sha-256"
       ]
     },

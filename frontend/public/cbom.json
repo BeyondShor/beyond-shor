@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
-  "serialNumber": "urn:uuid:f046119b-2aff-409c-a7e1-96024669b3e7",
+  "serialNumber": "urn:uuid:f97c90bf-a526-44d8-be38-2f6b26bf04f3",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-11-27T11:33:41.185567+00:00",
+    "timestamp": "2026-11-27T14:08:17.508626+00:00",
     "tools": {
       "components": [
         {
@@ -30,7 +30,7 @@
       },
       {
         "name": "crypto:provenance",
-        "value": "{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"910a7e906ff01d4e94fe5a19c6e9d264a31df8c4\", \"pathPrefix\": \"\"}"
+        "value": "{\"label\": \"beyond-shor\", \"webUrl\": \"https://github.com/BeyondShor/beyond-shor\", \"host\": \"github\", \"commit\": \"9695d6c5d395eff4469d8c26d04ab66b11a950ae\", \"pathPrefix\": \"\"}"
       },
       {
         "name": "crypto:sink",
@@ -38,7 +38,7 @@
       },
       {
         "name": "crypto:sink",
-        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/update-copy.mjs\", \"line\": 33}"
+        "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"scripts/update-copy.mjs\", \"line\": 34}"
       },
       {
         "name": "crypto:sink",
@@ -135,22 +135,6 @@
       {
         "name": "crypto:sink",
         "value": "{\"symbol\": \"fetch\", \"library\": \"fetch\", \"source\": \"beyond-shor\", \"location\": \"frontend/app/api/article-fields/route.ts\", \"line\": 68}"
-      },
-      {
-        "name": "beyond-shor:removed",
-        "value": "crypto/ecdsa (ECDSA): False positive: pqc-lagebild/scan/probe.mjs only classifies the key type of a scanned server's certificate (type === 'ec'). The handshake itself runs in Node's TLS stack, which is outside the scope of this inventory."
-      },
-      {
-        "name": "beyond-shor:removed",
-        "value": "crypto/ed25519 (Ed25519): False positive: pqc-lagebild/scan/probe.mjs only classifies the key type of a scanned server's certificate (type === 'ed25519'), and the Lagebild view only uses the name as a label. The handshake itself runs in Node's TLS stack, which is outside the scope of this inventory."
-      },
-      {
-        "name": "beyond-shor:removed",
-        "value": "crypto/ed448 (Ed448): False positive: pqc-lagebild/scan/probe.mjs only classifies the key type of a scanned server's certificate (type === 'ed448'), and the Lagebild view only uses the name as a label. The handshake itself runs in Node's TLS stack, which is outside the scope of this inventory."
-      },
-      {
-        "name": "beyond-shor:removed",
-        "value": "crypto/rsa (RSA): False positive: pqc-lagebild/scan/probe.mjs only classifies the key type of a scanned server's certificate (type === 'rsa'). The handshake itself runs in Node's TLS stack, which is outside the scope of this inventory."
       }
     ]
   },
@@ -221,10 +205,6 @@
         {
           "name": "crypto:source",
           "value": "beyond-shor"
-        },
-        {
-          "name": "beyond-shor:correction",
-          "value": "AES-256 key search is the reference for NIST category 5, not 1. (cryptoProperties.algorithmProperties.nistQuantumSecurityLevel: 1 → 5)"
         }
       ]
     },
@@ -559,7 +539,7 @@
         },
         {
           "name": "crypto:rationale",
-          "value": "ECDSA over NIST P-256 (sign/verify in the signature and PKI playgrounds); broken by Shor's algorithm."
+          "value": "NIST P-256 elliptic curve (key agreement unless the source shows only signing; the curve alone does not say); broken by Shor's algorithm."
         },
         {
           "name": "crypto:library",
@@ -568,10 +548,6 @@
         {
           "name": "crypto:source",
           "value": "beyond-shor"
-        },
-        {
-          "name": "beyond-shor:correction",
-          "value": "Only sign and verify are used (ECDSA), so the primitive is signature, not key-agree. (cryptoProperties.algorithmProperties.primitive: \"key-agree\" → \"signature\"; crypto:rationale: \"NIST P-256 elliptic curve (use not inferred from a bare curve constant); broken by Shor's algorithm.\" → \"ECDSA over NIST P-256 (sign/verify in the signature and PKI playgrounds); broken by Shor's algorithm.\")"
         }
       ]
     },
@@ -843,12 +819,6 @@
       "evidence": {
         "occurrences": [
           {
-            "location": "beyond-shor::frontend/lib/pki/meta.ts",
-            "line": 30,
-            "additionalContext": "id: 'mldsa44', name: 'ML-DSA-44', short: 'ML-DSA-44', oid: OID.mlDsa44,",
-            "symbol": "JWA:ML-DSA-44"
-          },
-          {
             "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
             "line": 110,
             "additionalContext": "case 'mldsa44': return ml_dsa44.verify(sig, msg, publicKey);",
@@ -1007,12 +977,6 @@
             "line": 121,
             "additionalContext": "return ml_dsa65.verify(Buffer.from(sigHex.trim(), 'hex'), bytes, Buffer.from(pubHex, 'hex'));",
             "symbol": "@noble/post-quantum/ml-dsa.js.ml_dsa65.verify"
-          },
-          {
-            "location": "beyond-shor::frontend/lib/pki/meta.ts",
-            "line": 34,
-            "additionalContext": "id: 'mldsa65', name: 'ML-DSA-65', short: 'ML-DSA-65', oid: OID.mlDsa65,",
-            "symbol": "JWA:ML-DSA-65"
           },
           {
             "location": "beyond-shor::frontend/lib/pki/algorithms.ts",
